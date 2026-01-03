@@ -1,0 +1,60 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import Sidebar from "../Sidebar";
+
+jest.mock("next/navigation", () => ({
+  usePathname: jest.fn(),
+}));
+
+const { usePathname } = jest.requireMock("next/navigation");
+
+describe("Sidebar", () => {
+  beforeEach(() => {
+    (usePathname as jest.Mock).mockReturnValue("/counselor/chat/michele");
+    global.fetch = jest.fn() as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it("renders fetched conversations and highlights active", async () => {
+    process.env.NEXT_PUBLIC_DEMO_USER_ID = "demo-user";
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: async () => ({
+        conversations: [
+          {
+            id: "1",
+            counselor_id: "michele",
+            title: "ミシェルとの相談",
+            updated_at: "2024-01-01T00:00:00.000Z",
+          },
+        ],
+      }),
+    });
+
+    render(<Sidebar />);
+
+    await waitFor(() =>
+      expect(screen.getByText("ミシェルとの相談")).toBeInTheDocument(),
+    );
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/conversations?userId=demo-user",
+    );
+    expect(
+      screen.getByRole("link", { name: /ミシェルとの相談/i }),
+    ).toHaveClass("bg-blue-50");
+  });
+
+  it("keeps fallback state when API returns empty", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: async () => ({ conversations: [] }),
+    });
+
+    render(<Sidebar />);
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByText("新しい会話を開始")).toBeInTheDocument();
+  });
+});
