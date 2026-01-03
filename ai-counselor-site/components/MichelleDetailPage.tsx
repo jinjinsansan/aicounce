@@ -63,7 +63,7 @@ export default function MichelleDetailPage() {
           <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12">
             <div className="relative h-48 w-48 flex-shrink-0">
               <Image
-                src="/images/counselor-michelle.png"
+                src="/images/counselors/michelle.png"
                 alt="Michelle"
                 fill
                 className="rounded-full object-cover shadow-2xl"
