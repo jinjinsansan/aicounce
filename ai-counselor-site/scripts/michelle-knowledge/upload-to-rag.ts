@@ -5,7 +5,7 @@ import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 
-import { chunkTextSinr } from "./chunk-sinr";
+import { chunkTextSinr } from "./chunk-sinr.ts";
 
 config({ path: join(process.cwd(), ".env.local") });
 
