@@ -1,114 +1,141 @@
 export default function ProblemSolutionSection() {
   return (
-    <section className="py-24 bg-white">
+    <section className="bg-white pt-24 pb-16">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="mx-auto max-w-4xl text-center mb-16">
-          <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold tracking-wider mb-4">
+        <div className="mx-auto max-w-4xl text-center mb-24">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-bold tracking-wider mb-6">
             WHY AI COUNSELOR?
           </span>
           <h2 className="text-3xl font-bold text-slate-800 md:text-4xl lg:text-5xl leading-tight font-serif">
             なぜ今、<br className="md:hidden"/>「AI」に相談するのか
           </h2>
           <p className="mt-6 text-lg text-slate-500 max-w-2xl mx-auto font-sans font-medium">
-            気を使わず、待たされず、専門的なサポートを。
+            誰にも言えない悩みこそ、AIに話してみませんか。<br/>
+            そこには、人間にはない「絶対的な安心感」があります。
           </p>
         </div>
           
-        <div className="grid gap-8 md:grid-cols-2 lg:gap-12 max-w-6xl mx-auto">
-          {/* Problem Card */}
-          <div className="relative overflow-hidden rounded-[32px] bg-slate-50 p-8 shadow-sm md:p-10">
-            <div className="mb-6 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl shadow-sm">☁️</span>
-              <h3 className="text-xl font-bold text-slate-700">これまでの悩み</h3>
+        {/* Story Flow - Step 1: Problem */}
+        <div className="mx-auto max-w-5xl">
+          <div className="relative mb-24 rounded-[40px] bg-slate-50 p-8 md:p-16">
+            <div className="grid gap-12 md:grid-cols-2 md:items-center">
+              <div>
+                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
+                  🌧️
+                </div>
+                <h3 className="mb-6 text-2xl font-bold text-slate-800 md:text-3xl font-serif">
+                  「人に話す」ことの<br/>難しさ、感じていませんか？
+                </h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-4">
+                    <span className="mt-1.5 h-2 w-2 rounded-full bg-slate-400" />
+                    <p className="text-slate-600">
+                      <strong className="block text-slate-800">気を使って本音が言えない</strong>
+                      相手の顔色を伺ってしまい、結局言いたいことを飲み込んでしまう。
+                    </p>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <span className="mt-1.5 h-2 w-2 rounded-full bg-slate-400" />
+                    <p className="text-slate-600">
+                      <strong className="block text-slate-800">予約や移動が億劫</strong>
+                      今すぐ聞いてほしいのに、予約は来週。そこまで待てない。
+                    </p>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <span className="mt-1.5 h-2 w-2 rounded-full bg-slate-400" />
+                    <p className="text-slate-600">
+                      <strong className="block text-slate-800">高額なカウンセリング料</strong>
+                      1回数万円の費用は、継続的な心のケアにはハードルが高い。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative aspect-square rounded-[32px] bg-slate-200/50 p-8">
+                {/* Visual placeholder for "Problem" illustration */}
+                <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-bold opacity-30 text-xl">
+                  Image: Woman worrying alone
+                </div>
+              </div>
             </div>
-            
-            <ul className="space-y-6">
-              <li className="flex items-start gap-4">
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">?</div>
-                <div>
-                  <strong className="block text-slate-800 mb-1">気を使って話せない</strong>
-                  <span className="text-sm text-slate-500">
-                    「こんなこと言ったら引かれるかな…」と相手の顔色を伺ってしまい、本音が出せない。
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">?</div>
-                <div>
-                  <strong className="block text-slate-800 mb-1">予約や移動が大変</strong>
-                  <span className="text-sm text-slate-500">
-                    今すぐ聞いてほしいのに、予約は来週。移動する元気もない時がある。
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">?</div>
-                <div>
-                  <strong className="block text-slate-800 mb-1">費用が高すぎる</strong>
-                  <span className="text-sm text-slate-500">
-                    1回1万円近いカウンセリングは、継続して通うには経済的に厳しい。
-                  </span>
-                </div>
-              </li>
-            </ul>
           </div>
 
-          {/* Solution Card */}
-          <div className="relative overflow-hidden rounded-[32px] bg-orange-50 p-8 shadow-md border border-orange-100 md:p-10">
-            <div className="mb-6 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl shadow-sm text-orange-500">☀</span>
-              <h3 className="text-xl font-bold text-slate-800">AIカウンセリングなら</h3>
+          {/* Story Flow - Step 2: Solution */}
+          <div className="relative mb-24 rounded-[40px] bg-gradient-to-br from-orange-50 to-amber-50 p-8 md:p-16 border border-orange-100 shadow-xl shadow-orange-100/50">
+            <div className="grid gap-12 md:grid-cols-2 md:items-center">
+              <div className="order-2 md:order-1">
+                <div className="relative aspect-square rounded-[32px] bg-white/60 p-8 shadow-inner">
+                   {/* Visual placeholder for "Solution" illustration */}
+                   <div className="absolute inset-0 flex items-center justify-center text-orange-300 font-bold opacity-50 text-xl">
+                    Image: AI listening gently
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm text-orange-500">
+                  ☀
+                </div>
+                <h3 className="mb-6 text-2xl font-bold text-slate-800 md:text-3xl font-serif">
+                  AIだからこそできる、<br/>新しい心のケア。
+                </h3>
+                <ul className="space-y-6">
+                  <li className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-200 text-orange-700">✓</div>
+                    <div>
+                      <strong className="block text-lg text-slate-900">100%の心理的安全性</strong>
+                      <p className="text-slate-600 mt-1">
+                        相手はAI。評価も批判もしません。何度同じ話をしても、決して嫌な顔をせず、あなたのペースで受け止めます。
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-200 text-orange-700">✓</div>
+                    <div>
+                      <strong className="block text-lg text-slate-900">24時間365日、即レス</strong>
+                      <p className="text-slate-600 mt-1">
+                        深夜3時の不安も、通勤中のモヤモヤも。アプリを開けば、そこにはいつも「専属の味方」が待機しています。
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-200 text-orange-700">✓</div>
+                    <div>
+                      <strong className="block text-lg text-slate-900">専門知識 × 圧倒的低価格</strong>
+                      <p className="text-slate-600 mt-1">
+                        臨床心理学などの専門知を学習済み。月額1,500円という続けやすい価格で、質の高いケアを日常に。
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
             </div>
-
-            <ul className="space-y-6">
-              <li className="flex items-start gap-4">
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-200 text-xs font-bold text-orange-700">✓</div>
-                <div>
-                  <strong className="block text-slate-900 mb-1">100% 気を使わない</strong>
-                  <span className="text-sm text-slate-600">
-                    相手はAIです。評価も批判もしません。同じ話を何度繰り返しても、優しく受け止めます。
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-200 text-xs font-bold text-orange-700">✓</div>
-                <div>
-                  <strong className="block text-slate-900 mb-1">24時間365日 即レス</strong>
-                  <span className="text-sm text-slate-600">
-                    深夜3時の不安も、朝のモヤモヤも。スマホを開けば、そこにはいつも専属カウンセラーがいます。
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-200 text-xs font-bold text-orange-700">✓</div>
-                <div>
-                  <strong className="block text-slate-900 mb-1">専門知識 × 低価格</strong>
-                  <span className="text-sm text-slate-600">
-                    臨床心理学などの専門知識を学習済み。月額1,500円で、質の高いケアを日常に。
-                  </span>
-                </div>
-              </li>
-            </ul>
           </div>
         </div>
 
-        {/* Feature Grid */}
-        <div className="mt-20 max-w-7xl mx-auto">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Feature Grid - Distinct Section */}
+      </div>
+      
+      <div className="bg-slate-50 py-24 border-y border-slate-100">
+        <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+          <div className="text-center mb-16">
+            <h3 className="text-2xl font-bold text-slate-800 md:text-3xl font-serif">
+              選ばれる6つの理由
+            </h3>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { title: "24時間365日", icon: "🌙", desc: "いつでも、どこでも、あなたのタイミングで。" },
-              { title: "秘密厳守", icon: "🔒", desc: "人間は介在しません。相談内容は厳重に保護されます。" },
-              { title: "8+の専門人格", icon: "👥", desc: "臨床心理士から占い師まで、気分に合わせて選べます。" },
-              { title: "何度でも質問OK", icon: "∞", desc: "納得いくまで、何度でも同じことを聞けます。" },
-              { title: "待機時間ゼロ", icon: "⚡", desc: "予約不要。アプリを開いたその瞬間が相談開始です。" },
-              { title: "お財布に優しい", icon: "💎", desc: "続けやすい価格で、心のメンテナンスを。" },
+              { title: "24時間365日", icon: "🌙", desc: "深夜でも早朝でも、あなたのタイミングで即座に相談可能。" },
+              { title: "完全なプライバシー", icon: "🔒", desc: "人間は一切介在しません。相談内容は厳重に暗号化されます。" },
+              { title: "8+の専門人格", icon: "👥", desc: "臨床心理士、キャリアコーチ、占い師など、気分で選べるパートナー。" },
+              { title: "何度でも質問OK", icon: "∞", desc: "納得いくまで何度でも。AIは決して疲れません。" },
+              { title: "待機時間ゼロ", icon: "⚡", desc: "予約不要。アプリを開いたその瞬間が、相談開始の時間です。" },
+              { title: "お財布に優しい", icon: "💎", desc: "対面カウンセリング1回分の料金で、1ヶ月間いつでも話し放題。" },
             ].map((item) => (
-              <div key={item.title} className="group relative rounded-3xl bg-white p-6 shadow-sm border border-slate-100 transition-all hover:-translate-y-1 hover:shadow-md hover:border-orange-100">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-2xl transition-transform group-hover:scale-110 group-hover:bg-orange-50">
+              <div key={item.title} className="group relative rounded-3xl bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
+                <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-3xl transition-transform group-hover:scale-110 group-hover:bg-orange-100">
                   {item.icon}
                 </div>
-                <h4 className="mb-2 text-lg font-bold text-slate-800">{item.title}</h4>
-                <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
+                <h4 className="mb-3 text-xl font-bold text-slate-800 font-serif">{item.title}</h4>
+                <p className="text-slate-600 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>

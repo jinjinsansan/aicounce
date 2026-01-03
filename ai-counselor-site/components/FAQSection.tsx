@@ -4,41 +4,53 @@ const faqs = [
   {
     question: "利用料金はかかりますか？",
     answer:
-      "基本プランは無料で利用でき、RAG検索トークンやマルチモデル切替に応じて従量課金を予定しています。",
+      "月額1,500円のサブスクリプションプランで、すべての機能を無制限にご利用いただけます。追加料金は一切かかりません。初めの7日間は無料でお試しいただけます。",
   },
   {
-    question: "個人情報や会話ログは安全ですか？",
+    question: "AIとの会話は誰かに見られませんか？",
     answer:
-      "SupabaseのRLSと暗号化ポリシーを適用し、会話ログは90日で自動アーカイブされます。",
+      "いいえ、誰にも見られません。会話データは厳重に暗号化され、開発者も含めて人間が内容を閲覧することは一切ありません。安心してお話しください。",
   },
   {
     question: "どのようにカウンセラーを選べばよいですか？",
     answer:
-      "専門分野・得意アプローチ・RAG対応可否を比較し、現在のテーマに最も近いカウンセラーを選択してください。",
+      "「なんとなく話したい」時はミシェルやアダム、「具体的な悩み」がある時はドクター・サトウやアレックスなど。気分や目的に合わせて、直感で選んでいただいて構いません。",
+  },
+  {
+    question: "解約はいつでもできますか？",
+    answer:
+      "はい、マイページからいつでも解約可能です。契約期間の縛りや違約金などは一切ございません。",
   },
 ];
 
 export default function FAQSection() {
   return (
-    <section id="faq" className="space-y-10 rounded-[32px] bg-slate-900 p-10 text-white">
-      <SectionHeading
-        eyebrow="FAQ"
-        title="よくあるご質問"
-        description="セキュリティ・料金・導入に関する代表的な質問をまとめました。"
-        align="left"
-      />
-      <div className="space-y-6">
-        {faqs.map((faq) => (
-          <details
-            key={faq.question}
-            className="group rounded-2xl border border-white/10 bg-white/5 p-6"
-          >
-            <summary className="cursor-pointer text-lg font-semibold">
-              {faq.question}
-            </summary>
-            <p className="mt-3 text-sm text-white/80">{faq.answer}</p>
-          </details>
-        ))}
+    <section id="faq" className="rounded-[40px] bg-slate-50 py-24 px-6 md:px-12">
+      <div className="mx-auto max-w-3xl">
+        <SectionHeading
+          eyebrow="FAQ"
+          title="よくあるご質問"
+          description="みなさまから寄せられる質問をまとめました。"
+          align="center"
+        />
+        <div className="mt-12 space-y-4">
+          {faqs.map((faq) => (
+            <details
+              key={faq.question}
+              className="group rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md open:ring-orange-100"
+            >
+              <summary className="flex cursor-pointer items-center justify-between text-lg font-bold text-slate-800 marker:content-none">
+                {faq.question}
+                <span className="ml-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400 transition group-open:rotate-180 group-open:bg-orange-100 group-open:text-orange-600">
+                  ⌄
+                </span>
+              </summary>
+              <p className="mt-4 text-base leading-relaxed text-slate-600 animate-in fade-in slide-in-from-top-2 duration-200">
+                {faq.answer}
+              </p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   );
