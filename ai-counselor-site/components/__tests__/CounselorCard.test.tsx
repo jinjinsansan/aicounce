@@ -23,17 +23,15 @@ describe("CounselorCard", () => {
     expect(screen.getByText("ミシェル")).toBeInTheDocument();
     expect(screen.getByText("テープ式心理学")).toBeInTheDocument();
     expect(screen.getByText("テープ式心理学の専門家")).toBeInTheDocument();
-    expect(screen.getByText("自己理解")).toBeInTheDocument();
+    expect(screen.getByText("#自己理解")).toBeInTheDocument();
     expect(screen.getByText(/1,200\+/)).toBeInTheDocument();
-    expect(screen.getByText("1-2 分")).toBeInTheDocument();
-    expect(screen.getByText("RAG対応")).toBeInTheDocument();
   });
 
   it("calls onSelect when action button is clicked", () => {
     const onSelect = jest.fn();
     render(<CounselorCard counselor={mockCounselor} onSelect={onSelect} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "チャットを開始" }));
+    fireEvent.click(screen.getByRole("button", { name: "相談する" }));
 
     expect(onSelect).toHaveBeenCalledWith("michele");
   });

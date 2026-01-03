@@ -48,8 +48,8 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fdfdfd]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto flex max-w-7xl flex-col gap-20 px-4 py-8 sm:px-6 lg:px-8">
         
         {/* Hero Area */}
         <HeroSection />
@@ -61,21 +61,24 @@ export default function HomePage() {
 
         {/* Counselors Grid */}
         <section id="counselors" className="scroll-mt-24">
-          <div className="mb-10 text-center">
+          <div className="mb-12 text-center">
+            <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold tracking-wider mb-4">
+              OUR COUNSELORS
+            </span>
             <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
               専門分野から選ぶ
             </h2>
-            <p className="mt-4 text-slate-600">
+            <p className="mt-4 text-slate-600 text-lg">
               あなたの悩みや目的に最適なパートナーが見つかります
             </p>
           </div>
 
           {loading ? (
-            <div className="rounded-[32px] bg-slate-50 p-10">
+            <div className="rounded-[40px] bg-slate-50 p-12">
               <LoadingState />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {counselors.map((counselor) => (
                 <CounselorCard
                   key={counselor.id}

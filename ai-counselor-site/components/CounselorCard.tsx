@@ -34,76 +34,52 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
   };
 
   return (
-    <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
+    <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
       <div className="flex items-center gap-4">
         <div className={cn(
-          "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-xl font-bold text-white shadow-sm",
+          "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-2xl font-bold text-white shadow-md transition-transform group-hover:scale-105",
           getAvatarColor(counselor.id)
         )}>
           {counselor.name.slice(0, 1)}
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
             {counselor.specialty}
           </p>
           <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{counselor.name}</h3>
         </div>
       </div>
 
-      <p className="mt-4 flex-1 text-sm text-slate-600">{counselor.description}</p>
+      <p className="mt-5 flex-1 text-sm leading-relaxed text-slate-600">
+        {counselor.description}
+      </p>
 
       {counselor.tags && (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           {counselor.tags.map((tag) => (
             <span
               key={`${counselor.id}-${tag}`}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
+              className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600"
             >
-              {tag}
+              #{tag}
             </span>
           ))}
         </div>
       )}
 
-      <div className="mt-6 flex items-center gap-6 text-sm text-slate-500">
-        {typeof counselor.sessionCount === "number" && (
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-400">相談実績</p>
-            <p className="font-semibold text-slate-900">
-              {formatNumber(counselor.sessionCount)}+
-            </p>
-          </div>
-        )}
-        {counselor.responseTime && (
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-400">平均応答</p>
-            <p className="font-semibold text-slate-900">{counselor.responseTime}</p>
-          </div>
-        )}
-        <div>
-          <p className="text-xs uppercase tracking-wider text-slate-400">モデル</p>
-          <p className="font-semibold text-slate-900">{counselor.modelType?.toUpperCase()}</p>
+      <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">実績</span>
+          <span className="font-bold text-slate-700">{formatNumber(counselor.sessionCount)}+</span>
         </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between">
-        <div
-          className={cn(
-            "rounded-full px-3 py-1 text-xs font-bold",
-            counselor.ragEnabled
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-slate-100 text-slate-500",
-          )}
-        >
-          {counselor.ragEnabled ? "RAG対応" : "LLM単体"}
-        </div>
+        
         <button
           type="button"
           onClick={handleSelect}
           disabled={isPending || !onSelect}
-          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
-          {isPending ? "準備中..." : "チャットを開始"}
+          {isPending ? "..." : "相談する"}
         </button>
       </div>
     </div>
