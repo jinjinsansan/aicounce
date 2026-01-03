@@ -18,6 +18,7 @@ function mapRowToCounselor(row: CounselorRow): Counselor {
     specialty: row.specialty,
     description: row.description ?? "",
     iconUrl: row.icon_url ?? undefined,
+    systemPrompt: row.system_prompt ?? undefined,
     modelName: row.model_name,
     modelType: row.model_type,
     ragEnabled: Boolean(row.rag_enabled),
