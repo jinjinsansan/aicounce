@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { fetchCounselorById } from "@/lib/counselors";
 import { callLLM } from "@/lib/llm";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { searchRagContext } from "@/lib/rag";
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,7 +80,15 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
-    const ragContext = useRag ? "" : undefined; // Phase4 placeholder
+    let ragContext: string | undefined;
+    let ragSources: { id: string; chunk_text: string; similarity: number }[] = [];
+
+    if (useRag && counselor.ragEnabled) {
+      const ragResult = await searchRagContext(counselorId, message);
+      ragContext = ragResult.context || undefined;
+      ragSources = ragResult.sources;
+    }
+
     const { content, tokensUsed } = await callLLM(
       counselor.modelType ?? "openai",
       counselor.modelName ?? "gpt-4o-mini",
@@ -99,11 +108,22 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
+    if (supabase && activeConversationId && ragSources.length > 0) {
+      await supabase.from("rag_search_logs").insert([
+        {
+          message_id: activeConversationId,
+          query: message,
+          retrieved_chunks: ragSources,
+        },
+      ]);
+    }
+
     return NextResponse.json({
       conversationId: activeConversationId ?? conversationId ?? counselorId,
       counselorId,
       content,
       tokensUsed: tokensUsed ?? 0,
+      ragSources,
     });
   } catch (error) {
     console.error("Chat API error", error);

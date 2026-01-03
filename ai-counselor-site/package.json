@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts"
+    "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts",
+    "rag:insert": "ts-node scripts/insert-rag-data.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
