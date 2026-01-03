@@ -62,7 +62,7 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
       <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
         <div className="flex flex-col">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">実績</span>
-          <span className="font-bold text-slate-700">{formatNumber(counselor.sessionCount)}+</span>
+          <span className="font-bold text-slate-700">{formatNumber(counselor.sessionCount ?? 0)}+</span>
         </div>
         
         <button
