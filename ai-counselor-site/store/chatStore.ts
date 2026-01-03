@@ -12,8 +12,8 @@ type ChatState = {
   appendMessage: (message: Message) => void;
   sendMessage: (payload: {
     counselorId: string;
-    conversationId: string;
-  }) => Promise<void>;
+    conversationId?: string | null;
+  }) => Promise<string | null>;
 };
 
 const generateId = () => {
@@ -44,7 +44,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   appendMessage: (message) => set({ messages: [...get().messages, message] }),
   sendMessage: async ({ counselorId, conversationId }) => {
     const { input } = get();
-    if (!input.trim() || get().isSending) return;
+    if (!input.trim() || get().isSending) return conversationId ?? null;
 
     const userContent = input.trim();
     set({
@@ -52,7 +52,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       input: "",
     });
 
-    const userMessage = createMessage("user", userContent, conversationId);
+    const optimisticConversationId = conversationId ?? "pending";
+    const userMessage = createMessage("user", userContent, optimisticConversationId);
     get().appendMessage(userMessage);
 
     try {
@@ -68,22 +69,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       const data = await response.json();
 
+      const resolvedConversationId = data?.conversationId ?? conversationId ?? null;
+
+      if (resolvedConversationId && resolvedConversationId !== optimisticConversationId) {
+        set({
+          messages: get().messages.map((msg) => ({
+            ...msg,
+            conversationId: resolvedConversationId,
+          })),
+        });
+      }
+
       const assistantMessage = createMessage(
         "assistant",
         data?.content ?? "応答を取得できませんでした。",
-        conversationId,
+        resolvedConversationId ?? optimisticConversationId,
       );
 
       get().appendMessage(assistantMessage);
+      return resolvedConversationId;
     } catch (error) {
       console.error("Failed to send message", error);
       get().appendMessage(
         createMessage(
           "assistant",
           "エラーが発生しました。時間をおいて再度お試しください。",
-          conversationId,
+          conversationId ?? optimisticConversationId,
         ),
       );
+      return conversationId ?? null;
     } finally {
       set({ isSending: false });
     }

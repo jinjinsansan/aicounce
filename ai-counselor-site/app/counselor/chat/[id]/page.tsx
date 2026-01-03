@@ -36,7 +36,8 @@ export default function ChatPage({
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const { messages, setMessages } = useChatStore();
-  const conversationId = useMemo(() => params.id, [params.id]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const conversationKey = useMemo(() => conversationId ?? "", [conversationId]);
 
   useEffect(() => {
     let mounted = true;
@@ -49,7 +50,9 @@ export default function ChatPage({
   }, [params.id]);
 
   useEffect(() => {
-    if (messages.length > 0) return;
+    if (messages.length > 0 || !conversationId) {
+      return;
+    }
 
     let active = true;
 
@@ -84,19 +87,13 @@ export default function ChatPage({
       }
 
       if (!active) return;
-      const fallbackMessages = [
+      setMessages([
         buildMessage(
           "assistant",
           "こんにちは。ここではUIの確認ができます。Phase 3でLLM応答を接続予定です。",
           conversationId,
         ),
-        buildMessage(
-          "user",
-          "テスト会話を開始しました。",
-          conversationId,
-        ),
-      ];
-      setMessages(fallbackMessages);
+      ]);
     };
 
     loadHistory();
@@ -139,7 +136,8 @@ export default function ChatPage({
 
           <ChatInterface
             counselorId={params.id}
-            conversationId={conversationId}
+            conversationId={conversationKey}
+            onConversationResolved={(id) => setConversationId(id)}
           />
         </main>
       </div>

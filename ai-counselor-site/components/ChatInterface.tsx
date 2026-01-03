@@ -4,17 +4,30 @@ import { useChatStore } from "@/store/chatStore";
 
 interface ChatInterfaceProps {
   counselorId: string;
-  conversationId: string;
+  conversationId?: string | null;
+  onConversationResolved?: (conversationId: string) => void;
 }
 
 export default function ChatInterface({
   counselorId,
   conversationId,
+  onConversationResolved,
 }: ChatInterfaceProps) {
   const { input, setInput, isSending, sendMessage } = useChatStore();
 
   const handleSubmit = async () => {
-    await sendMessage({ counselorId, conversationId });
+    const newConversationId = await sendMessage({
+      counselorId,
+      conversationId,
+    });
+
+    if (
+      newConversationId &&
+      newConversationId !== conversationId &&
+      onConversationResolved
+    ) {
+      onConversationResolved(newConversationId);
+    }
   };
 
   return (
