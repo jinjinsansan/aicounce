@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@300;400;500;700;900&display=swap');
 
 :root {
   --background: #fffdfa;
@@ -18,20 +19,20 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-card: var(--card);
-  --font-sans: var(--font-zen-maru), "Zen Maru Gothic", sans-serif;
-  --font-serif: var(--font-shippori), "Shippori Mincho", serif;
+  --font-sans: "Zen Maru Gothic", sans-serif;
+  --font-serif: "Shippori Mincho", serif;
 }
 
 body {
   background: #fffdfa;
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: "Zen Maru Gothic", sans-serif;
   min-height: 100vh;
   line-height: 1.8;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif);
+  font-family: "Shippori Mincho", serif;
   letter-spacing: 0.05em;
 }
 

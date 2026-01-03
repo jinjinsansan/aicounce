@@ -1,23 +1,8 @@
 import "@/sentry.client.config";
 import type { Metadata } from "next";
-import { Zen_Maru_Gothic, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import AppHeader from "@/components/AppHeader";
-
-const zenMaruGothic = Zen_Maru_Gothic({
-  subsets: ["latin"],
-  variable: "--font-zen-maru",
-  weight: ["300", "400", "500", "700", "900"],
-  display: "swap",
-});
-
-const shipporiMincho = Shippori_Mincho({
-  subsets: ["latin"],
-  variable: "--font-shippori",
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "テープ式心理学 AIカウンセラー",
@@ -32,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${zenMaruGothic.variable} ${shipporiMincho.variable} antialiased`}>
+      <body className="antialiased">
         <SupabaseProvider>
           <AppHeader />
           {children}
