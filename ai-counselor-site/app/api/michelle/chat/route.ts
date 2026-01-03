@@ -156,7 +156,7 @@ export async function POST(request: Request) {
 }
 
 const resolveSession = async (
-  supabase: ReturnType<typeof createSupabaseRouteClient<Database>>,
+  supabase: ReturnType<typeof createSupabaseRouteClient>,
   userId: string,
   sessionId: string | undefined,
   message: string,
@@ -197,7 +197,7 @@ const resolveSession = async (
 };
 
 const ensureThreadId = async (
-  supabase: ReturnType<typeof createSupabaseRouteClient<Database>>,
+  supabase: ReturnType<typeof createSupabaseRouteClient>,
   sessionId: string,
   threadId: string | null,
 ) => {
