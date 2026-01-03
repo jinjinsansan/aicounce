@@ -10,12 +10,12 @@ const paramsSchema = z.object({
   sessionId: z.string().uuid(),
 });
 
-export async function DELETE(_: Request, context: { params: { sessionId: string } }) {
+export async function DELETE(_: Request, context: { params: Promise<{ sessionId: string }> }) {
   if (!MICHELLE_AI_ENABLED) {
     return NextResponse.json({ error: "Michelle AI is currently disabled" }, { status: 503 });
   }
 
-  const { sessionId } = paramsSchema.parse(context.params);
+  const { sessionId } = paramsSchema.parse(await context.params);
   const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient<Database>(cookieStore);
 
