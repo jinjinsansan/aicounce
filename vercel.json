@@ -13,6 +13,8 @@
     "OPENAI_API_KEY": "@openai_api_key",
     "ANTHROPIC_API_KEY": "@anthropic_api_key",
     "GOOGLE_API_KEY": "@google_api_key",
-    "DEEPSEEK_API_KEY": "@deepseek_api_key"
+    "DEEPSEEK_API_KEY": "@deepseek_api_key",
+    "NEXT_PUBLIC_SENTRY_DSN": "@next_public_sentry_dsn",
+    "SENTRY_DSN": "@sentry_dsn"
   }
 }

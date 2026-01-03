@@ -11,10 +11,12 @@
     "analyze": "cross-env ANALYZE=true next build --webpack",
     "verify:env": "ts-node scripts/check-env.ts",
     "release:health": "ts-node scripts/post-deploy-check.ts",
+    "release:smoke": "ts-node scripts/smoke-test.ts",
     "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts",
     "rag:insert": "ts-node scripts/insert-rag-data.ts"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.32.1",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/auth-helpers-react": "^0.15.0",
     "@supabase/supabase-js": "^2.89.0",

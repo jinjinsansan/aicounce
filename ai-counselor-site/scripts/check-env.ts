@@ -4,6 +4,7 @@ const requiredEnvVars = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "SUPABASE_PROJECT_ID",
   "OPENAI_API_KEY",
+  "NEXT_PUBLIC_SENTRY_DSN",
 ];
 
 const optionalEnvVars = [
@@ -11,6 +12,7 @@ const optionalEnvVars = [
   "GOOGLE_API_KEY",
   "DEEPSEEK_API_KEY",
   "RAG_SOURCE_FOLDER",
+  "SENTRY_DSN",
 ];
 
 function checkEnv() {
