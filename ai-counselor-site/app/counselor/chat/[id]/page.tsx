@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { Counselor, Message } from "@/types";
-import { fetchCounselorById } from "@/lib/counselors";
 import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
+import { loadCounselorById } from "@/lib/client-counselors";
 
 
 export default function ChatPage({
@@ -32,7 +32,7 @@ export default function ChatPage({
     }
 
     let mounted = true;
-    fetchCounselorById(counselorId)
+    loadCounselorById(counselorId)
       .then((data) => mounted && setCounselor(data))
       .finally(() => mounted && setLoading(false));
     return () => {

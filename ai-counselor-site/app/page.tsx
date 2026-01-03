@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import CounselorCard from "@/components/CounselorCard";
 import { LoadingState } from "@/components/LoadingState";
 import type { Counselor } from "@/types";
-import { fetchCounselors } from "@/lib/counselors";
+import { loadCounselors } from "@/lib/client-counselors";
 
 const HeroSection = dynamic(() => import("@/components/HeroSection"), {
   loading: () => (
@@ -31,7 +31,7 @@ export default function HomePage() {
   useEffect(() => {
     let mounted = true;
 
-    fetchCounselors()
+    loadCounselors()
       .then((data) => {
         if (!mounted) return;
         setCounselors(data);

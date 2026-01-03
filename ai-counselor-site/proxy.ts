@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createSupabaseMiddlewareClient } from "@/lib/supabase-clients";
 
-const PROTECTED_PATHS = ["/counselor", "/api/chat", "/api/conversations"];
+const PROTECTED_PATHS = [
+  "/counselor",
+  "/api/chat",
+  "/api/conversations",
+  "/admin",
+  "/api/admin",
+];
 
 export default async function proxy(request: NextRequest) {
   const response = NextResponse.next();
@@ -31,5 +37,11 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/counselor/:path*", "/api/chat", "/api/conversations/:path*"],
+  matcher: [
+    "/counselor/:path*",
+    "/api/chat",
+    "/api/conversations/:path*",
+    "/admin/:path*",
+    "/api/admin/:path*",
+  ],
 };

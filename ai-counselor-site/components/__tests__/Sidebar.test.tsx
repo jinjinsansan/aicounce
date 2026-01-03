@@ -18,8 +18,8 @@ describe("Sidebar", () => {
   });
 
   it("renders fetched conversations and highlights active", async () => {
-    process.env.NEXT_PUBLIC_DEMO_USER_ID = "demo-user";
     (global.fetch as jest.Mock).mockResolvedValue({
+      status: 200,
       json: async () => ({
         conversations: [
           {
@@ -38,9 +38,7 @@ describe("Sidebar", () => {
       expect(screen.getByText("ミシェルとの相談")).toBeInTheDocument(),
     );
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/conversations?userId=demo-user",
-    );
+    expect(global.fetch).toHaveBeenCalledWith("/api/conversations");
     expect(
       screen.getByRole("link", { name: /ミシェルとの相談/i }),
     ).toHaveClass("bg-blue-50");
@@ -48,6 +46,7 @@ describe("Sidebar", () => {
 
   it("keeps fallback state when API returns empty", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
+      status: 200,
       json: async () => ({ conversations: [] }),
     });
 
@@ -59,12 +58,12 @@ describe("Sidebar", () => {
   });
 
   it("creates a new conversation via button", async () => {
-    process.env.NEXT_PUBLIC_DEMO_USER_ID = "demo-user";
     const mockFetch = global.fetch as jest.Mock;
     const onCreated = jest.fn();
 
     mockFetch
       .mockResolvedValueOnce({
+        status: 200,
         json: async () => ({ conversations: [] }),
       })
       .mockResolvedValueOnce({
@@ -72,6 +71,7 @@ describe("Sidebar", () => {
         json: async () => ({ conversation: { id: "new-conv" } }),
       })
       .mockResolvedValueOnce({
+        status: 200,
         json: async () => ({
           conversations: [
             {

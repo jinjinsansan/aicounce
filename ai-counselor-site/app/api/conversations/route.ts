@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 
 export async function GET(request: NextRequest) {
-  const userId = request.nextUrl.searchParams.get("userId");
   const counselorId = request.nextUrl.searchParams.get("counselorId");
 
-  if (!userId) {
-    return NextResponse.json({ error: "userId is required" }, { status: 400 });
-  }
+  const cookieStore = await cookies();
+  const supabase = createSupabaseRouteClient(cookieStore);
 
-  if (!hasServiceRole()) {
-    return NextResponse.json({ conversations: [] });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const supabase = getServiceSupabase();
     let query = supabase
       .from("conversations")
       .select("id, counselor_id, title, updated_at")
-      .eq("user_id", userId)
+      .eq("user_id", session.user.id)
       .order("updated_at", { ascending: false });
 
     if (counselorId) {
@@ -47,29 +50,54 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasServiceRole()) {
-    return NextResponse.json(
-      { error: "Service role key not configured" },
-      { status: 500 },
-    );
+  const cookieStore = await cookies();
+  const supabase = createSupabaseRouteClient(cookieStore);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const { userId, counselorId, title } = await request.json();
+  const adminSupabase = hasServiceRole() ? getServiceSupabase() : null;
 
-    if (!userId || !counselorId) {
+  try {
+    const { counselorId, title } = await request.json();
+
+    if (!counselorId) {
       return NextResponse.json(
-        { error: "userId and counselorId are required" },
+        { error: "counselorId is required" },
         { status: 400 },
       );
     }
 
-    const supabase = getServiceSupabase();
+    if (adminSupabase) {
+      const userEmail = session.user.email ?? `${session.user.id}@example.com`;
+      try {
+        await adminSupabase
+          .from("users")
+          .upsert(
+            {
+              id: session.user.id,
+              email: userEmail,
+              username:
+                session.user.user_metadata?.full_name ??
+                session.user.email ??
+                "User",
+            },
+            { onConflict: "id" },
+          );
+      } catch (error) {
+        console.error("Failed to upsert user profile before conversation", error);
+      }
+    }
+
     const { data, error } = await supabase
       .from("conversations")
       .insert([
         {
-          user_id: userId,
+          user_id: session.user.id,
           counselor_id: counselorId,
           title: title ?? null,
         },

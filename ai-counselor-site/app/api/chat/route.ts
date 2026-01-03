@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { fetchCounselorById } from "@/lib/counselors";
 import { callLLM } from "@/lib/llm";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 import { searchRagContext } from "@/lib/rag";
+import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +13,6 @@ export async function POST(request: NextRequest) {
       message,
       counselorId,
       conversationId,
-      userId,
       useRag,
     } = await request.json();
 
@@ -27,37 +28,56 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Counselor not found" }, { status: 404 });
     }
 
-    const finalUserId =
-      userId || process.env.DEMO_USER_ID || "00000000-0000-0000-0000-000000000000";
+    const cookieStore = await cookies();
+    const supabase = createSupabaseRouteClient(cookieStore);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const supabaseReady = hasServiceRole();
-    const supabase = supabaseReady ? getServiceSupabase() : null;
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const adminSupabase = hasServiceRole() ? getServiceSupabase() : null;
 
     let activeConversationId = conversationId ?? null;
 
-    if (supabase) {
+    if (adminSupabase) {
+      const userEmail = session.user.email ?? `${session.user.id}@example.com`;
       try {
-        await supabase
+        await adminSupabase
           .from("users")
           .upsert(
             {
-              id: finalUserId,
-              email: "demo@example.com",
-              username: "Demo User",
+              id: session.user.id,
+              email: userEmail,
+              username:
+                session.user.user_metadata?.full_name ?? session.user.email ?? "User",
             },
             { onConflict: "id" },
           );
       } catch (error) {
-        console.error("Failed to upsert demo user", error);
+        console.error("Failed to upsert user profile", error);
       }
     }
 
-    if (supabase && !activeConversationId) {
+    if (activeConversationId) {
+      const { error } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("id", activeConversationId)
+        .single();
+      if (error) {
+        return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+      }
+    }
+
+    if (!activeConversationId) {
       const { data, error } = await supabase
         .from("conversations")
         .insert([
           {
-            user_id: finalUserId,
+            user_id: session.user.id,
             counselor_id: counselorId,
             title: `${counselor.name}との相談`,
           },
@@ -71,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     let assistantMessageId: string | null = null;
-    if (supabase && activeConversationId) {
+    if (activeConversationId) {
       await supabase.from("messages").insert([
         {
           conversation_id: activeConversationId,
@@ -117,7 +137,7 @@ export async function POST(request: NextRequest) {
       ragContext,
     );
 
-    if (supabase && activeConversationId) {
+    if (activeConversationId) {
       const { data: assistantRows, error: assistantError } = await supabase
         .from("messages")
         .insert([
@@ -136,8 +156,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (supabase && assistantMessageId && ragSources.length > 0) {
-      await supabase.from("rag_search_logs").insert([
+    if (adminSupabase && assistantMessageId && ragSources.length > 0) {
+      await adminSupabase.from("rag_search_logs").insert([
         {
           message_id: assistantMessageId,
           query: message,
@@ -147,7 +167,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      conversationId: activeConversationId ?? conversationId ?? counselorId,
+      conversationId: activeConversationId ?? counselorId,
       counselorId,
       content,
       tokensUsed: tokensUsed ?? 0,

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { Counselor } from "@/types";
-import { fetchCounselorById } from "@/lib/counselors";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
+import { loadCounselorById } from "@/lib/client-counselors";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -32,7 +32,7 @@ export default function CounselorDetailPage({
     }
 
     let mounted = true;
-    fetchCounselorById(counselorId)
+    loadCounselorById(counselorId)
       .then((data) => {
         if (!mounted) return;
         setCounselor(data);

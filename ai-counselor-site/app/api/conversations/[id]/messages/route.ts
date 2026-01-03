@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { cookies } from "next/headers";
+import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
+  const cookieStore = await cookies();
+  const supabase = createSupabaseRouteClient(cookieStore);
 
-  if (!hasServiceRole()) {
-    return NextResponse.json({ messages: [] });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const supabase = getServiceSupabase();
     const { data, error } = await supabase
       .from("messages")
       .select("id, role, content, conversation_id, created_at, tokens_used")

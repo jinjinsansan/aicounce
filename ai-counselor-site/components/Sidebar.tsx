@@ -27,14 +27,13 @@ function SidebarComponent({
     FALLBACK_CONVERSATIONS,
   );
 
-  const demoUserId =
-    process.env.NEXT_PUBLIC_DEMO_USER_ID ??
-    process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
-    "00000000-0000-0000-0000-000000000000";
-
   const loadConversations = useCallback(async () => {
     try {
-      const response = await fetch(`/api/conversations?userId=${demoUserId}`);
+      const response = await fetch(`/api/conversations`);
+      if (response.status === 401) {
+        setConversations([]);
+        return;
+      }
       const data = await response.json();
       if (Array.isArray(data.conversations) && data.conversations.length > 0) {
         setConversations((prev) => {
@@ -50,7 +49,7 @@ function SidebarComponent({
     } catch (error) {
       console.error("Failed to load conversations", error);
     }
-  }, [demoUserId]);
+  }, []);
 
   useEffect(() => {
     loadConversations();
@@ -67,7 +66,6 @@ function SidebarComponent({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: demoUserId,
           counselorId: selectedCounselorId,
           title: null,
         }),

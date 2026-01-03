@@ -67,6 +67,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }),
       });
 
+      if (response.status === 401) {
+        get().appendMessage(
+          createMessage(
+            "assistant",
+            "ログインが必要です。再度サインインしてください。",
+            optimisticConversationId,
+          ),
+        );
+        return conversationId ?? null;
+      }
+
       const data = await response.json();
 
       const resolvedConversationId = data?.conversationId ?? conversationId ?? null;

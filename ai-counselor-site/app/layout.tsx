@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import SupabaseProvider from "@/components/providers/SupabaseProvider";
+import AppHeader from "@/components/AppHeader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,7 +31,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${inter.variable} ${notoSansJP.variable} antialiased`}>
-        {children}
+        <SupabaseProvider>
+          <AppHeader />
+          {children}
+        </SupabaseProvider>
       </body>
     </html>
   );

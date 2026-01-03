@@ -6,11 +6,10 @@ import { useState } from "react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { useChatStore } from "@/store/chatStore";
 
-const navLinks = [
+const baseNavLinks = [
   { href: "/", label: "ホーム" },
   { href: "/counselor/michele", label: "カウンセラー" },
 ];
-
 export default function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
@@ -29,6 +28,10 @@ export default function AppHeader() {
     }
   };
 
+  const navLinks = session
+    ? [...baseNavLinks, { href: "/admin", label: "管理" }]
+    : baseNavLinks;
+
   return (
     <header className="border-b border-slate-100 bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -36,17 +39,19 @@ export default function AppHeader() {
           テープ式心理学 AIカウンセラー
         </Link>
         <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                pathname === link.href ? "text-blue-600" : "hover:text-slate-900"
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive =
+              pathname === link.href || pathname?.startsWith(`${link.href}/`);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={isActive ? "text-blue-600" : "hover:text-slate-900"}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           {loading ? null : session ? (
             <button
               type="button"
