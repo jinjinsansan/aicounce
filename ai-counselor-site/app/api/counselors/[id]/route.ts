@@ -4,9 +4,10 @@ import { fetchCounselorById } from "@/lib/counselors";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
-  const counselor = await fetchCounselorById(params.id);
+  const { id } = await context.params;
+  const counselor = await fetchCounselorById(id);
 
   if (!counselor) {
     return NextResponse.json({ error: "Counselor not found" }, { status: 404 });

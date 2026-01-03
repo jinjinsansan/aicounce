@@ -83,17 +83,36 @@ export async function POST(request: NextRequest) {
 
     let ragContext: string | undefined;
     let ragSources: { id: string; chunk_text: string; similarity: number }[] = [];
+    let ragDurationMs: number | null = null;
 
     if (useRag && counselor.ragEnabled) {
+      const ragStart =
+        typeof performance !== "undefined" && typeof performance.now === "function"
+          ? performance.now()
+          : Date.now();
       const ragResult = await searchRagContext(counselorId, message);
       ragContext = ragResult.context || undefined;
       ragSources = ragResult.sources;
+      const ragEnd =
+        typeof performance !== "undefined" && typeof performance.now === "function"
+          ? performance.now()
+          : Date.now();
+      ragDurationMs = Math.round(ragEnd - ragStart);
+      if (ragSources.length > 0) {
+        console.info(
+          `[RAG] counselor=${counselorId} chunks=${ragSources.length} duration=${ragDurationMs}ms`,
+        );
+      }
     }
+
+    const systemPrompt =
+      counselor.systemPrompt ??
+      "You are a supportive counselor who responds in Japanese with empathy and actionable advice.";
 
     const { content, tokensUsed } = await callLLM(
       counselor.modelType ?? "openai",
       counselor.modelName ?? "gpt-4o-mini",
-      counselor.systemPrompt,
+      systemPrompt,
       message,
       ragContext,
     );
@@ -133,6 +152,7 @@ export async function POST(request: NextRequest) {
       content,
       tokensUsed: tokensUsed ?? 0,
       ragSources,
+      ragDurationMs: ragDurationMs ?? 0,
     });
   } catch (error) {
     console.error("Chat API error", error);

@@ -2,13 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import HeroSection from "@/components/HeroSection";
-import FeaturesSection from "@/components/FeaturesSection";
-import FAQSection from "@/components/FAQSection";
+import dynamic from "next/dynamic";
 import CounselorCard from "@/components/CounselorCard";
 import { LoadingState } from "@/components/LoadingState";
 import type { Counselor } from "@/types";
 import { fetchCounselors } from "@/lib/counselors";
+
+const HeroSection = dynamic(() => import("@/components/HeroSection"), {
+  loading: () => (
+    <div className="h-[320px] rounded-[32px] bg-white/40 shadow-inner animate-pulse" />
+  ),
+});
+
+const FeaturesSection = dynamic(
+  () => import("@/components/FeaturesSection"),
+  { ssr: false },
+);
+
+const FAQSection = dynamic(() => import("@/components/FAQSection"), {
+  ssr: false,
+});
 
 export default function HomePage() {
   const [counselors, setCounselors] = useState<Counselor[]>([]);

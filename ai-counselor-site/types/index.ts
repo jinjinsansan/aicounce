@@ -10,6 +10,7 @@ export interface Counselor {
   iconUrl?: string;
   modelType?: string;
   modelName?: string;
+  systemPrompt?: string;
   ragEnabled?: boolean;
   ragSourceId?: string | null;
   responseTime?: string;

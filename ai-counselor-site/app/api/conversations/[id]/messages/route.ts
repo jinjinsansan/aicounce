@@ -4,8 +4,10 @@ import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await context.params;
+
   if (!hasServiceRole()) {
     return NextResponse.json({ messages: [] });
   }
@@ -15,7 +17,7 @@ export async function GET(
     const { data, error } = await supabase
       .from("messages")
       .select("id, role, content, conversation_id, created_at, tokens_used")
-      .eq("conversation_id", params.id)
+      .eq("conversation_id", id)
       .order("created_at", { ascending: true });
 
     if (error) {

@@ -1,3 +1,6 @@
+"use client";
+
+import { memo, useMemo } from "react";
 import type { Message } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -5,8 +8,17 @@ interface MessageBubbleProps {
   message: Message;
 }
 
-export default function MessageBubble({ message }: MessageBubbleProps) {
+function MessageBubbleComponent({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const timestamp = useMemo(
+    () =>
+      new Date(message.createdAt).toLocaleTimeString("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    [message.createdAt],
+  );
+
   return (
     <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
       <div
@@ -24,12 +36,11 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
             isUser ? "text-white/80" : "text-slate-500",
           )}
         >
-          {new Date(message.createdAt).toLocaleTimeString("ja-JP", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {timestamp}
         </span>
       </div>
     </div>
   );
 }
+
+export default memo(MessageBubbleComponent);

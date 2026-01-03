@@ -132,14 +132,14 @@ export async function insertRagDocument(payload: InsertChunkPayload) {
 
   const parentChunks = chunkText(payload.content, PARENT_SIZE, OVERLAP);
 
-  const parentPromises = parentChunks.map(async (chunkText, index) => {
-    const embedding = await createEmbedding(chunkText);
+  const parentPromises = parentChunks.map(async (chunkContent, index) => {
+    const embedding = await createEmbedding(chunkContent);
     const { data: parent, error: parentError } = await supabase
       .from("rag_chunks")
       .insert([
         {
           document_id: doc.id,
-          chunk_text: chunkText,
+          chunk_text: chunkContent,
           chunk_index: index,
           embedding,
         },
@@ -151,7 +151,7 @@ export async function insertRagDocument(payload: InsertChunkPayload) {
       throw parentError ?? new Error("Failed to insert parent chunk");
     }
 
-    const childChunks = chunkText(chunkText, CHILD_SIZE, OVERLAP);
+    const childChunks = chunkText(chunkContent, CHILD_SIZE, OVERLAP);
     for (let childIndex = 0; childIndex < childChunks.length; childIndex++) {
       const childEmbedding = await createEmbedding(childChunks[childIndex]);
       await supabase.from("rag_chunks").insert([

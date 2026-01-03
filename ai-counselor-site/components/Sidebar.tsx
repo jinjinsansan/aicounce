@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,7 +13,7 @@ type ConversationLink = {
 
 const FALLBACK_CONVERSATIONS: ConversationLink[] = [];
 
-export default function Sidebar() {
+function SidebarComponent() {
   const pathname = usePathname();
   const [conversations, setConversations] = useState<ConversationLink[]>(
     FALLBACK_CONVERSATIONS,
@@ -31,7 +31,15 @@ export default function Sidebar() {
         );
         const data = await response.json();
         if (Array.isArray(data.conversations) && data.conversations.length > 0) {
-          setConversations(data.conversations);
+          setConversations((prev) => {
+            if (
+              prev.length === data.conversations.length &&
+              prev.every((conv, index) => conv.id === data.conversations[index].id)
+            ) {
+              return prev;
+            }
+            return data.conversations;
+          });
         }
       } catch (error) {
         console.error("Failed to load conversations", error);
@@ -82,3 +90,5 @@ export default function Sidebar() {
     </aside>
   );
 }
+
+export default memo(SidebarComponent);
