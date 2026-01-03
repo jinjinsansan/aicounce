@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
-import type { Database } from "@/types/supabase";
 
 export async function GET() {
   if (!MICHELLE_AI_ENABLED) {
@@ -11,7 +10,7 @@ export async function GET() {
   }
 
   const cookieStore = await cookies();
-  const supabase = createSupabaseRouteClient<Database>(cookieStore);
+  const supabase = createSupabaseRouteClient(cookieStore);
 
   const {
     data: { session },

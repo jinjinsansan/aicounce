@@ -99,7 +99,7 @@ export function MichelleChatClient() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef(true);
-  const scrollFrameRef = useRef<number>();
+  const scrollFrameRef = useRef<number | undefined>(undefined);
   const [composerHeight, setComposerHeight] = useState(0);
   const hasRestoredSessionRef = useRef(false);
   const lastRequestTimeRef = useRef<number>(0);
