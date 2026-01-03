@@ -17,17 +17,36 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
     startTransition(() => onSelect(counselor.id));
   };
 
+  const getAvatarColor = (id: string) => {
+    switch (id) {
+      case "michele": return "from-orange-400 to-pink-500";
+      case "sato": return "from-blue-600 to-sky-400";
+      case "alex": return "from-slate-500 to-slate-400";
+      case "nana": return "from-green-500 to-emerald-400";
+      case "yuki": return "from-purple-300 to-cyan-300";
+      case "iris": return "from-indigo-400 via-purple-400 to-pink-400";
+      case "adam": return "from-yellow-500 to-amber-600";
+      case "gemini": return "from-blue-500 to-purple-500";
+      case "claude": return "from-slate-900 to-purple-900";
+      case "deep": return "from-blue-900 to-slate-900";
+      default: return "from-blue-500 to-indigo-500";
+    }
+  };
+
   return (
-    <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
+    <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-xl font-bold text-white">
+        <div className={cn(
+          "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-xl font-bold text-white shadow-sm",
+          getAvatarColor(counselor.id)
+        )}>
           {counselor.name.slice(0, 1)}
         </div>
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
             {counselor.specialty}
           </p>
-          <h3 className="text-xl font-bold text-slate-900">{counselor.name}</h3>
+          <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{counselor.name}</h3>
         </div>
       </div>
 

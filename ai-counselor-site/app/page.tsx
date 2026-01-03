@@ -10,14 +10,15 @@ import { loadCounselors } from "@/lib/client-counselors";
 
 const HeroSection = dynamic(() => import("@/components/HeroSection"), {
   loading: () => (
-    <div className="h-[320px] rounded-[32px] bg-white/40 shadow-inner animate-pulse" />
+    <div className="h-[400px] rounded-[32px] bg-white/40 shadow-inner animate-pulse" />
   ),
 });
 
-const FeaturesSection = dynamic(
-  () => import("@/components/FeaturesSection"),
-  { ssr: false },
+const ProblemSolutionSection = dynamic(
+  () => import("@/components/ProblemSolutionSection")
 );
+
+const PricingSection = dynamic(() => import("@/components/PricingSection"));
 
 const FAQSection = dynamic(() => import("@/components/FAQSection"), {
   ssr: false,
@@ -47,32 +48,34 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-transparent px-4 py-10 sm:px-6 lg:px-12">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+    <div className="min-h-screen bg-[#fdfdfd]">
+      <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 py-8 sm:px-6 lg:px-8">
+        
+        {/* Hero Area */}
         <HeroSection />
 
-        <section id="counselors" className="space-y-8 rounded-[32px] bg-white/90 p-10 shadow-xl">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">
-                Counselors
-              </p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">
-                目的に合わせてAIカウンセラーを選択
-              </h2>
-              <p className="text-sm text-slate-600">
-                RAG対応済みの専門カウンセラーから汎用アシスタントまで網羅しています。
-              </p>
-            </div>
-            <div className="text-sm text-slate-500">
-              {counselors.length} counselors available
-            </div>
+        {/* Introduction / Problem & Solution */}
+        <div id="about">
+          <ProblemSolutionSection />
+        </div>
+
+        {/* Counselors Grid */}
+        <section id="counselors" className="scroll-mt-24">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
+              専門分野から選ぶ
+            </h2>
+            <p className="mt-4 text-slate-600">
+              あなたの悩みや目的に最適なパートナーが見つかります
+            </p>
           </div>
 
           {loading ? (
-            <LoadingState />
+            <div className="rounded-[32px] bg-slate-50 p-10">
+              <LoadingState />
+            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {counselors.map((counselor) => (
                 <CounselorCard
                   key={counselor.id}
@@ -84,7 +87,10 @@ export default function HomePage() {
           )}
         </section>
 
-        <FeaturesSection />
+        {/* Pricing & CTA */}
+        <PricingSection />
+
+        {/* FAQ (Keeping as it's useful) */}
         <FAQSection />
       </div>
     </div>

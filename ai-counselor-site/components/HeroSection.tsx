@@ -1,52 +1,55 @@
 import Link from "next/link";
 
-const heroHighlights = [
-  { label: "専門カウンセラー", value: "8+" },
-  { label: "平均応答", value: "1.8分" },
-  { label: "相談満足度", value: "96%" },
-];
-
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-2xl">
-      <div className="absolute inset-0 opacity-40" aria-hidden />
-      <div className="relative z-10 space-y-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200">
-          Tape Psychology Platform
-        </p>
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
-            テープ式心理学と最新LLMを掛け合わせた
-            <span className="text-cyan-200"> AIカウンセリング体験</span>
+    <section className="relative overflow-hidden rounded-[32px] bg-[#fdfdfd] text-center shadow-sm ring-1 ring-slate-100 md:text-left">
+      <div className="container mx-auto flex flex-col items-center px-6 py-16 md:flex-row md:justify-between md:px-12 md:py-24">
+        
+        {/* Text Content */}
+        <div className="max-w-2xl space-y-6 md:pr-8">
+          <div className="inline-block rounded-full bg-blue-50 px-4 py-1.5 text-sm font-bold tracking-wide text-blue-600">
+            AI Counselor Office
+          </div>
+          <h1 className="text-4xl font-bold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
+            人間が一切存在しない、
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              AIだけのカウンセリング事務所
+            </span>
           </h1>
-          <p className="max-w-2xl text-base text-cyan-50/90 sm:text-lg">
-            8種の専門AIカウンセラーが、あなたの感情テープ・キャリア課題・学校や職場の
-            ストレスまで伴走。RAGで蓄積した専門知をリアルタイムで呼び出します。
+          <p className="text-lg leading-relaxed text-slate-600">
+            AI駆動開発のプロフェッショナルと心理学の専門家がコラボレーション。
+            <br className="hidden sm:block" />
+            24時間365日、あなたの心に寄り添う専門家たちがここにいます。
           </p>
+          
+          <div className="flex flex-col gap-4 pt-4 sm:flex-row">
+            <Link
+              href="#counselors"
+              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-8 py-4 text-base font-bold text-white transition hover:bg-slate-800 hover:shadow-lg"
+            >
+              カウンセラーを選ぶ
+            </Link>
+            <Link
+              href="#about"
+              className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-base font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+            >
+              事務所について
+            </Link>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-4">
-          <Link
-            href="#counselors"
-            className="inline-flex w-full items-center justify-center rounded-full bg-white/95 px-6 py-3 text-base font-semibold text-slate-900 transition hover:bg-white sm:w-auto"
-          >
-            カウンセラーを選ぶ
-          </Link>
-          <Link
-            href="#features"
-            className="inline-flex w-full items-center justify-center rounded-full border border-white/40 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10 sm:w-auto"
-          >
-            仕組みを見る
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-6 pt-4">
-          {heroHighlights.map((item) => (
-            <div key={item.label} className="min-w-[120px]">
-              <p className="text-3xl font-bold">{item.value}</p>
-              <p className="text-sm text-white/80">{item.label}</p>
-            </div>
-          ))}
+        {/* Visual Decoration (Abstract/Calming) */}
+        <div className="mt-12 md:mt-0 relative">
+          <div className="absolute -inset-4 bg-gradient-to-tr from-blue-100 to-purple-100 opacity-50 blur-3xl rounded-full" />
+          <div className="relative h-64 w-64 md:h-80 md:w-80 rounded-full bg-white p-6 shadow-xl ring-1 ring-slate-100 flex items-center justify-center">
+             {/* Simple reliable icon or abstract shape */}
+             <div className="text-center space-y-2">
+                <span className="text-6xl">🌿</span>
+                <p className="font-bold text-slate-800">Relax & Talk</p>
+                <p className="text-xs text-slate-400">Privacy First</p>
+             </div>
+          </div>
         </div>
       </div>
     </section>
