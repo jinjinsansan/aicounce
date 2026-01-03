@@ -21,6 +21,11 @@
   --color-card: var(--card);
   --font-sans: "Zen Maru Gothic", sans-serif;
   --font-serif: "Shippori Mincho", serif;
+  --color-peach-50: #fff5f0;
+  --color-peach-100: #ffe4d5;
+  --color-peach-200: #ffd4bb;
+  --color-peach-400: #ffb088;
+  --color-peach-500: #ff9966;
 }
 
 body {
@@ -39,4 +44,8 @@ h1, h2, h3, h4, h5, h6 {
 ::selection {
   background-color: color-mix(in srgb, var(--primary) 70%, white);
   color: #ffffff;
+}
+
+.font-shippori {
+  font-family: "Shippori Mincho", serif;
 }

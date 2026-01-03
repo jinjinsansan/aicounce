@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Counselor } from "@/types";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
+import MichelleDetailPage from "@/components/MichelleDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -42,6 +43,11 @@ export default function CounselorDetailPage({
       mounted = false;
     };
   }, [counselorId]);
+
+  // ミシェル専用ページを表示
+  if (counselorId === "michele") {
+    return <MichelleDetailPage />;
+  }
 
   if (loading) {
     return (
