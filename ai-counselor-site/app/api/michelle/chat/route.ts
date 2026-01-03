@@ -8,7 +8,6 @@ import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
-import type { Database } from "@/types/supabase";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -34,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const supabase = createSupabaseRouteClient<Database>(cookieStore);
+  const supabase = createSupabaseRouteClient(cookieStore);
 
   const {
     data: { session },
