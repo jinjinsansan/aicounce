@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database } from "@/types/supabase";
 
 let browserClient: ReturnType<typeof createClient<Database>> | null = null;
 

@@ -1,4 +1,4 @@
-import type { Tables } from "./database";
+import type { Tables } from "./supabase";
 
 export type CounselorRow = Tables<"counselors">;
 

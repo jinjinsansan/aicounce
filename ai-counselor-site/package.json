@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
