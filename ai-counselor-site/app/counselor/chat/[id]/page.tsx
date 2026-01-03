@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Counselor, Message } from "@/types";
 import { fetchCounselorById } from "@/lib/counselors";
 import Sidebar from "@/components/Sidebar";
@@ -18,7 +18,6 @@ export default function ChatPage({
   const [loading, setLoading] = useState(true);
   const { messages, setMessages } = useChatStore();
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const conversationKey = useMemo(() => conversationId ?? "", [conversationId]);
 
   useEffect(() => {
     let mounted = true;
@@ -124,7 +123,7 @@ export default function ChatPage({
 
           <ChatInterface
             counselorId={params.id}
-            conversationId={conversationKey}
+            conversationId={conversationId ?? undefined}
             onConversationResolved={(id) => setConversationId(id)}
           />
         </main>
