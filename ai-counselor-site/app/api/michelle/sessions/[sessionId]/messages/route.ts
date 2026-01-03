@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
-import type { Database } from "@/types/supabase";
 
 const paramsSchema = z.object({
   sessionId: z.string().uuid(),
@@ -17,7 +16,7 @@ export async function GET(_: Request, context: { params: Promise<{ sessionId: st
 
   const { sessionId } = paramsSchema.parse(await context.params);
   const cookieStore = await cookies();
-  const supabase = createSupabaseRouteClient<Database>(cookieStore);
+  const supabase = createSupabaseRouteClient(cookieStore);
 
   const {
     data: { session },
