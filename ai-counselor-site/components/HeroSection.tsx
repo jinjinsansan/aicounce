@@ -17,7 +17,7 @@ export default function HeroSection() {
             24時間365日 即時対応
           </div>
 
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-6xl font-serif">
             もう、誰にも
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">
@@ -25,7 +25,7 @@ export default function HeroSection() {
             </span>
           </h1>
 
-          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 lg:mx-0">
+          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 lg:mx-0 font-sans font-medium">
             人間が一切介在しない、AIだけのカウンセリング事務所。<br/>
             臨床心理学からスピリチュアルまで、専門知識を学習したAIが<br className="hidden sm:inline"/>
             あなたの心に寄り添い、否定することなく話を聞き続けます。

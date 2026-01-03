@@ -1,21 +1,22 @@
 import "@/sentry.client.config";
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_JP } from "next/font/google";
+import { Zen_Maru_Gothic, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import AppHeader from "@/components/AppHeader";
 
-const inter = Inter({
+const zenMaruGothic = Zen_Maru_Gothic({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-zen-maru",
+  weight: ["300", "400", "500", "700", "900"],
   display: "swap",
 });
 
-const notoSansJP = Noto_Sans_JP({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-noto-sans-jp",
+const shipporiMincho = Shippori_Mincho({
+  subsets: ["latin"],
+  variable: "--font-shippori",
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
-  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${inter.variable} ${notoSansJP.variable} antialiased`}>
+      <body className={`${zenMaruGothic.variable} ${shipporiMincho.variable} antialiased`}>
         <SupabaseProvider>
           <AppHeader />
           {children}

@@ -6,10 +6,10 @@ export default function ProblemSolutionSection() {
           <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold tracking-wider mb-4">
             WHY AI COUNSELOR?
           </span>
-          <h2 className="text-3xl font-bold text-slate-800 md:text-4xl lg:text-5xl leading-tight">
+          <h2 className="text-3xl font-bold text-slate-800 md:text-4xl lg:text-5xl leading-tight font-serif">
             なぜ今、<br className="md:hidden"/>「AI」に相談するのか
           </h2>
-          <p className="mt-6 text-lg text-slate-500 max-w-2xl mx-auto">
+          <p className="mt-6 text-lg text-slate-500 max-w-2xl mx-auto font-sans font-medium">
             気を使わず、待たされず、専門的なサポートを。
           </p>
         </div>

@@ -18,9 +18,8 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-card: var(--card);
-  --font-sans: var(--font-noto-sans-jp), var(--font-inter), "Noto Sans JP",
-    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  --font-sans: var(--font-zen-maru), "Zen Maru Gothic", sans-serif;
+  --font-serif: var(--font-shippori), "Shippori Mincho", serif;
 }
 
 body {
@@ -29,6 +28,11 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
   line-height: 1.8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  letter-spacing: 0.05em;
 }
 
 ::selection {
