@@ -3,30 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Counselor, Message } from "@/types";
 import { fetchCounselorById } from "@/lib/counselors";
-import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
 import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import { useChatStore } from "@/store/chatStore";
 
-const randomId = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return Math.random().toString(36).slice(2);
-};
-
-const buildMessage = (
-  role: Message["role"],
-  content: string,
-  conversationId: string,
-): Message => ({
-  id: randomId(),
-  role,
-  content,
-  conversationId,
-  createdAt: new Date().toISOString(),
-});
 
 export default function ChatPage({
   params,
@@ -50,58 +31,65 @@ export default function ChatPage({
   }, [params.id]);
 
   useEffect(() => {
-    if (messages.length > 0 || !conversationId) {
-      return;
-    }
+    const demoUserId =
+      process.env.NEXT_PUBLIC_DEMO_USER_ID ??
+      process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
+      "00000000-0000-0000-0000-000000000000";
 
-    let active = true;
-
-    const loadHistory = async () => {
-      if (hasSupabaseConfig()) {
-        try {
-          const supabase = getSupabaseClient();
-          const { data, error } = await supabase
-            .from("messages")
-            .select("*")
-            .eq("conversation_id", conversationId)
-            .order("created_at", { ascending: true });
-
-          if (!active) return;
-
-          if (!error && data && data.length) {
-            setMessages(
-              data.map((row) => ({
-                id: row.id,
-                role: row.role as Message["role"],
-                content: row.content,
-                conversationId: row.conversation_id,
-                createdAt: row.created_at ?? new Date().toISOString(),
-                tokensUsed: row.tokens_used ?? undefined,
-              })),
-            );
-            return;
-          }
-        } catch (error) {
-          console.error("Failed to load conversation history", error);
+    const loadConversation = async () => {
+      try {
+        const response = await fetch(
+          `/api/conversations?userId=${demoUserId}&counselorId=${params.id}`,
+        );
+        const data = await response.json();
+        if (data?.conversation?.id) {
+          setConversationId(data.conversation.id);
         }
+      } catch (error) {
+        console.error("Failed to resolve conversation", error);
       }
-
-      if (!active) return;
-      setMessages([
-        buildMessage(
-          "assistant",
-          "こんにちは。ここではUIの確認ができます。Phase 3でLLM応答を接続予定です。",
-          conversationId,
-        ),
-      ]);
     };
 
-    loadHistory();
+    loadConversation();
+  }, [params.id]);
 
-    return () => {
-      active = false;
+  useEffect(() => {
+    if (!conversationId) return;
+
+    type ApiMessage = {
+      id: string;
+      role: Message["role"];
+      content: string;
+      conversation_id: string;
+      created_at: string | null;
+      tokens_used: number | null;
     };
-  }, [conversationId, messages.length, setMessages]);
+
+    const loadMessages = async () => {
+      try {
+        const response = await fetch(
+          `/api/conversations/${conversationId}/messages`,
+        );
+        const data = await response.json();
+        if (Array.isArray(data.messages)) {
+          setMessages(
+            data.messages.map((row: ApiMessage) => ({
+              id: row.id,
+              role: row.role,
+              content: row.content,
+              conversationId: row.conversation_id,
+              createdAt: row.created_at ?? new Date().toISOString(),
+              tokensUsed: row.tokens_used ?? undefined,
+            })),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load messages", error);
+      }
+    };
+
+    loadMessages();
+  }, [conversationId, setMessages]);
 
   if (loading) {
     return (

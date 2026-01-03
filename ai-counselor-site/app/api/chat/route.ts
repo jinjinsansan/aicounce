@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let assistantMessageId: string | null = null;
     if (supabase && activeConversationId) {
       await supabase.from("messages").insert([
         {
@@ -98,20 +99,28 @@ export async function POST(request: NextRequest) {
     );
 
     if (supabase && activeConversationId) {
-      await supabase.from("messages").insert([
-        {
-          conversation_id: activeConversationId,
-          role: "assistant",
-          content,
-          tokens_used: tokensUsed ?? null,
-        },
-      ]);
+      const { data: assistantRows, error: assistantError } = await supabase
+        .from("messages")
+        .insert([
+          {
+            conversation_id: activeConversationId,
+            role: "assistant",
+            content,
+            tokens_used: tokensUsed ?? null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (!assistantError && assistantRows) {
+        assistantMessageId = assistantRows.id;
+      }
     }
 
-    if (supabase && activeConversationId && ragSources.length > 0) {
+    if (supabase && assistantMessageId && ragSources.length > 0) {
       await supabase.from("rag_search_logs").insert([
         {
-          message_id: activeConversationId,
+          message_id: assistantMessageId,
           query: message,
           retrieved_chunks: ragSources,
         },
