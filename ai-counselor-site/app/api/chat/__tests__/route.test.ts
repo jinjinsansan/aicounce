@@ -20,11 +20,24 @@ jest.mock("@/lib/supabase-server", () => ({
   getServiceSupabase: jest.fn(),
 }));
 
+jest.mock("@/lib/supabase-clients", () => ({
+  createSupabaseRouteClient: jest.fn(),
+}));
+
+jest.mock("next/headers", () => ({
+  cookies: jest.fn(() => ({
+    getAll: () => [],
+  })),
+}));
+
 const { fetchCounselorById } = jest.requireMock("@/lib/counselors");
 const { callLLM } = jest.requireMock("@/lib/llm");
 const { searchRagContext } = jest.requireMock("@/lib/rag");
 const { hasServiceRole, getServiceSupabase } = jest.requireMock(
   "@/lib/supabase-server",
+);
+const { createSupabaseRouteClient } = jest.requireMock(
+  "@/lib/supabase-clients",
 );
 
 function createRequest(body: Record<string, unknown>) {
@@ -37,53 +50,106 @@ function createRequest(body: Record<string, unknown>) {
   );
 }
 
+function setupAuthedSupabase(conversationId = "conv-1") {
+  const capturedMessages: unknown[] = [];
+  const client = {
+    auth: {
+      getSession: jest.fn().mockResolvedValue({
+        data: {
+          session: {
+            user: {
+              id: "user-1",
+              email: "user@example.com",
+              user_metadata: { full_name: "User" },
+            },
+          },
+        },
+      }),
+    },
+    from: jest.fn((table: string) => {
+      if (table === "conversations") {
+        return {
+          insert: jest.fn().mockReturnValue({
+            select: () => ({
+              single: () =>
+                Promise.resolve({ data: { id: conversationId }, error: null }),
+            }),
+          }),
+          select: jest.fn().mockReturnValue({
+            single: () =>
+              Promise.resolve({ data: { id: conversationId }, error: null }),
+          }),
+        };
+      }
+      if (table === "messages") {
+        return {
+          insert: jest.fn((payload: unknown) => {
+            capturedMessages.push(payload);
+            return {
+              select: () => ({
+                single: () =>
+                  Promise.resolve({
+                    data: { id: `msg-${capturedMessages.length}` },
+                    error: null,
+                  }),
+              }),
+            };
+          }),
+        };
+      }
+      return {
+        insert: jest.fn().mockResolvedValue({ data: null, error: null }),
+        select: jest.fn().mockResolvedValue({ data: null, error: null }),
+      };
+    }),
+  };
+
+  createSupabaseRouteClient.mockReturnValue(client);
+  return { capturedMessages, client };
+}
+
+function setupSessionlessSupabase() {
+  const client = {
+    auth: {
+      getSession: jest.fn().mockResolvedValue({
+        data: {
+          session: null,
+        },
+      }),
+    },
+    from: jest.fn(),
+  };
+  createSupabaseRouteClient.mockReturnValue(client);
+  return client;
+}
+
+function setupAdminSupabase() {
+  const ragLogInsert = jest.fn().mockResolvedValue({});
+  const userUpsert = jest.fn().mockResolvedValue({});
+  getServiceSupabase.mockReturnValue({
+    from: (table: string) => {
+      switch (table) {
+        case "users":
+          return { upsert: userUpsert };
+        case "rag_search_logs":
+          return { insert: ragLogInsert };
+        default:
+          throw new Error(`Unexpected table ${table}`);
+      }
+    },
+  });
+  return { ragLogInsert, userUpsert };
+}
+
 describe("POST /api/chat", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    process.env.DEMO_USER_ID = "demo-user";
   });
 
   it("creates a conversation, stores messages, and returns LLM output", async () => {
     hasServiceRole.mockReturnValue(true);
-
-    const capturedMessages: unknown[] = [];
-    const conversationInsert = jest.fn().mockReturnValue({
-      select: () => ({ single: () => Promise.resolve({ data: { id: "conv-1" }, error: null }) }),
-    });
-
-    let messageInsertCount = 0;
-    const messageInsert = jest.fn((rows: unknown) => {
-      capturedMessages.push(rows);
-      messageInsertCount += 1;
-      if (messageInsertCount === 1) {
-        return Promise.resolve({ data: null, error: null });
-      }
-      return {
-        select: () => ({
-          single: () => Promise.resolve({ data: { id: "msg-2" }, error: null }),
-        }),
-      };
-    });
-
-    const ragLogInsert = jest.fn().mockResolvedValue({});
-    const userUpsert = jest.fn().mockResolvedValue({});
-
-    getServiceSupabase.mockReturnValue({
-      from: (table: string) => {
-        switch (table) {
-          case "users":
-            return { upsert: userUpsert };
-          case "conversations":
-            return { insert: conversationInsert };
-          case "messages":
-            return { insert: messageInsert };
-          case "rag_search_logs":
-            return { insert: ragLogInsert };
-          default:
-            throw new Error(`Unexpected table ${table}`);
-        }
-      },
-    });
+    const { capturedMessages } = setupAuthedSupabase();
+    const { ragLogInsert } = setupAdminSupabase();
 
     fetchCounselorById.mockResolvedValue({
       id: "michele",
@@ -127,5 +193,50 @@ describe("POST /api/chat", () => {
   it("returns 400 when payload is invalid", async () => {
     const response = await POST(createRequest({}));
     expect(response.status).toBe(400);
+  });
+
+  it("returns 401 when no session is present", async () => {
+    hasServiceRole.mockReturnValue(false);
+    setupSessionlessSupabase();
+
+    fetchCounselorById.mockResolvedValue({
+      id: "michele",
+      name: "ミシェル",
+      systemPrompt: "system",
+      ragEnabled: false,
+      modelType: "openai",
+      modelName: "gpt-4o-mini",
+    });
+
+    const response = await POST(
+      createRequest({ message: "こんにちは", counselorId: "michele" }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(searchRagContext).not.toHaveBeenCalled();
+  });
+
+  it("skips RAG lookup when counselor is not RAG enabled", async () => {
+    hasServiceRole.mockReturnValue(false);
+    setupAuthedSupabase();
+
+    fetchCounselorById.mockResolvedValue({
+      id: "gpt",
+      name: "GPT",
+      systemPrompt: "system",
+      ragEnabled: false,
+      modelType: "openai",
+      modelName: "gpt-4o-mini",
+    });
+
+    callLLM.mockResolvedValue({ content: "回答", tokensUsed: 10 });
+
+    const response = await POST(
+      createRequest({ message: "hi", counselorId: "gpt", useRag: true }),
+    );
+
+    const body = await response.json();
+    expect(body.content).toBe("回答");
+    expect(searchRagContext).not.toHaveBeenCalled();
   });
 });

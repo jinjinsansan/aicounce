@@ -68,4 +68,23 @@ describe("ChatInterface", () => {
     await user.click(button);
     expect(sendMessage).not.toHaveBeenCalled();
   });
+
+  it("prevents sending when input is empty after trimming", async () => {
+    const user = userEvent.setup();
+    const sendMessage = jest.fn();
+    useChatStore.setState({
+      ...useChatStore.getState(),
+      messages: [],
+      input: "   ",
+      isSending: false,
+      sendMessage,
+    });
+
+    render(<ChatInterface counselorId="michele" conversationId="conv" />);
+
+    const button = screen.getByRole("button", { name: "送信" });
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
 });

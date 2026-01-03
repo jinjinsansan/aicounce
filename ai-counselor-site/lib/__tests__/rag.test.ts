@@ -1,0 +1,68 @@
+/** @jest-environment node */
+
+import { searchRagContext } from "../rag";
+
+jest.mock("@/lib/supabase", () => ({
+  getSupabaseClient: jest.fn(),
+  hasSupabaseConfig: jest.fn(),
+}));
+
+const { getSupabaseClient, hasSupabaseConfig } = jest.requireMock("@/lib/supabase");
+
+describe("searchRagContext", () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+    process.env.OPENAI_API_KEY = "test";
+    global.fetch = jest.fn();
+  });
+
+  it("returns formatted context when matches are found", async () => {
+    hasSupabaseConfig.mockReturnValue(true);
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [{ embedding: [0.1, 0.2] }] }),
+    });
+
+    const rpc = jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: "chunk-1",
+          document_id: "doc-1",
+          parent_chunk_id: null,
+          chunk_text: "テストチャンク",
+          similarity: 0.92,
+        },
+      ],
+      error: null,
+    });
+    getSupabaseClient.mockReturnValue({ rpc });
+
+    const result = await searchRagContext("counselor-1", "質問", 1);
+
+    expect(result.sources).toHaveLength(1);
+    expect(result.context).toContain("[ソース 1]");
+    expect(result.context).toContain("テストチャンク");
+    expect(rpc).toHaveBeenCalledWith("match_rag_chunks", expect.any(Object));
+  });
+
+  it("returns empty context when Supabase config is missing", async () => {
+    hasSupabaseConfig.mockReturnValue(false);
+
+    const result = await searchRagContext("counselor-1", "質問", 1);
+
+    expect(result).toEqual({ context: "", sources: [] });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("handles embedding API failures gracefully", async () => {
+    hasSupabaseConfig.mockReturnValue(true);
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      text: async () => "error",
+    });
+
+    const result = await searchRagContext("counselor-1", "質問", 1);
+
+    expect(result).toEqual({ context: "", sources: [] });
+  });
+});
