@@ -47,8 +47,9 @@ export async function fetchCounselors(): Promise<Counselor[]> {
       return FALLBACK_COUNSELORS;
     }
 
-    if (!data) {
-      return [];
+    if (!data || data.length === 0) {
+      console.warn("Counselor table is empty; falling back to defaults.");
+      return FALLBACK_COUNSELORS;
     }
 
     return data.map(mapRowToCounselor);
@@ -80,13 +81,26 @@ export async function fetchCounselorById(
 
     if (error) {
       console.error("Failed to fetch counselor", error);
-      return null;
+      return (
+        FALLBACK_COUNSELORS.find((counselor) => counselor.id === counselorId) ??
+        null
+      );
     }
 
-    return data ? mapRowToCounselor(data) : null;
+    if (data) {
+      return mapRowToCounselor(data);
+    }
+
+    return (
+      FALLBACK_COUNSELORS.find((counselor) => counselor.id === counselorId) ??
+      null
+    );
   } catch (error) {
     console.error("Unexpected counselor fetch error", error);
-    return null;
+    return (
+      FALLBACK_COUNSELORS.find((counselor) => counselor.id === counselorId) ??
+      null
+    );
   }
 }
 
