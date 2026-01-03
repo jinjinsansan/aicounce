@@ -109,7 +109,7 @@ export default function ProblemSolutionSection() {
                     <div>
                       <strong className="block text-lg text-slate-900">専門知識 × 圧倒的低価格</strong>
                       <p className="text-slate-600 mt-1">
-                        臨床心理学などの専門知を学習済み。月額1,500円という続けやすい価格で、質の高いケアを日常に。
+                        臨床心理学などの専門知を学習済み。月額1,980円という続けやすい価格で、質の高いケアを日常に。
                       </p>
                     </div>
                   </li>

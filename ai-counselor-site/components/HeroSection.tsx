@@ -59,7 +59,7 @@ export default function HeroSection() {
             </div>
             <div className="h-10 w-px bg-slate-200" />
             <div>
-              <p className="text-3xl font-bold text-slate-900">¥1,500</p>
+              <p className="text-3xl font-bold text-slate-900">¥1,980</p>
               <p className="text-xs text-slate-500">月額使い放題</p>
             </div>
           </div>

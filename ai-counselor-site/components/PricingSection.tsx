@@ -26,7 +26,7 @@ export default function PricingSection() {
                 使い放題プラン
               </h3>
               <div className="my-8 flex items-baseline justify-center gap-2">
-                <span className="text-6xl font-black text-slate-900 tracking-tight">¥1,500</span>
+                <span className="text-6xl font-black text-slate-900 tracking-tight">¥1,980</span>
                 <span className="text-xl font-medium text-slate-500">/月</span>
               </div>
               
