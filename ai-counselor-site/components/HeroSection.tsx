@@ -11,7 +11,7 @@ export default function HeroSection() {
 
       <div className="relative z-10 mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center">
         {/* Text Content */}
-        <div className="space-y-8 text-center lg:text-left">
+        <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
           <div className="inline-flex items-center rounded-full bg-white px-4 py-1.5 text-sm font-medium text-orange-600 shadow-sm ring-1 ring-orange-100">
             <span className="mr-2 flex h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
             24時間365日 即時対応
@@ -66,7 +66,7 @@ export default function HeroSection() {
         </div>
 
         {/* Visual Content */}
-        <div className="relative mx-auto w-full max-w-md lg:max-w-full">
+        <div className="relative mx-auto w-full max-w-md lg:max-w-full order-1 lg:order-2">
           <div className="relative aspect-square overflow-visible rounded-[40px] border border-white/50 bg-white/40 backdrop-blur-md shadow-2xl ring-1 ring-white/60">
             <div className="relative h-full w-full overflow-hidden rounded-[40px]">
               <Image

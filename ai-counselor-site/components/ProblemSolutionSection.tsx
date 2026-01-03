@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function ProblemSolutionSection() {
   return (
     <section className="bg-white pt-24 pb-16">
@@ -19,7 +21,7 @@ export default function ProblemSolutionSection() {
         <div className="mx-auto max-w-5xl">
           <div className="relative mb-24 rounded-[40px] bg-slate-50 p-8 md:p-16">
             <div className="grid gap-12 md:grid-cols-2 md:items-center">
-              <div>
+              <div className="order-2 md:order-1">
                 <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
                   🌧️
                 </div>
@@ -50,11 +52,14 @@ export default function ProblemSolutionSection() {
                   </li>
                 </ul>
               </div>
-              <div className="relative aspect-square rounded-[32px] bg-slate-200/50 p-8">
-                {/* Visual placeholder for "Problem" illustration */}
-                <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-bold opacity-30 text-xl">
-                  Image: Woman worrying alone
-                </div>
+              <div className="relative aspect-square rounded-[32px] overflow-hidden bg-slate-200/50 order-1 md:order-2">
+                <Image
+                  src="/images/woman_worrying_alone.png"
+                  alt="悩んでいる女性のイラスト"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
               </div>
             </div>
           </div>
@@ -63,11 +68,14 @@ export default function ProblemSolutionSection() {
           <div className="relative mb-24 rounded-[40px] bg-gradient-to-br from-orange-50 to-amber-50 p-8 md:p-16 border border-orange-100 shadow-xl shadow-orange-100/50">
             <div className="grid gap-12 md:grid-cols-2 md:items-center">
               <div className="order-2 md:order-1">
-                <div className="relative aspect-square rounded-[32px] bg-white/60 p-8 shadow-inner">
-                   {/* Visual placeholder for "Solution" illustration */}
-                   <div className="absolute inset-0 flex items-center justify-center text-orange-300 font-bold opacity-50 text-xl">
-                    Image: AI listening gently
-                  </div>
+                <div className="relative aspect-square rounded-[32px] overflow-hidden bg-white/60 shadow-inner">
+                  <Image
+                    src="/images/ai_listening_gently.png"
+                    alt="優しく話を聞くAIのイラスト"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
                 </div>
               </div>
               <div className="order-1 md:order-2">
