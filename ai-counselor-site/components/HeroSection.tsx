@@ -67,21 +67,23 @@ export default function HeroSection() {
 
         {/* Visual Content */}
         <div className="relative mx-auto w-full max-w-md lg:max-w-full">
-          <div className="relative aspect-square overflow-hidden rounded-[40px] border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl">
-            <Image
-              src="/images/hero_image.png"
-              alt="AI Counselor Interface"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
+          <div className="relative aspect-square overflow-visible rounded-[40px] border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl">
+            <div className="relative h-full w-full overflow-hidden rounded-[40px]">
+              <Image
+                src="/images/hero_image.png"
+                alt="AI Counselor Interface"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            </div>
             
             {/* Floating Badges (Overlay on image) */}
-            <div className="absolute -right-6 top-10 animate-bounce rounded-xl border border-white/10 bg-slate-800/90 px-4 py-2 text-xs font-bold text-emerald-400 shadow-xl backdrop-blur-md delay-700">
+            <div className="absolute -right-6 top-10 z-20 animate-bounce rounded-xl border border-white/10 bg-slate-800/90 px-4 py-2 text-xs font-bold text-emerald-400 shadow-xl backdrop-blur-md delay-700">
               ✨ 秘密厳守
             </div>
-            <div className="absolute -left-6 bottom-20 animate-bounce rounded-xl border border-white/10 bg-slate-800/90 px-4 py-2 text-xs font-bold text-blue-400 shadow-xl backdrop-blur-md">
+            <div className="absolute -left-6 bottom-20 z-20 animate-bounce rounded-xl border border-white/10 bg-slate-800/90 px-4 py-2 text-xs font-bold text-blue-400 shadow-xl backdrop-blur-md">
               🌙 24H対応
             </div>
           </div>

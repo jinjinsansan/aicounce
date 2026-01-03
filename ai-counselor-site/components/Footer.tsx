@@ -9,9 +9,9 @@ export default function Footer() {
           src="/images/footer.png"
           alt="Footer Background"
           fill
-          className="object-cover opacity-80"
+          className="object-cover opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-900/40" />
       </div>
       
       <div className="container mx-auto px-4 py-12 relative z-10">

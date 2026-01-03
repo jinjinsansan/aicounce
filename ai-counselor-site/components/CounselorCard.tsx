@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useTransition } from "react";
 import type { Counselor } from "@/types";
-import { cn, formatNumber } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 
 interface CounselorCardProps {
   counselor: Counselor;
@@ -18,39 +18,20 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
     startTransition(() => onSelect(counselor.id));
   };
 
-  const getAvatarColor = (id: string) => {
-    switch (id) {
-      case "michele": return "from-orange-400 to-pink-500";
-      case "sato": return "from-blue-600 to-sky-400";
-      case "alex": return "from-slate-500 to-slate-400";
-      case "nana": return "from-green-500 to-emerald-400";
-      case "yuki": return "from-purple-300 to-cyan-300";
-      case "iris": return "from-indigo-400 via-purple-400 to-pink-400";
-      case "adam": return "from-yellow-500 to-amber-600";
-      case "gemini": return "from-blue-500 to-purple-500";
-      case "claude": return "from-slate-900 to-purple-900";
-      case "deep": return "from-blue-900 to-slate-900";
-      default: return "from-blue-500 to-indigo-500";
-    }
-  };
-
   return (
     <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
       <div className="flex items-center gap-4">
-        <div className={cn(
-          "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-md transition-transform group-hover:scale-105 overflow-hidden",
-          getAvatarColor(counselor.id)
-        )}>
+        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-100 shadow-md transition-transform group-hover:scale-105 overflow-hidden">
           {counselor.iconUrl ? (
             <Image
               src={counselor.iconUrl}
-              alt={counselor.name}
+              alt={`${counselor.name}のアイコン`}
               fill
               className="object-cover"
               sizes="64px"
             />
           ) : (
-            <span className="text-2xl font-bold text-white">{counselor.name.slice(0, 1)}</span>
+            <span className="text-2xl font-bold text-slate-400">{counselor.name.slice(0, 1)}</span>
           )}
         </div>
         <div>
