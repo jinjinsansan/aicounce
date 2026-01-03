@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -36,7 +37,15 @@ export default function AppHeader() {
     <header className="border-b border-slate-100 bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <span className="text-xl">🌿</span>
+          <div className="relative h-8 w-8 overflow-hidden rounded-lg">
+            <Image
+              src="/images/logo_square.png"
+              alt="AI Counselor Office Logo"
+              fill
+              className="object-cover"
+              sizes="32px"
+            />
+          </div>
           <span>AIカウンセリング事務所</span>
         </Link>
         <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">

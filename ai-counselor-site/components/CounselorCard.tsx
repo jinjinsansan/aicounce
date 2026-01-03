@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useTransition } from "react";
 import type { Counselor } from "@/types";
 import { cn, formatNumber } from "@/lib/utils";
@@ -37,10 +38,20 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
     <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
       <div className="flex items-center gap-4">
         <div className={cn(
-          "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-2xl font-bold text-white shadow-md transition-transform group-hover:scale-105",
+          "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-md transition-transform group-hover:scale-105 overflow-hidden",
           getAvatarColor(counselor.id)
         )}>
-          {counselor.name.slice(0, 1)}
+          {counselor.iconUrl ? (
+            <Image
+              src={counselor.iconUrl}
+              alt={counselor.name}
+              fill
+              className="object-cover"
+              sizes="64px"
+            />
+          ) : (
+            <span className="text-2xl font-bold text-white">{counselor.name.slice(0, 1)}</span>
+          )}
         </div>
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">

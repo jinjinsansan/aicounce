@@ -24,6 +24,8 @@ const FAQSection = dynamic(() => import("@/components/FAQSection"), {
   ssr: false,
 });
 
+const Footer = dynamic(() => import("@/components/Footer"));
+
 export default function HomePage() {
   const [counselors, setCounselors] = useState<Counselor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +98,7 @@ export default function HomePage() {
         {/* FAQ (Keeping as it's useful) */}
         <FAQSection />
       </div>
+      <Footer />
     </div>
   );
 }

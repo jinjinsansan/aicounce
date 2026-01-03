@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function HeroSection() {
@@ -66,46 +67,17 @@ export default function HeroSection() {
 
         {/* Visual Content */}
         <div className="relative mx-auto w-full max-w-md lg:max-w-full">
-          <div className="relative aspect-square rounded-[40px] border border-white/10 bg-white/5 p-8 backdrop-blur-md shadow-2xl">
-            {/* Chat UI Mockup */}
-            <div className="flex h-full flex-col gap-4 overflow-hidden rounded-2xl bg-slate-900/50 p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-pink-500 text-white font-bold">
-                  ミ
-                </div>
-                <div className="rounded-2xl rounded-tl-none bg-slate-800 p-3 text-sm text-slate-200 shadow-sm">
-                  こんにちは。今日はどのようなことをお話ししたいですか？
-                  <br/>
-                  どんな感情でも、そのまま受け止めますよ。
-                </div>
-              </div>
-              
-              <div className="flex items-start justify-end gap-3">
-                <div className="rounded-2xl rounded-tr-none bg-blue-600 p-3 text-sm text-white shadow-sm">
-                  最近、仕事で失敗してしまって...<br/>
-                  誰にも相談できなくて辛いです。
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-pink-500 text-white font-bold">
-                  ミ
-                </div>
-                <div className="rounded-2xl rounded-tl-none bg-slate-800 p-3 text-sm text-slate-200 shadow-sm">
-                  そうでしたか。一人で抱え込むのはお辛いですよね。<br/>
-                  失敗したときのご自身の気持ち、もう少し詳しく教えていただけますか？
-                </div>
-              </div>
-              
-              {/* Type indicator */}
-              <div className="mt-auto flex gap-1 px-2">
-                <div className="h-2 w-2 animate-bounce rounded-full bg-slate-500" />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-slate-500 delay-100" />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-slate-500 delay-200" />
-              </div>
-            </div>
-
-            {/* Floating Badges */}
+          <div className="relative aspect-square overflow-hidden rounded-[40px] border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl">
+            <Image
+              src="/images/hero_image.png"
+              alt="AI Counselor Interface"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+            />
+            
+            {/* Floating Badges (Overlay on image) */}
             <div className="absolute -right-6 top-10 animate-bounce rounded-xl border border-white/10 bg-slate-800/90 px-4 py-2 text-xs font-bold text-emerald-400 shadow-xl backdrop-blur-md delay-700">
               ✨ 秘密厳守
             </div>
