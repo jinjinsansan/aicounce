@@ -7,7 +7,6 @@ import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
 import { michelleEnv } from "@/lib/michelle/env.server";
 import { getMichelleOpenAIClient } from "@/lib/michelle/openai";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
-import type { Database } from "@/types/supabase";
 
 type GuidedPhase = "explore" | "deepen" | "release";
 
@@ -33,11 +32,13 @@ const buildConversationSnapshot = (
     .join("\n");
 };
 
-const parseOpenAIContent = (content: OpenAI.Chat.Completions.ChatCompletionMessage["content"]) => {
+type ChatContent = string | OpenAI.Chat.Completions.ChatCompletionMessageContentPart[] | null;
+
+const parseOpenAIContent = (content: ChatContent) => {
   if (!content) return "";
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
-    return content
+    return (content as OpenAI.Chat.Completions.ChatCompletionMessageContentPart[])
       .map((part) => {
         if (part?.type === "text") return part.text ?? "";
         return "";
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
 
   const { sessionId } = parsed.data;
   const cookieStore = await cookies();
-  const supabase = createSupabaseRouteClient<Database>(cookieStore);
+  const supabase = createSupabaseRouteClient(cookieStore);
 
   const {
     data: { session },
