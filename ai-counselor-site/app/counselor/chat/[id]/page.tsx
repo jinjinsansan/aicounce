@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Counselor, Message } from "@/types";
 import { fetchCounselorById } from "@/lib/counselors";
+import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
 import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
@@ -35,7 +36,7 @@ export default function ChatPage({
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const { messages, setMessages } = useChatStore();
-  const conversationId = useMemo(() => `session-${params.id}`, [params.id]);
+  const conversationId = useMemo(() => params.id, [params.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -48,13 +49,62 @@ export default function ChatPage({
   }, [params.id]);
 
   useEffect(() => {
-    const welcomeMessage = buildMessage(
-      "assistant",
-      "こんにちは。ここではUIの確認ができます。Phase 3でLLM応答を接続予定です。",
-      conversationId,
-    );
-    setMessages([welcomeMessage]);
-  }, [conversationId, setMessages]);
+    if (messages.length > 0) return;
+
+    let active = true;
+
+    const loadHistory = async () => {
+      if (hasSupabaseConfig()) {
+        try {
+          const supabase = getSupabaseClient();
+          const { data, error } = await supabase
+            .from("messages")
+            .select("*")
+            .eq("conversation_id", conversationId)
+            .order("created_at", { ascending: true });
+
+          if (!active) return;
+
+          if (!error && data && data.length) {
+            setMessages(
+              data.map((row) => ({
+                id: row.id,
+                role: row.role as Message["role"],
+                content: row.content,
+                conversationId: row.conversation_id,
+                createdAt: row.created_at ?? new Date().toISOString(),
+                tokensUsed: row.tokens_used ?? undefined,
+              })),
+            );
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to load conversation history", error);
+        }
+      }
+
+      if (!active) return;
+      const fallbackMessages = [
+        buildMessage(
+          "assistant",
+          "こんにちは。ここではUIの確認ができます。Phase 3でLLM応答を接続予定です。",
+          conversationId,
+        ),
+        buildMessage(
+          "user",
+          "テスト会話を開始しました。",
+          conversationId,
+        ),
+      ];
+      setMessages(fallbackMessages);
+    };
+
+    loadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, [conversationId, messages.length, setMessages]);
 
   if (loading) {
     return (

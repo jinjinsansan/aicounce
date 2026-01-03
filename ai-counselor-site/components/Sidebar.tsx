@@ -5,17 +5,17 @@ import { usePathname } from "next/navigation";
 
 const mockConversations = [
   {
-    id: "conv-1",
+    counselorId: "michele",
     counselor: "ミシェル",
     preview: "テープノート、今日の気付きを振り返りましょう...",
   },
   {
-    id: "conv-2",
+    counselorId: "clinical",
     counselor: "臨床心理カウンセラー",
     preview: "睡眠習慣の見直しについて...",
   },
   {
-    id: "conv-3",
+    counselorId: "industrial",
     counselor: "産業メンタルコーチ",
     preview: "1on1でのコミュニケーション計画を整理...",
   },
@@ -34,11 +34,11 @@ export default function Sidebar() {
       </div>
       <div className="space-y-4">
         {mockConversations.map((conversation) => {
-          const href = `/counselor/chat/${conversation.id}`;
+          const href = `/counselor/chat/${conversation.counselorId}`;
           const isActive = pathname === href;
           return (
             <Link
-              key={conversation.id}
+              key={conversation.counselorId}
               href={href}
               className={
                 "block rounded-2xl border px-4 py-3 text-sm transition " +
