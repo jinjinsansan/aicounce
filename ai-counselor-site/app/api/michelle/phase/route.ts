@@ -32,13 +32,13 @@ const buildConversationSnapshot = (
     .join("\n");
 };
 
-type ChatContent = string | OpenAI.Chat.Completions.ChatCompletionMessageContentPart[] | null;
+type ChatContent = string | OpenAI.Chat.Completions.ChatCompletionContentPart[] | null;
 
 const parseOpenAIContent = (content: ChatContent) => {
   if (!content) return "";
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
-    return (content as OpenAI.Chat.Completions.ChatCompletionMessageContentPart[])
+    return (content as OpenAI.Chat.Completions.ChatCompletionContentPart[])
       .map((part) => {
         if (part?.type === "text") return part.text ?? "";
         return "";
