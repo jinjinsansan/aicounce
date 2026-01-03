@@ -1,0 +1,40 @@
+"use client";
+
+import { useChatStore } from "@/store/chatStore";
+
+interface ChatInterfaceProps {
+  counselorId: string;
+  conversationId: string;
+}
+
+export default function ChatInterface({
+  counselorId,
+  conversationId,
+}: ChatInterfaceProps) {
+  const { input, setInput, isSending, sendMessage } = useChatStore();
+
+  const handleSubmit = async () => {
+    await sendMessage({ counselorId, conversationId });
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex gap-3">
+        <textarea
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          placeholder="今の気持ちや相談内容を入力してください..."
+          className="min-h-[64px] flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSending || !input.trim()}
+          className="h-12 min-w-[120px] rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          {isSending ? "送信中..." : "送信"}
+        </button>
+      </div>
+    </div>
+  );
+}

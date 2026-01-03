@@ -2,6 +2,15 @@ import type { Counselor, CounselorRow } from "@/types";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
 
+const DEFAULT_RESPONSE_TIME = "1-2 分";
+
+function deriveTags(specialty: string) {
+  return specialty
+    .split(/[・,/]/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
 function mapRowToCounselor(row: CounselorRow): Counselor {
   return {
     id: row.id,
@@ -13,8 +22,8 @@ function mapRowToCounselor(row: CounselorRow): Counselor {
     modelType: row.model_type,
     ragEnabled: Boolean(row.rag_enabled),
     ragSourceId: row.rag_source_id,
-    tags: row.specialty.split("・"),
-    responseTime: "1-2 分",
+    tags: deriveTags(row.specialty),
+    responseTime: DEFAULT_RESPONSE_TIME,
     sessionCount: 0,
   };
 }
@@ -46,4 +55,48 @@ export async function fetchCounselors(): Promise<Counselor[]> {
     console.error("Unexpected counselor fetch error", error);
     return FALLBACK_COUNSELORS;
   }
+}
+
+export async function fetchCounselorById(
+  counselorId: string,
+): Promise<Counselor | null> {
+  if (!counselorId) return null;
+
+  if (!hasSupabaseConfig()) {
+    return (
+      FALLBACK_COUNSELORS.find((counselor) => counselor.id === counselorId) ??
+      null
+    );
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from("counselors")
+      .select("*")
+      .eq("id", counselorId)
+      .single();
+
+    if (error) {
+      console.error("Failed to fetch counselor", error);
+      return null;
+    }
+
+    return data ? mapRowToCounselor(data) : null;
+  } catch (error) {
+    console.error("Unexpected counselor fetch error", error);
+    return null;
+  }
+}
+
+export async function searchCounselors(keyword: string) {
+  const list = await fetchCounselors();
+  if (!keyword) return list;
+  const normalized = keyword.toLowerCase();
+  return list.filter(
+    (counselor) =>
+      counselor.name.toLowerCase().includes(normalized) ||
+      counselor.specialty.toLowerCase().includes(normalized) ||
+      counselor.description.toLowerCase().includes(normalized),
+  );
 }

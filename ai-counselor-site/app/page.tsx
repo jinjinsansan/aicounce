@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import FAQSection from "@/components/FAQSection";
@@ -12,6 +13,7 @@ import { fetchCounselors } from "@/lib/counselors";
 export default function HomePage() {
   const [counselors, setCounselors] = useState<Counselor[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     let mounted = true;
@@ -59,7 +61,11 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {counselors.map((counselor) => (
-                <CounselorCard key={counselor.id} counselor={counselor} />
+                <CounselorCard
+                  key={counselor.id}
+                  counselor={counselor}
+                  onSelect={(id) => router.push(`/counselor/${id}`)}
+                />
               ))}
             </div>
           )}
