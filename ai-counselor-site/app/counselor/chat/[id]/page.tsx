@@ -7,43 +7,51 @@ import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import { useChatStore } from "@/store/chatStore";
+import { useResolvedParams } from "@/hooks/useResolvedParams";
 
 
 export default function ChatPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const { messages, setMessages } = useChatStore();
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const resolvedParams = useResolvedParams(params);
+  const counselorId = resolvedParams?.id;
   const handleConversationCreated = (id: string) => {
     setConversationId(id);
     setMessages([]);
   };
 
   useEffect(() => {
+    if (!counselorId) {
+      return;
+    }
+
     let mounted = true;
-    fetchCounselorById(params.id)
+    fetchCounselorById(counselorId)
       .then((data) => mounted && setCounselor(data))
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
     };
-  }, [params.id]);
+  }, [counselorId]);
 
   useEffect(() => {
-    const demoUserId =
-      process.env.NEXT_PUBLIC_DEMO_USER_ID ??
-      process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
-      "00000000-0000-0000-0000-000000000000";
-
     const loadConversation = async () => {
+      if (!counselorId) {
+        return;
+      }
       try {
         const response = await fetch(
-          `/api/conversations?userId=${demoUserId}&counselorId=${params.id}`,
+          `/api/conversations?counselorId=${counselorId}`,
         );
+        if (response.status === 401) {
+          return;
+        }
         const data = await response.json();
         if (data?.conversation?.id) {
           setConversationId(data.conversation.id);
@@ -54,7 +62,7 @@ export default function ChatPage({
     };
 
     loadConversation();
-  }, [params.id]);
+  }, [counselorId]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -96,7 +104,7 @@ export default function ChatPage({
     loadMessages();
   }, [conversationId, setMessages]);
 
-  if (loading) {
+  if (loading || !counselorId) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-500">
         ロード中...
@@ -108,7 +116,7 @@ export default function ChatPage({
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-6xl gap-6">
         <Sidebar
-          selectedCounselorId={params.id}
+          selectedCounselorId={counselorId ?? undefined}
           onConversationCreated={handleConversationCreated}
         />
         <main className="flex-1 space-y-6 rounded-3xl bg-white/90 p-6 shadow-xl">
@@ -131,7 +139,7 @@ export default function ChatPage({
           </section>
 
           <ChatInterface
-            counselorId={params.id}
+            counselorId={counselorId}
             conversationId={conversationId ?? undefined}
             onConversationResolved={handleConversationCreated}
           />

@@ -1,23 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { Counselor } from "@/types";
 import { fetchCounselorById } from "@/lib/counselors";
-import FeaturesSection from "@/components/FeaturesSection";
+import { useResolvedParams } from "@/hooks/useResolvedParams";
+
+const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
+  loading: () => (
+    <section className="h-64 rounded-[32px] bg-white/60 p-10 shadow-inner">
+      <div className="h-full w-full animate-pulse rounded-2xl bg-slate-100" />
+    </section>
+  ),
+});
 
 export default function CounselorDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const resolvedParams = useResolvedParams(params);
+  const counselorId = resolvedParams?.id;
 
   useEffect(() => {
+    if (!counselorId) {
+      return;
+    }
+
     let mounted = true;
-    fetchCounselorById(params.id)
+    fetchCounselorById(counselorId)
       .then((data) => {
         if (!mounted) return;
         setCounselor(data);
@@ -26,7 +41,7 @@ export default function CounselorDetailPage({
     return () => {
       mounted = false;
     };
-  }, [params.id]);
+  }, [counselorId]);
 
   if (loading) {
     return (

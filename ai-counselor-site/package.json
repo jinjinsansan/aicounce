@@ -8,11 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
+    "analyze": "cross-env ANALYZE=true next build --webpack",
     "verify:env": "ts-node scripts/check-env.ts",
     "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts",
     "rag:insert": "ts-node scripts/insert-rag-data.ts"
   },
   "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/auth-helpers-react": "^0.15.0",
     "@supabase/supabase-js": "^2.89.0",
     "clsx": "^2.1.1",
     "next": "16.1.1",
@@ -21,6 +24,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.5.9",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
@@ -30,6 +34,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/yargs": "^17.0.35",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "jest": "^30.2.0",
