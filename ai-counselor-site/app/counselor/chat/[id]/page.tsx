@@ -18,6 +18,10 @@ export default function ChatPage({
   const [loading, setLoading] = useState(true);
   const { messages, setMessages } = useChatStore();
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const handleConversationCreated = (id: string) => {
+    setConversationId(id);
+    setMessages([]);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -64,6 +68,8 @@ export default function ChatPage({
       tokens_used: number | null;
     };
 
+    setMessages([]);
+
     const loadMessages = async () => {
       try {
         const response = await fetch(
@@ -101,7 +107,10 @@ export default function ChatPage({
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-6xl gap-6">
-        <Sidebar />
+        <Sidebar
+          selectedCounselorId={params.id}
+          onConversationCreated={handleConversationCreated}
+        />
         <main className="flex-1 space-y-6 rounded-3xl bg-white/90 p-6 shadow-xl">
           <header className="rounded-2xl border border-slate-100 bg-white/80 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">
@@ -124,7 +133,7 @@ export default function ChatPage({
           <ChatInterface
             counselorId={params.id}
             conversationId={conversationId ?? undefined}
-            onConversationResolved={(id) => setConversationId(id)}
+            onConversationResolved={handleConversationCreated}
           />
         </main>
       </div>

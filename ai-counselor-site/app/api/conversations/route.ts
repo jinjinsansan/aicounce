@@ -45,3 +45,46 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
+
+export async function POST(request: NextRequest) {
+  if (!hasServiceRole()) {
+    return NextResponse.json(
+      { error: "Service role key not configured" },
+      { status: 500 },
+    );
+  }
+
+  try {
+    const { userId, counselorId, title } = await request.json();
+
+    if (!userId || !counselorId) {
+      return NextResponse.json(
+        { error: "userId and counselorId are required" },
+        { status: 400 },
+      );
+    }
+
+    const supabase = getServiceSupabase();
+    const { data, error } = await supabase
+      .from("conversations")
+      .insert([
+        {
+          user_id: userId,
+          counselor_id: counselorId,
+          title: title ?? null,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error("Failed to create conversation", error);
+      return NextResponse.json({ error: "Failed to create" }, { status: 500 });
+    }
+
+    return NextResponse.json({ conversation: data });
+  } catch (error) {
+    console.error("Conversation create error", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+}

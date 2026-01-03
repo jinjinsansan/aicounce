@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import Sidebar from "../Sidebar";
 
 jest.mock("next/navigation", () => ({
@@ -32,7 +32,7 @@ describe("Sidebar", () => {
       }),
     });
 
-    render(<Sidebar />);
+    render(<Sidebar selectedCounselorId="michele" />);
 
     await waitFor(() =>
       expect(screen.getByText("ミシェルとの相談")).toBeInTheDocument(),
@@ -51,10 +51,51 @@ describe("Sidebar", () => {
       json: async () => ({ conversations: [] }),
     });
 
-    render(<Sidebar />);
+    render(<Sidebar selectedCounselorId="michele" />);
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.getByText("新しい会話を開始")).toBeInTheDocument();
+  });
+
+  it("creates a new conversation via button", async () => {
+    process.env.NEXT_PUBLIC_DEMO_USER_ID = "demo-user";
+    const mockFetch = global.fetch as jest.Mock;
+    const onCreated = jest.fn();
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: async () => ({ conversations: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ conversation: { id: "new-conv" } }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          conversations: [
+            {
+              id: "new-conv",
+              counselor_id: "michele",
+              title: "New session",
+              updated_at: "2024-01-01T00:00:00.000Z",
+            },
+          ],
+        }),
+      });
+
+    render(
+      <Sidebar selectedCounselorId="michele" onConversationCreated={onCreated} />,
+    );
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByText("新しい会話を開始"));
+
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith("new-conv"));
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/conversations",
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,41 +13,79 @@ type ConversationLink = {
 
 const FALLBACK_CONVERSATIONS: ConversationLink[] = [];
 
-function SidebarComponent() {
+interface SidebarProps {
+  selectedCounselorId?: string;
+  onConversationCreated?: (conversationId: string) => void;
+}
+
+function SidebarComponent({
+  selectedCounselorId,
+  onConversationCreated,
+}: SidebarProps) {
   const pathname = usePathname();
   const [conversations, setConversations] = useState<ConversationLink[]>(
     FALLBACK_CONVERSATIONS,
   );
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const demoUserId =
-          process.env.NEXT_PUBLIC_DEMO_USER_ID ??
-          process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
-          "00000000-0000-0000-0000-000000000000";
-        const response = await fetch(
-          `/api/conversations?userId=${demoUserId}`,
-        );
-        const data = await response.json();
-        if (Array.isArray(data.conversations) && data.conversations.length > 0) {
-          setConversations((prev) => {
-            if (
-              prev.length === data.conversations.length &&
-              prev.every((conv, index) => conv.id === data.conversations[index].id)
-            ) {
-              return prev;
-            }
-            return data.conversations;
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load conversations", error);
-      }
-    };
+  const demoUserId =
+    process.env.NEXT_PUBLIC_DEMO_USER_ID ??
+    process.env.NEXT_PUBLIC_DEFAULT_USER_ID ??
+    "00000000-0000-0000-0000-000000000000";
 
-    load();
-  }, []);
+  const loadConversations = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/conversations?userId=${demoUserId}`);
+      const data = await response.json();
+      if (Array.isArray(data.conversations) && data.conversations.length > 0) {
+        setConversations((prev) => {
+          if (
+            prev.length === data.conversations.length &&
+            prev.every((conv, index) => conv.id === data.conversations[index].id)
+          ) {
+            return prev;
+          }
+          return data.conversations;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load conversations", error);
+    }
+  }, [demoUserId]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  const handleCreateConversation = async () => {
+    if (!selectedCounselorId) {
+      console.warn("selectedCounselorId is required to create conversations");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/conversations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: demoUserId,
+          counselorId: selectedCounselorId,
+          title: null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create conversation");
+      }
+
+      const data = await response.json();
+      if (data?.conversation?.id) {
+        await loadConversations();
+        onConversationCreated?.(data.conversation.id);
+      }
+    } catch (error) {
+      console.error("Failed to create conversation", error);
+    }
+  };
 
   return (
     <aside className="hidden w-64 flex-col gap-6 rounded-3xl bg-white/70 p-6 shadow-lg lg:flex">
@@ -84,7 +122,11 @@ function SidebarComponent() {
           );
         })}
       </div>
-      <button className="rounded-2xl border border-dashed border-blue-300 py-3 text-sm font-semibold text-blue-600">
+      <button
+        type="button"
+        onClick={handleCreateConversation}
+        className="rounded-2xl border border-dashed border-blue-300 py-3 text-sm font-semibold text-blue-600"
+      >
         新しい会話を開始
       </button>
     </aside>
