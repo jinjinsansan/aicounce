@@ -254,6 +254,171 @@ export interface Database {
           }
         ];
       };
+      michelle_sessions: {
+        Row: {
+          auth_user_id: string;
+          category: Database["public"]["Enums"]["michelle_session_category"];
+          created_at: string;
+          id: string;
+          openai_thread_id: string | null;
+          title: string | null;
+          total_tokens: number;
+          updated_at: string;
+        };
+        Insert: {
+          auth_user_id: string;
+          category?: Database["public"]["Enums"]["michelle_session_category"];
+          created_at?: string;
+          id?: string;
+          openai_thread_id?: string | null;
+          title?: string | null;
+          total_tokens?: number;
+          updated_at?: string;
+        };
+        Update: {
+          auth_user_id?: string;
+          category?: Database["public"]["Enums"]["michelle_session_category"];
+          created_at?: string;
+          id?: string;
+          openai_thread_id?: string | null;
+          title?: string | null;
+          total_tokens?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "michelle_sessions_auth_user_id_fkey";
+            columns: ["auth_user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      michelle_messages: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          role: Database["public"]["Enums"]["michelle_message_role"];
+          session_id: string;
+          tokens_used: number;
+          updated_at: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          role: Database["public"]["Enums"]["michelle_message_role"];
+          session_id: string;
+          tokens_used?: number;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          role?: Database["public"]["Enums"]["michelle_message_role"];
+          session_id?: string;
+          tokens_used?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "michelle_messages_session_id_fkey";
+            columns: ["session_id"];
+            referencedRelation: "michelle_sessions";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      michelle_knowledge: {
+        Row: {
+          content: string;
+          created_at: string;
+          embedding: number[] | null;
+          id: string;
+          metadata: Json | null;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          embedding?: number[] | null;
+          id?: string;
+          metadata?: Json | null;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          embedding?: number[] | null;
+          id?: string;
+          metadata?: Json | null;
+        };
+        Relationships: [];
+      };
+      michelle_knowledge_parents: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          metadata: Json | null;
+          parent_index: number;
+          source: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          parent_index: number;
+          source: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          parent_index?: number;
+          source?: string;
+        };
+        Relationships: [];
+      };
+      michelle_knowledge_children: {
+        Row: {
+          child_index: number;
+          content: string;
+          created_at: string;
+          embedding: number[] | null;
+          id: string;
+          metadata: Json | null;
+          parent_id: string;
+        };
+        Insert: {
+          child_index: number;
+          content: string;
+          created_at?: string;
+          embedding?: number[] | null;
+          id?: string;
+          metadata?: Json | null;
+          parent_id: string;
+        };
+        Update: {
+          child_index?: number;
+          content?: string;
+          created_at?: string;
+          embedding?: number[] | null;
+          id?: string;
+          metadata?: Json | null;
+          parent_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "michelle_knowledge_children_parent_id_fkey";
+            columns: ["parent_id"];
+            referencedRelation: "michelle_knowledge_parents";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       users: {
         Row: {
           created_at: string | null;
@@ -340,8 +505,38 @@ export interface Database {
           similarity: number;
         }[];
       };
+      match_michelle_knowledge: {
+        Args: {
+          query_embedding: unknown;
+          match_count?: number;
+          similarity_threshold?: number;
+        };
+        Returns: {
+          id: string;
+          content: string;
+          metadata: Json | null;
+          similarity: number;
+        }[];
+      };
+      match_michelle_knowledge_sinr: {
+        Args: {
+          query_embedding: unknown;
+          match_count?: number;
+          similarity_threshold?: number;
+        };
+        Returns: {
+          parent_id: string;
+          parent_content: string;
+          parent_metadata: Json | null;
+          parent_source: string;
+          child_similarity: number;
+        }[];
+      };
     };
-    Enums: Record<string, never>;
+    Enums: {
+      michelle_message_role: "user" | "assistant" | "system";
+      michelle_session_category: "love" | "life" | "relationship";
+    };
     CompositeTypes: Record<string, never>;
   };
 }

@@ -5,6 +5,7 @@ import type { Counselor, Message } from "@/types";
 import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
+import MichelleChatClient from "@/components/MichelleChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
@@ -110,6 +111,10 @@ export default function ChatPage({
         ロード中...
       </div>
     );
+  }
+
+  if (counselorId === "michele") {
+    return <MichelleChatClient />;
   }
 
   return (

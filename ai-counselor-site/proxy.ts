@@ -6,6 +6,7 @@ const PROTECTED_PATHS = [
   "/counselor",
   "/api/chat",
   "/api/conversations",
+  "/api/michelle",
   "/admin",
   "/api/admin",
 ];
@@ -41,6 +42,7 @@ export const config = {
     "/counselor/:path*",
     "/api/chat",
     "/api/conversations/:path*",
+    "/api/michelle/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
   ],

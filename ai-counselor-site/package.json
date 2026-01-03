@@ -13,7 +13,8 @@
     "release:health": "ts-node scripts/post-deploy-check.ts",
     "release:smoke": "ts-node scripts/smoke-test.ts",
     "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts",
-    "rag:insert": "ts-node scripts/insert-rag-data.ts"
+    "rag:insert": "ts-node scripts/insert-rag-data.ts",
+    "michelle:upload": "ts-node scripts/michelle-knowledge/upload-to-rag.ts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.32.1",
@@ -21,7 +22,9 @@
     "@supabase/auth-helpers-react": "^0.15.0",
     "@supabase/supabase-js": "^2.89.0",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
+    "openai": "^6.15.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zustand": "^5.0.9"
