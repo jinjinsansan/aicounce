@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 import { debugLog } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 
-type GuidedAction = "back" | "deeper" | "next";
-type GuidedPhase = "explore" | "deepen" | "release";
-
 type SessionSummary = {
   id: string;
   title: string | null;
@@ -53,28 +50,6 @@ const thinkingMessages = [
 
 const THINKING_MESSAGE_INTERVAL_MS = 1400;
 
-const GUIDED_ACTION_PRESETS: Record<GuidedAction, { prompt: string; success: string }> = {
-  back: {
-    prompt: "直前に扱っていたテーマをもう一度整理したいです。さっきの内容を別の視点でもう少し丁寧に解説してください。",
-    success: "✓ 直前のテーマをもう一度整理します",
-  },
-  deeper: {
-    prompt:
-      "今取り組んでいる心のテーマをさらに深掘りしたいです。感情の芯や根底にある思い込みまで一緒に探ってください。",
-    success: "✓ 同じテーマをさらに深掘りします",
-  },
-  next: {
-    prompt: "このテーマはいったん区切って、次に進むためのセルフケアや新しい視点を案内してください。",
-    success: "✓ 次のステップへ進みます",
-  },
-};
-
-const GUIDED_PHASE_LABELS: Record<GuidedPhase, string> = {
-  explore: "気持ちの整理",
-  deepen: "深掘り・核心探索",
-  release: "リリース＆ケア",
-};
-
 export function ClinicalChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -90,9 +65,6 @@ export function ClinicalChatClient() {
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
-  const [phaseInsight, setPhaseInsight] = useState<{ phase: GuidedPhase; summary: string } | null>(null);
-  const [isPhaseInsightLoading, setIsPhaseInsightLoading] = useState(false);
-  const [guidedActionLoading, setGuidedActionLoading] = useState<null | GuidedAction>(null);
   const [isOffline, setIsOffline] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -154,11 +126,6 @@ export function ClinicalChatClient() {
         }
         if (res.status === 404) {
           debugLog("[loadMessages] Session not found - clearing activeSessionId");
-          setActiveSessionId(null);
-          setHasLoadedMessages(true);
-          return;
-        }
-        if (res.status === 404) {
           console.warn("Clinical session not found", sessionId);
           setActiveSessionId(null);
           setHasLoadedMessages(true);
@@ -183,6 +150,8 @@ export function ClinicalChatClient() {
         debugLog("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
       } catch (err) {
         console.error("[loadMessages] Error loading messages:", err);
+        setError("ネットワークエラーが発生しました");
+        setHasLoadedMessages(true);
       } finally {
         setIsLoading((prev) => ({ ...prev, messages: false }));
         debugLog("[loadMessages] Loading complete");
@@ -392,94 +361,12 @@ export function ClinicalChatClient() {
     return () => clearInterval(interval);
   }, [hasPendingResponse]);
 
-  const handlePhaseInsightRequest = async () => {
-    if (!activeSessionId || messages.length < 4) {
-      setError("会話が十分ではありません");
-      setTimeout(() => setError(null), 2000);
-      return;
-    }
-
-    setIsPhaseInsightLoading(true);
-    try {
-      const res = await fetch("/api/clinical/phase", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: activeSessionId }),
-      });
-
-      if (res.status === 401) {
-        setError("ログインが必要です");
-        setTimeout(() => setError(null), 2000);
-        return;
-      }
-
-      if (!res.ok) {
-        let serverMessage = "フェーズ診断に失敗しました";
-        try {
-          const raw = await res.text();
-          if (raw) {
-            try {
-              const parsed = JSON.parse(raw) as { error?: string };
-              if (parsed.error) {
-                serverMessage = parsed.error;
-              } else {
-                serverMessage = raw;
-              }
-            } catch {
-              serverMessage = raw;
-            }
-          }
-        } catch {}
-        throw new Error(serverMessage);
-      }
-
-      const data = (await res.json()) as { phase?: string; summary?: string };
-      const allowedPhases: GuidedPhase[] = ["explore", "deepen", "release"];
-      const normalized = (data.phase ?? "explore").toLowerCase() as GuidedPhase;
-      const nextPhase = allowedPhases.includes(normalized) ? normalized : "explore";
-
-      setPhaseInsight({
-        phase: nextPhase,
-        summary: data.summary?.trim() || `現在は${GUIDED_PHASE_LABELS[nextPhase]}にいます。`,
-      });
-    } catch (phaseError) {
-      const message = phaseError instanceof Error ? phaseError.message : "フェーズ診断に失敗しました";
-      setError(message);
-      setTimeout(() => setError(null), 2000);
-    } finally {
-      setIsPhaseInsightLoading(false);
-    }
-  };
-
-  const handleGuidedAction = async (action: GuidedAction) => {
-    if (isLoading.sending || guidedActionLoading) {
-      return;
-    }
-
-    const preset = GUIDED_ACTION_PRESETS[action];
-    setGuidedActionLoading(action);
-
-    try {
-      setError(preset.success);
-      setTimeout(() => setError(null), 2000);
-
-      await handleSendMessage(preset.prompt);
-    } catch (actionError) {
-      console.error("Guided action error", actionError);
-      setError("操作に失敗しました");
-      setTimeout(() => setError(null), 2000);
-    } finally {
-      setGuidedActionLoading(null);
-    }
-  };
-
   const handleNewChat = () => {
     debugLog("[User Action] New chat clicked - clearing session");
     setActiveSessionId(null);
     setMessages([]);
     setError(null);
     setHasLoadedMessages(true);
-    setPhaseInsight(null);
     hasRestoredSessionRef.current = false;
 
     try {
@@ -967,50 +854,6 @@ export function ClinicalChatClient() {
                       )}
                     </div>
 
-                    {message.role === "assistant" && !message.pending && activeSessionId && messages.length >= 4 && (
-                      <div className="ml-[52px] mt-1.5 flex flex-wrap items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
-                          onClick={() => handleGuidedAction("back")}
-                          disabled={guidedActionLoading !== null || isLoading.sending}
-                        >
-                          {guidedActionLoading === "back" ? "整理中..." : "◀ 前のテーマ"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
-                          onClick={() => handleGuidedAction("deeper")}
-                          disabled={guidedActionLoading !== null || isLoading.sending}
-                        >
-                          {guidedActionLoading === "deeper" ? "準備中..." : "◎ 深掘り"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
-                          onClick={() => handleGuidedAction("next")}
-                          disabled={guidedActionLoading !== null || isLoading.sending}
-                        >
-                          {guidedActionLoading === "next" ? "案内中..." : "次へ ▶"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
-                          onClick={handlePhaseInsightRequest}
-                          disabled={isPhaseInsightLoading || !activeSessionId}
-                        >
-                          {isPhaseInsightLoading && <Loader2 className="mr-0.5 h-2.5 w-2.5 animate-spin" />}
-                          {isPhaseInsightLoading ? "判定中..." : "フェーズ判定"}
-                        </Button>
-                        {phaseInsight && (
-                          <span className="text-[9px] text-[#1e3a8a]">{GUIDED_PHASE_LABELS[phaseInsight.phase]}</span>
-                        )}
-                      </div>
-                    )}
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
