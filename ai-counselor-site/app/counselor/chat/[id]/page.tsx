@@ -6,32 +6,23 @@ import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import MichelleChatClient from "@/components/MichelleChatClient";
+import ClinicalChatClient from "@/components/ClinicalChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
 
-
-export default function ChatPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+function StandardChatExperience({ counselorId }: { counselorId: string }) {
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const { messages, setMessages } = useChatStore();
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const resolvedParams = useResolvedParams(params);
-  const counselorId = resolvedParams?.id;
+
   const handleConversationCreated = (id: string) => {
     setConversationId(id);
     setMessages([]);
   };
 
   useEffect(() => {
-    if (!counselorId) {
-      return;
-    }
-
     let mounted = true;
     loadCounselorById(counselorId)
       .then((data) => mounted && setCounselor(data))
@@ -43,9 +34,6 @@ export default function ChatPage({
 
   useEffect(() => {
     const loadConversation = async () => {
-      if (!counselorId) {
-        return;
-      }
       try {
         const response = await fetch(
           `/api/conversations?counselorId=${counselorId}`,
@@ -105,7 +93,7 @@ export default function ChatPage({
     loadMessages();
   }, [conversationId, setMessages]);
 
-  if (loading || !counselorId) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-500">
         ロード中...
@@ -113,15 +101,11 @@ export default function ChatPage({
     );
   }
 
-  if (counselorId === "michele") {
-    return <MichelleChatClient />;
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-6xl gap-6">
         <Sidebar
-          selectedCounselorId={counselorId ?? undefined}
+          selectedCounselorId={counselorId}
           onConversationCreated={handleConversationCreated}
         />
         <main className="flex-1 space-y-6 rounded-3xl bg-white/90 p-6 shadow-xl">
@@ -152,4 +136,31 @@ export default function ChatPage({
       </div>
     </div>
   );
+}
+
+export default function ChatPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = useResolvedParams(params);
+  const counselorId = resolvedParams?.id;
+
+  if (!counselorId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        ロード中...
+      </div>
+    );
+  }
+
+  if (counselorId === "michele") {
+    return <MichelleChatClient />;
+  }
+
+  if (counselorId === "sato") {
+    return <ClinicalChatClient />;
+  }
+
+  return <StandardChatExperience counselorId={counselorId} />;
 }

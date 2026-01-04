@@ -7,6 +7,7 @@ import type { Counselor } from "@/types";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
 import MichelleDetailPage from "@/components/MichelleDetailPage";
+import SatoDetailPage from "@/components/SatoDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -16,22 +17,12 @@ const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   ),
 });
 
-export default function CounselorDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+function StandardCounselorDetail({ counselorId }: { counselorId: string }) {
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const resolvedParams = useResolvedParams(params);
-  const counselorId = resolvedParams?.id;
 
   useEffect(() => {
-    if (!counselorId) {
-      return;
-    }
-
     let mounted = true;
     loadCounselorById(counselorId)
       .then((data) => {
@@ -43,11 +34,6 @@ export default function CounselorDetailPage({
       mounted = false;
     };
   }, [counselorId]);
-
-  // ミシェル専用ページを表示
-  if (counselorId === "michele") {
-    return <MichelleDetailPage />;
-  }
 
   if (loading) {
     return (
@@ -88,10 +74,10 @@ export default function CounselorDetailPage({
               <p className="mt-4 text-slate-600">{counselor.description}</p>
             </div>
             <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-              <p className="font-semibold text-slate-900">アプローチ</p>
+              <p className="font-semibold text-slate-900">相談スタイル</p>
               <p className="mt-2">
-                システムプロンプトとRAGを組み合わせ、相談者のフェーズに応じた
-                カスタマイズシナリオを提供します。Phase 4でRAG強化を予定。
+                対話テンポやトーンを調整しながら、感じていることを安全に言葉にできるようサポートします。
+                重要なポイントはメモとしてまとめ、次のステップへ自然につなげます。
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -140,4 +126,31 @@ export default function CounselorDetailPage({
       </div>
     </div>
   );
+}
+
+export default function CounselorDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = useResolvedParams(params);
+  const counselorId = resolvedParams?.id;
+
+  if (!counselorId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        読み込み中...
+      </div>
+    );
+  }
+
+  if (counselorId === "michele") {
+    return <MichelleDetailPage />;
+  }
+
+  if (counselorId === "sato") {
+    return <SatoDetailPage />;
+  }
+
+  return <StandardCounselorDetail counselorId={counselorId} />;
 }
