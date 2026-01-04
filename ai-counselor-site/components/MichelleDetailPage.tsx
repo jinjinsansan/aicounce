@@ -61,12 +61,14 @@ export default function MichelleDetailPage() {
           </button>
 
           <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12">
-            <div className="relative h-48 w-48 flex-shrink-0">
+            <div className="relative h-52 w-52 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
               <Image
                 src="/images/counselors/michelle.png"
                 alt="Michelle"
                 fill
-                className="rounded-full object-cover shadow-2xl"
+                className="object-contain"
+                sizes="208px"
+                priority
               />
             </div>
 
