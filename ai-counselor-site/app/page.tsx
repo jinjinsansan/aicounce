@@ -18,6 +18,10 @@ const ProblemSolutionSection = dynamic(
   () => import("@/components/ProblemSolutionSection")
 );
 
+const MultiCounselingSection = dynamic(
+  () => import("@/components/MultiCounselingSection")
+);
+
 const PricingSection = dynamic(() => import("@/components/PricingSection"));
 
 const FAQSection = dynamic(() => import("@/components/FAQSection"), {
@@ -92,8 +96,13 @@ export default function HomePage() {
           )}
         </section>
 
+        {/* Multi-Counseling Feature */}
+        <MultiCounselingSection />
+
         {/* Pricing & CTA */}
-        <PricingSection />
+        <div id="pricing">
+          <PricingSection />
+        </div>
 
         {/* FAQ (Keeping as it's useful) */}
         <FAQSection />
