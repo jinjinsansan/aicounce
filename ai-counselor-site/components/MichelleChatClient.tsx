@@ -717,7 +717,7 @@ export function MichelleChatClient() {
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ffd8e6] via-[#ffc4da] to-[#ffb7d2] text-[#84284c] font-semibold shadow-[0_10px_30px_rgba(255,180,210,0.35)] transition hover:shadow-[0_12px_34px_rgba(255,180,210,0.5)]"
+          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -786,7 +786,7 @@ export function MichelleChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 w-full justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ffd8e6] via-[#ffc4da] to-[#ffb7d2] text-[#84284c] font-semibold shadow-[0_10px_30px_rgba(255,180,210,0.35)] transition hover:shadow-[0_12px_34px_rgba(255,180,210,0.5)]"
+              className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
