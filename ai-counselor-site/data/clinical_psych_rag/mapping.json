@@ -1,0 +1,3292 @@
+{
+  "01-01": {
+    "parent_file": "lecture01/01-01_セルフコンパッションとは.md",
+    "children": [
+      {
+        "child_id": "01-01-c01",
+        "section": "セルフコンパッションとは - 自分への思いやり",
+        "char_count": 327
+      },
+      {
+        "child_id": "01-01-c02",
+        "section": "- 「辛かったね」「大変だったね」と自分に声をかける",
+        "char_count": 332
+      },
+      {
+        "child_id": "01-01-c03",
+        "section": "3. マインドフルネス（Mindfulness）",
+        "char_count": 333
+      },
+      {
+        "child_id": "01-01-c04",
+        "section": "セルフコンパッション",
+        "char_count": 475
+      }
+    ]
+  },
+  "01-02": {
+    "parent_file": "lecture01/01-02_セルフコンパッションの実践.md",
+    "children": [
+      {
+        "child_id": "01-02-c01",
+        "section": "セルフコンパッションの実践方法",
+        "char_count": 350
+      },
+      {
+        "child_id": "01-02-c02",
+        "section": "- 「今、私は苦しんでいる」と認識する",
+        "char_count": 342
+      },
+      {
+        "child_id": "01-02-c03",
+        "section": "**やり方**:",
+        "char_count": 332
+      },
+      {
+        "child_id": "01-02-c04",
+        "section": "日常での取り入れ方",
+        "char_count": 353
+      },
+      {
+        "child_id": "01-02-c05",
+        "section": "- 自己批判が強い人は、失敗を避けるようになる",
+        "char_count": 282
+      }
+    ]
+  },
+  "01-03": {
+    "parent_file": "lecture01/01-03_臨床心理学の定義.md",
+    "children": [
+      {
+        "child_id": "01-03-c01",
+        "section": "臨床心理学の定義と科学的アプローチ",
+        "char_count": 166
+      },
+      {
+        "child_id": "01-03-c02",
+        "section": "**重要ポイント**: 「科学的に」という点が本質的である。",
+        "char_count": 166
+      },
+      {
+        "child_id": "01-03-c03",
+        "section": "同様に:",
+        "char_count": 167
+      }
+    ]
+  },
+  "01-04": {
+    "parent_file": "lecture01/01-04_歴史的発展.md",
+    "children": [
+      {
+        "child_id": "01-04-c01",
+        "section": "臨床心理学の歴史的発展",
+        "char_count": 200
+      },
+      {
+        "child_id": "01-04-c02",
+        "section": "- 「これは狂気ではなく精神病として考えるべき」という主張",
+        "char_count": 199
+      },
+      {
+        "child_id": "01-04-c03",
+        "section": "実験で調べるアプローチの確立",
+        "char_count": 201
+      }
+    ]
+  },
+  "01-05": {
+    "parent_file": "lecture01/01-05_心理的アセスメントの基礎.md",
+    "children": [
+      {
+        "child_id": "01-05-c01",
+        "section": "心理的アセスメントの基礎",
+        "char_count": 194
+      },
+      {
+        "child_id": "01-05-c02",
+        "section": "数値化しやすい",
+        "char_count": 193
+      },
+      {
+        "child_id": "01-05-c03",
+        "section": "- ロールシャッハ・テスト",
+        "char_count": 194
+      }
+    ]
+  },
+  "01-06": {
+    "parent_file": "lecture01/01-06_効果研究とエビデンス.md",
+    "children": [
+      {
+        "child_id": "01-06-c01",
+        "section": "効果研究とエビデンスベースド実践",
+        "char_count": 188
+      },
+      {
+        "child_id": "01-06-c02",
+        "section": "1. **最良のエビデンス**：科学的研究による根拠",
+        "char_count": 188
+      },
+      {
+        "child_id": "01-06-c03",
+        "section": "について既存の研究を体系的に収集・評価・統合",
+        "char_count": 189
+      }
+    ]
+  },
+  "01-07": {
+    "parent_file": "lecture01/01-07_事例研究とケースフォーミュレーション.md",
+    "children": [
+      {
+        "child_id": "01-07-c01",
+        "section": "事例研究とケースフォーミュレーション",
+        "char_count": 172
+      },
+      {
+        "child_id": "01-07-c02",
+        "section": "参与観察など",
+        "char_count": 172
+      },
+      {
+        "child_id": "01-07-c03",
+        "section": "：発達歴、家族関係",
+        "char_count": 173
+      }
+    ]
+  },
+  "01-08": {
+    "parent_file": "lecture01/01-08_スーパービジョン.md",
+    "children": [
+      {
+        "child_id": "01-08-c01",
+        "section": "スーパービジョンの重要性",
+        "char_count": 176
+      },
+      {
+        "child_id": "01-08-c02",
+        "section": "2. 専門的アイデンティティの形成",
+        "char_count": 174
+      },
+      {
+        "child_id": "01-08-c03",
+        "section": "ービジョン",
+        "char_count": 177
+      }
+    ]
+  },
+  "01-09": {
+    "parent_file": "lecture01/01-09_共通要因と治療関係.md",
+    "children": [
+      {
+        "child_id": "01-09-c01",
+        "section": "共通要因と治療関係の重要性",
+        "char_count": 193
+      },
+      {
+        "child_id": "01-09-c02",
+        "section": "*：15%",
+        "char_count": 192
+      },
+      {
+        "child_id": "01-09-c03",
+        "section": "- 強みに注目する",
+        "char_count": 195
+      }
+    ]
+  },
+  "01-10": {
+    "parent_file": "lecture01/01-10_臨床心理学の学び方.md",
+    "children": [
+      {
+        "child_id": "01-10-c01",
+        "section": "臨床心理学の学び方と心構え",
+        "char_count": 189
+      },
+      {
+        "child_id": "01-10-c02",
+        "section": "初めて乗れるようになる。",
+        "char_count": 188
+      },
+      {
+        "child_id": "01-10-c03",
+        "section": "継続的な学び",
+        "char_count": 191
+      }
+    ]
+  },
+  "02-01": {
+    "parent_file": "lecture02/02-01_精神分析学の基礎.md",
+    "children": [
+      {
+        "child_id": "02-01-c01",
+        "section": "精神分析学の基礎理論",
+        "char_count": 200
+      },
+      {
+        "child_id": "02-01-c02",
+        "section": "と症状が消える",
+        "char_count": 200
+      },
+      {
+        "child_id": "02-01-c03",
+        "section": "- 抵抗:思い出したくないことを避けようとする反応",
+        "char_count": 202
+      }
+    ]
+  },
+  "02-02": {
+    "parent_file": "lecture02/02-02_中核3条件.md",
+    "children": [
+      {
+        "child_id": "02-02-c01",
+        "section": "パーソナリティ変化のための中核3条件",
+        "char_count": 340
+      },
+      {
+        "child_id": "02-02-c02",
+        "section": "**重要性**:",
+        "char_count": 320
+      },
+      {
+        "child_id": "02-02-c03",
+        "section": "- 自分のことをもっと話せるようになる",
+        "char_count": 322
+      },
+      {
+        "child_id": "02-02-c04",
+        "section": "治療的メカニズム",
+        "char_count": 215
+      }
+    ]
+  },
+  "02-03": {
+    "parent_file": "lecture02/02-03_精神力動アプローチ.md",
+    "children": [
+      {
+        "child_id": "02-03-c01",
+        "section": "精神力動アプローチの基本概念",
+        "char_count": 197
+      },
+      {
+        "child_id": "02-03-c02",
+        "section": "に変形して症状として現れる",
+        "char_count": 197
+      },
+      {
+        "child_id": "02-03-c03",
+        "section": "*投影**：自分の感情を他者のせいにする",
+        "char_count": 198
+      }
+    ]
+  },
+  "02-04": {
+    "parent_file": "lecture02/02-04_認知行動アプローチ.md",
+    "children": [
+      {
+        "child_id": "02-04-c01",
+        "section": "認知行動アプローチの発展",
+        "char_count": 172
+      },
+      {
+        "child_id": "02-04-c02",
+        "section": "、行動主義の限界から「認知」への注目が高まる。",
+        "char_count": 172
+      },
+      {
+        "child_id": "02-04-c03",
+        "section": "BCT）**",
+        "char_count": 173
+      }
+    ]
+  },
+  "02-05": {
+    "parent_file": "lecture02/02-05_人間性アプローチ.md",
+    "children": [
+      {
+        "child_id": "02-05-c01",
+        "section": "人間性アプローチと来談者中心療法",
+        "char_count": 172
+      },
+      {
+        "child_id": "02-05-c02",
+        "section": "にかして変えよう」ではなく「この人の中にある力をどうやったら引き出せるだろう」",
+        "char_count": 172
+      },
+      {
+        "child_id": "02-05-c03",
+        "section": "傾聴で人は変わるのか",
+        "char_count": 174
+      }
+    ]
+  },
+  "02-06": {
+    "parent_file": "lecture02/02-06_システミックアプローチ.md",
+    "children": [
+      {
+        "child_id": "02-06-c01",
+        "section": "システミックアプローチと家族療法",
+        "char_count": 198
+      },
+      {
+        "child_id": "02-06-c02",
+        "section": "全体として理解する。**つながりや関係性を重視する**。",
+        "char_count": 199
+      },
+      {
+        "child_id": "02-06-c03",
+        "section": "の中で理解",
+        "char_count": 201
+      }
+    ]
+  },
+  "02-07": {
+    "parent_file": "lecture02/02-07_ナラティブアプローチ.md",
+    "children": [
+      {
+        "child_id": "02-07-c01",
+        "section": "ナラティブアプローチ",
+        "char_count": 177
+      },
+      {
+        "child_id": "02-07-c02",
+        "section": "た人ではない",
+        "char_count": 176
+      },
+      {
+        "child_id": "02-07-c03",
+        "section": "オルタナティブストーリー",
+        "char_count": 177
+      }
+    ]
+  },
+  "02-08": {
+    "parent_file": "lecture02/02-08_統合的アプローチと変化ステージ.md",
+    "children": [
+      {
+        "child_id": "02-08-c01",
+        "section": "統合的アプローチと変化ステージモデル",
+        "char_count": 203
+      },
+      {
+        "child_id": "02-08-c02",
+        "section": "画を立て始める",
+        "char_count": 203
+      },
+      {
+        "child_id": "02-08-c03",
+        "section": "firmation（是認）",
+        "char_count": 204
+      }
+    ]
+  },
+  "02-09": {
+    "parent_file": "lecture02/02-09_日本の心理療法.md",
+    "children": [
+      {
+        "child_id": "02-09-c01",
+        "section": "日本独自の心理療法",
+        "char_count": 163
+      },
+      {
+        "child_id": "02-09-c02",
+        "section": "治療過程",
+        "char_count": 164
+      },
+      {
+        "child_id": "02-09-c03",
+        "section": "- 母親から始まり重要な他者へ",
+        "char_count": 164
+      }
+    ]
+  },
+  "02-10": {
+    "parent_file": "lecture02/02-10_心理療法のまとめ.md",
+    "children": [
+      {
+        "child_id": "02-10-c01",
+        "section": "心理療法の実践と倫理",
+        "char_count": 196
+      },
+      {
+        "child_id": "02-10-c02",
+        "section": "でも共通要因が重要",
+        "char_count": 196
+      },
+      {
+        "child_id": "02-10-c03",
+        "section": "インフォームドコンセント",
+        "char_count": 197
+      }
+    ]
+  },
+  "03-01": {
+    "parent_file": "lecture03/03-01_臨床心理学の定義.md",
+    "children": [
+      {
+        "child_id": "03-01-c01",
+        "section": "臨床心理学の定義と科学的アプローチ",
+        "char_count": 196
+      },
+      {
+        "child_id": "03-01-c02",
+        "section": "ある方法",
+        "char_count": 196
+      },
+      {
+        "child_id": "03-01-c03",
+        "section": "援助の形態",
+        "char_count": 196
+      }
+    ]
+  },
+  "03-02": {
+    "parent_file": "lecture03/03-02_臨床心理学の歴史.md",
+    "children": [
+      {
+        "child_id": "03-02-c01",
+        "section": "臨床心理学の歴史的発展",
+        "char_count": 268
+      },
+      {
+        "child_id": "03-02-c02",
+        "section": "精神病院の人たちを人として扱う",
+        "char_count": 266
+      },
+      {
+        "child_id": "03-02-c03",
+        "section": "同時期に起きたこと",
+        "char_count": 268
+      }
+    ]
+  },
+  "03-03": {
+    "parent_file": "lecture03/03-03_精神分析学の基礎.md",
+    "children": [
+      {
+        "child_id": "03-03-c01",
+        "section": "精神分析学の基礎理論",
+        "char_count": 200
+      },
+      {
+        "child_id": "03-03-c02",
+        "section": "と症状が消える",
+        "char_count": 200
+      },
+      {
+        "child_id": "03-03-c03",
+        "section": "- 抵抗:思い出したくないことを避けようとする反応",
+        "char_count": 202
+      }
+    ]
+  },
+  "03-04": {
+    "parent_file": "lecture03/03-04_構造論と防衛機制.md",
+    "children": [
+      {
+        "child_id": "03-04-c01",
+        "section": "フロイトの構造論と防衛機制",
+        "char_count": 229
+      },
+      {
+        "child_id": "03-04-c02",
+        "section": "バランスの重要性",
+        "char_count": 228
+      },
+      {
+        "child_id": "03-04-c03",
+        "section": "人の浮気を「そんなはずない」と信じ込む",
+        "char_count": 229
+      }
+    ]
+  },
+  "03-05": {
+    "parent_file": "lecture03/03-05_転移と逆転移.md",
+    "children": [
+      {
+        "child_id": "03-05-c01",
+        "section": "転移と逆転移",
+        "char_count": 199
+      },
+      {
+        "child_id": "03-05-c02",
+        "section": "対的感情",
+        "char_count": 199
+      },
+      {
+        "child_id": "03-05-c03",
+        "section": "イラする",
+        "char_count": 200
+      }
+    ]
+  },
+  "03-06": {
+    "parent_file": "lecture03/03-06_精神性的発達理論前編.md",
+    "children": [
+      {
+        "child_id": "03-06-c01",
+        "section": "フロイトの精神性的発達理論（前編）",
+        "char_count": 176
+      },
+      {
+        "child_id": "03-06-c02",
+        "section": "- リビドーがその部位に留まり続ける",
+        "char_count": 176
+      },
+      {
+        "child_id": "03-06-c03",
+        "section": "まってちゃん傾向",
+        "char_count": 178
+      }
+    ]
+  },
+  "03-07": {
+    "parent_file": "lecture03/03-07_精神性的発達理論後編.md",
+    "children": [
+      {
+        "child_id": "03-07-c01",
+        "section": "精神性的発達理論（後編）:男根期から性器期",
+        "char_count": 178
+      },
+      {
+        "child_id": "03-07-c02",
+        "section": "理だと諦める",
+        "char_count": 178
+      },
+      {
+        "child_id": "03-07-c03",
+        "section": "強に集中",
+        "char_count": 179
+      }
+    ]
+  },
+  "03-08": {
+    "parent_file": "lecture03/03-08_行動主義の誕生.md",
+    "children": [
+      {
+        "child_id": "03-08-c01",
+        "section": "行動主義の誕生と基本概念",
+        "char_count": 184
+      },
+      {
+        "child_id": "03-08-c02",
+        "section": "証可能なものだけを扱う",
+        "char_count": 184
+      },
+      {
+        "child_id": "03-08-c03",
+        "section": "- 再現可能性の重視",
+        "char_count": 185
+      }
+    ]
+  },
+  "03-09": {
+    "parent_file": "lecture03/03-09_レスポンデント条件付け.md",
+    "children": [
+      {
+        "child_id": "03-09-c01",
+        "section": "レスポンデント条件付け（古典的条件付け）",
+        "char_count": 192
+      },
+      {
+        "child_id": "03-09-c02",
+        "section": "無条件刺激(UCS)",
+        "char_count": 192
+      },
+      {
+        "child_id": "03-09-c03",
+        "section": "心理学への応用",
+        "char_count": 192
+      }
+    ]
+  },
+  "03-10": {
+    "parent_file": "lecture03/03-10_オペラント条件付け.md",
+    "children": [
+      {
+        "child_id": "03-10-c01",
+        "section": "オペラント条件付けの基礎",
+        "char_count": 217
+      },
+      {
+        "child_id": "03-10-c02",
+        "section": "を詳細に観察",
+        "char_count": 215
+      },
+      {
+        "child_id": "03-10-c03",
+        "section": "**正の弱化（罰）**：",
+        "char_count": 217
+      }
+    ]
+  },
+  "03-11": {
+    "parent_file": "lecture03/03-11_行動療法の技法.md",
+    "children": [
+      {
+        "child_id": "03-11-c01",
+        "section": "行動療法の技法:系統的脱感作法",
+        "char_count": 233
+      },
+      {
+        "child_id": "03-11-c02",
+        "section": "ステップ2：現状の認識",
+        "char_count": 233
+      },
+      {
+        "child_id": "03-11-c03",
+        "section": "を延ばす",
+        "char_count": 234
+      }
+    ]
+  },
+  "03-12": {
+    "parent_file": "lecture03/03-12_人間性心理学の誕生.md",
+    "children": [
+      {
+        "child_id": "03-12-c01",
+        "section": "人間性心理学の誕生と基本理念",
+        "char_count": 162
+      },
+      {
+        "child_id": "03-12-c02",
+        "section": "側面がある」",
+        "char_count": 162
+      },
+      {
+        "child_id": "03-12-c03",
+        "section": "現象学・実存主義の影響",
+        "char_count": 161
+      }
+    ]
+  },
+  "03-13": {
+    "parent_file": "lecture03/03-13_マズローの欲求階層説.md",
+    "children": [
+      {
+        "child_id": "03-13-c01",
+        "section": "マズローの欲求階層説",
+        "char_count": 208
+      },
+      {
+        "child_id": "03-13-c02",
+        "section": "第3層:所属と愛の欲求**",
+        "char_count": 206
+      },
+      {
+        "child_id": "03-13-c03",
+        "section": "欠乏欲求(第1〜4層)",
+        "char_count": 209
+      }
+    ]
+  },
+  "03-14": {
+    "parent_file": "lecture03/03-14_ロジャーズとクライエント中心療法.md",
+    "children": [
+      {
+        "child_id": "03-14-c01",
+        "section": "ロジャーズとクライエント中心療法",
+        "char_count": 199
+      },
+      {
+        "child_id": "03-14-c02",
+        "section": "基本姿勢",
+        "char_count": 199
+      },
+      {
+        "child_id": "03-14-c03",
+        "section": "ちんと自分の問題解決をしている",
+        "char_count": 199
+      }
+    ]
+  },
+  "03-15": {
+    "parent_file": "lecture03/03-15_三大理論の共通点.md",
+    "children": [
+      {
+        "child_id": "03-15-c01",
+        "section": "3つの理論の共通点：アドバイスをしない",
+        "char_count": 214
+      },
+      {
+        "child_id": "03-15-c02",
+        "section": "ンは作るが",
+        "char_count": 213
+      },
+      {
+        "child_id": "03-15-c03",
+        "section": "- 基本はやっぱり**体験的理解**",
+        "char_count": 215
+      }
+    ]
+  },
+  "03-16": {
+    "parent_file": "lecture03/03-16_精神分析の発展.md",
+    "children": [
+      {
+        "child_id": "03-16-c01",
+        "section": "精神分析の発展：ユング、アドラー、対象関係論",
+        "char_count": 224
+      },
+      {
+        "child_id": "03-16-c02",
+        "section": "-1937)",
+        "char_count": 224
+      },
+      {
+        "child_id": "03-16-c03",
+        "section": "ンらイギリス学派",
+        "char_count": 224
+      }
+    ]
+  },
+  "03-17": {
+    "parent_file": "lecture03/03-17_臨床心理士の専門業務.md",
+    "children": [
+      {
+        "child_id": "03-17-c01",
+        "section": "臨床心理士の4つの専門業務",
+        "char_count": 185
+      },
+      {
+        "child_id": "03-17-c02",
+        "section": "の心理テストや観察、面接を通じて、個々人の独自性、個別性、固有な特徴や問題点の所在を明らかにする",
+        "char_count": 185
+      },
+      {
+        "child_id": "03-17-c03",
+        "section": "さまざまな技法",
+        "char_count": 184
+      }
+    ]
+  },
+  "03-18": {
+    "parent_file": "lecture03/03-18_パーソナリティ変化の中核3条件.md",
+    "children": [
+      {
+        "child_id": "03-18-c01",
+        "section": "パーソナリティ変化のための中核3条件",
+        "char_count": 221
+      },
+      {
+        "child_id": "03-18-c02",
+        "section": "クライエントの感情や考えを尊重",
+        "char_count": 222
+      },
+      {
+        "child_id": "03-18-c03",
+        "section": "ineness)",
+        "char_count": 224
+      }
+    ]
+  },
+  "03-19": {
+    "parent_file": "lecture03/03-19_認知行動療法の誕生.md",
+    "children": [
+      {
+        "child_id": "03-19-c01",
+        "section": "認知革命と認知行動療法の誕生",
+        "char_count": 187
+      },
+      {
+        "child_id": "03-19-c02",
+        "section": "理情動療法）",
+        "char_count": 187
+      },
+      {
+        "child_id": "03-19-c03",
+        "section": "み：物事の捉え方のクセ",
+        "char_count": 188
+      }
+    ]
+  },
+  "03-20": {
+    "parent_file": "lecture03/03-20_認知行動療法の発展.md",
+    "children": [
+      {
+        "child_id": "03-20-c01",
+        "section": "認知行動療法の発展と現代的技法",
+        "char_count": 179
+      },
+      {
+        "child_id": "03-20-c02",
+        "section": "(MBCT)",
+        "char_count": 179
+      },
+      {
+        "child_id": "03-20-c03",
+        "section": "ルの訓練",
+        "char_count": 181
+      }
+    ]
+  },
+  "03-21": {
+    "parent_file": "lecture03/03-21_統合的アプローチ.md",
+    "children": [
+      {
+        "child_id": "03-21-c01",
+        "section": "心理療法の統合的アプローチ",
+        "char_count": 152
+      },
+      {
+        "child_id": "03-21-c02",
+        "section": "技術的折衷主義",
+        "char_count": 151
+      },
+      {
+        "child_id": "03-21-c03",
+        "section": "実践的で現実的",
+        "char_count": 154
+      }
+    ]
+  },
+  "03-22": {
+    "parent_file": "lecture03/03-22_日本の心理療法.md",
+    "children": [
+      {
+        "child_id": "03-22-c01",
+        "section": "日本独自の心理療法",
+        "char_count": 172
+      },
+      {
+        "child_id": "03-22-c02",
+        "section": "1. 絶対臥褥期：何もせず寝ている",
+        "char_count": 172
+      },
+      {
+        "child_id": "03-22-c03",
+        "section": "- 母親から始まり、重要な他者へ",
+        "char_count": 172
+      }
+    ]
+  },
+  "03-23": {
+    "parent_file": "lecture03/03-23_心理職の資格.md",
+    "children": [
+      {
+        "child_id": "03-23-c01",
+        "section": "心理職の専門性と資格",
+        "char_count": 152
+      },
+      {
+        "child_id": "03-23-c02",
+        "section": "- **国家資格**（2017年施行）",
+        "char_count": 151
+      },
+      {
+        "child_id": "03-23-c03",
+        "section": "業務に含まれていない",
+        "char_count": 154
+      }
+    ]
+  },
+  "03-24": {
+    "parent_file": "lecture03/03-24_心理職の活動分野.md",
+    "children": [
+      {
+        "child_id": "03-24-c01",
+        "section": "心理職の主要5分野での活動",
+        "char_count": 205
+      },
+      {
+        "child_id": "03-24-c02",
+        "section": "- 児童生徒・学生の相談",
+        "char_count": 206
+      },
+      {
+        "child_id": "03-24-c03",
+        "section": "育プログラム",
+        "char_count": 207
+      }
+    ]
+  },
+  "03-25": {
+    "parent_file": "lecture03/03-25_臨床心理学のまとめ.md",
+    "children": [
+      {
+        "child_id": "03-25-c01",
+        "section": "臨床心理学の本質：まとめ",
+        "char_count": 194
+      },
+      {
+        "child_id": "03-25-c02",
+        "section": "応用分野としての臨床心理学を学ぶ",
+        "char_count": 192
+      },
+      {
+        "child_id": "03-25-c03",
+        "section": "自転車の例え",
+        "char_count": 196
+      }
+    ]
+  },
+  "04-01": {
+    "parent_file": "lecture04/04-01_メンタル不調者の共通点.md",
+    "children": [
+      {
+        "child_id": "04-01-c01",
+        "section": "メンタル不調者の共通点と自己批判",
+        "char_count": 283
+      },
+      {
+        "child_id": "04-01-c02",
+        "section": "しまう状態を作り出しています。",
+        "char_count": 283
+      },
+      {
+        "child_id": "04-01-c03",
+        "section": "的にどうやって自分に優しくするかわからない",
+        "char_count": 283
+      }
+    ]
+  },
+  "04-02": {
+    "parent_file": "lecture04/04-02_セルフコンパッションとは.md",
+    "children": [
+      {
+        "child_id": "04-02-c01",
+        "section": "セルフコンパッションとは何か",
+        "char_count": 339
+      },
+      {
+        "child_id": "04-02-c02",
+        "section": "このように、自信をなくすようなことばかりをしてしまっています。",
+        "char_count": 327
+      },
+      {
+        "child_id": "04-02-c03",
+        "section": "- いろんなことを楽観的に捉えられる",
+        "char_count": 370
+      }
+    ]
+  },
+  "04-03": {
+    "parent_file": "lecture04/04-03_実践法1_事実を受け入れる.md",
+    "children": [
+      {
+        "child_id": "04-03-c01",
+        "section": "セルフコンパッション実践法①:事実をありのまま受け入れる",
+        "char_count": 343
+      },
+      {
+        "child_id": "04-03-c02",
+        "section": "- 「そんなこと考えちゃダメだ」",
+        "char_count": 325
+      },
+      {
+        "child_id": "04-03-c03",
+        "section": "- 「行きたくないな」→「そう思っているんだな」(ただ受け入れる)",
+        "char_count": 334
+      },
+      {
+        "child_id": "04-03-c04",
+        "section": "- 「こんなことで緊張するくらいだったら先が思いやられる」",
+        "char_count": 385
+      }
+    ]
+  },
+  "04-04": {
+    "parent_file": "lecture04/04-04_実践法2_他者と変わらない.md",
+    "children": [
+      {
+        "child_id": "04-04-c01",
+        "section": "セルフコンパッション実践法②:他者と変わらないことに気づく",
+        "char_count": 324
+      },
+      {
+        "child_id": "04-04-c02",
+        "section": "- 「普通はこうじゃないのに」という思い込み",
+        "char_count": 326
+      },
+      {
+        "child_id": "04-04-c03",
+        "section": "- 自分だけじゃなかった",
+        "char_count": 361
+      },
+      {
+        "child_id": "04-04-c04",
+        "section": "2. **環境の問題**: 「その状況なら誰でもそう感じる」",
+        "char_count": 397
+      }
+    ]
+  },
+  "04-05": {
+    "parent_file": "lecture04/04-05_実践法3_エンプティチェア.md",
+    "children": [
+      {
+        "child_id": "04-05-c01",
+        "section": "セルフコンパッション実践法③:エンプティチェア技法",
+        "char_count": 321
+      },
+      {
+        "child_id": "04-05-c02",
+        "section": "ステップ1:空の椅子を準備",
+        "char_count": 323
+      },
+      {
+        "child_id": "04-05-c03",
+        "section": "講師の実践例:精神科病棟での経験",
+        "char_count": 376
+      },
+      {
+        "child_id": "04-05-c04",
+        "section": "実践のコツ",
+        "char_count": 328
+      },
+      {
+        "child_id": "04-05-c05",
+        "section": "- 面接が終わって誰もいなくなったら",
+        "char_count": 342
+      }
+    ]
+  },
+  "04-06": {
+    "parent_file": "lecture04/04-06_自尊心と親子関係.md",
+    "children": [
+      {
+        "child_id": "04-06-c01",
+        "section": "自尊心の育ちと親子関係",
+        "char_count": 344
+      },
+      {
+        "child_id": "04-06-c02",
+        "section": "結果として",
+        "char_count": 327
+      },
+      {
+        "child_id": "04-06-c03",
+        "section": "養育環境との関連",
+        "char_count": 326
+      },
+      {
+        "child_id": "04-06-c04",
+        "section": "理想の自分を演じることの弊害",
+        "char_count": 330
+      },
+      {
+        "child_id": "04-06-c05",
+        "section": "2. **自分を大切に育てていく**",
+        "char_count": 324
+      }
+    ]
+  },
+  "04-07": {
+    "parent_file": "lecture04/04-07_継続と効果.md",
+    "children": [
+      {
+        "child_id": "04-07-c01",
+        "section": "セルフコンパッションの継続と効果",
+        "char_count": 334
+      },
+      {
+        "child_id": "04-07-c02",
+        "section": "- 日常的にこの3つを実践していく",
+        "char_count": 337
+      },
+      {
+        "child_id": "04-07-c03",
+        "section": "このチャンネルの基盤",
+        "char_count": 330
+      },
+      {
+        "child_id": "04-07-c04",
+        "section": "- さまざまなことに挑戦できる",
+        "char_count": 338
+      },
+      {
+        "child_id": "04-07-c05",
+        "section": "- 今日の動画だけでは完全に理解できないかもしれない",
+        "char_count": 322
+      }
+    ]
+  },
+  "04-08": {
+    "parent_file": "lecture04/04-08_依存と回復のプロセス.md",
+    "children": [
+      {
+        "child_id": "04-08-c01",
+        "section": "依存と回復のプロセス",
+        "char_count": 151
+      },
+      {
+        "child_id": "04-08-c02",
+        "section": "囲の心配を否定",
+        "char_count": 149
+      },
+      {
+        "child_id": "04-08-c03",
+        "section": "再発予防",
+        "char_count": 153
+      }
+    ]
+  },
+  "05-01": {
+    "parent_file": "lecture05/05-01_人目を気にする人の違い.md",
+    "children": [
+      {
+        "child_id": "05-01-c01",
+        "section": "人目を気にする人と気にしない人の違い",
+        "char_count": 332
+      },
+      {
+        "child_id": "05-01-c02",
+        "section": "人目がある場所での振る舞い",
+        "char_count": 329
+      },
+      {
+        "child_id": "05-01-c03",
+        "section": "よくある誤解",
+        "char_count": 335
+      }
+    ]
+  },
+  "05-02": {
+    "parent_file": "lecture05/05-02_愛着理論の基礎.md",
+    "children": [
+      {
+        "child_id": "05-02-c01",
+        "section": "愛着理論の基礎:心の土台とは",
+        "char_count": 335
+      },
+      {
+        "child_id": "05-02-c02",
+        "section": "- 言葉も理解できないのに、**快・不快**はわかる",
+        "char_count": 348
+      },
+      {
+        "child_id": "05-02-c03",
+        "section": "親の反応の重要性",
+        "char_count": 326
+      },
+      {
+        "child_id": "05-02-c04",
+        "section": "心の土台の完成",
+        "char_count": 185
+      }
+    ]
+  },
+  "05-03": {
+    "parent_file": "lecture05/05-03_愛着と対人関係.md",
+    "children": [
+      {
+        "child_id": "05-03-c01",
+        "section": "愛着形成と対人関係への影響",
+        "char_count": 343
+      },
+      {
+        "child_id": "05-03-c02",
+        "section": "- 他人に対しても安心できる",
+        "char_count": 324
+      },
+      {
+        "child_id": "05-03-c03",
+        "section": "- 親で培った安心感が他者にも適用される",
+        "char_count": 332
+      },
+      {
+        "child_id": "05-03-c04",
+        "section": "- 自分らしく振る舞える",
+        "char_count": 263
+      }
+    ]
+  },
+  "05-04": {
+    "parent_file": "lecture05/05-04_愛着形成不十分な場合.md",
+    "children": [
+      {
+        "child_id": "05-04-c01",
+        "section": "愛着形成が不十分だった場合",
+        "char_count": 328
+      },
+      {
+        "child_id": "05-04-c02",
+        "section": "結果として生まれる信念",
+        "char_count": 336
+      },
+      {
+        "child_id": "05-04-c03",
+        "section": "- ギュッと抱きしめてくれる機会が少ない",
+        "char_count": 328
+      },
+      {
+        "child_id": "05-04-c04",
+        "section": "- ありのままでは愛されない",
+        "char_count": 326
+      },
+      {
+        "child_id": "05-04-c05",
+        "section": "この段階で:",
+        "char_count": 352
+      }
+    ]
+  },
+  "05-05": {
+    "parent_file": "lecture05/05-05_心理メカニズム.md",
+    "children": [
+      {
+        "child_id": "05-05-c01",
+        "section": "人目を気にする心理メカニズム",
+        "char_count": 332
+      },
+      {
+        "child_id": "05-05-c02",
+        "section": "具体的には:",
+        "char_count": 328
+      },
+      {
+        "child_id": "05-05-c03",
+        "section": "- SNSで自分よりいい人が現れると「まずい」と思う",
+        "char_count": 340
+      },
+      {
+        "child_id": "05-05-c04",
+        "section": "満たされない感覚",
+        "char_count": 335
+      },
+      {
+        "child_id": "05-05-c05",
+        "section": "メカニズム",
+        "char_count": 346
+      }
+    ]
+  },
+  "05-06": {
+    "parent_file": "lecture05/05-06_解決法1_内側の安心.md",
+    "children": [
+      {
+        "child_id": "05-06-c01",
+        "section": "解決法①:外側の承認から内側の安心へ",
+        "char_count": 333
+      },
+      {
+        "child_id": "05-06-c02",
+        "section": "- **内側にすでに安心がある**",
+        "char_count": 338
+      },
+      {
+        "child_id": "05-06-c03",
+        "section": "- 虐待を受けて内側に安心なんてこれっぽっちもない人が",
+        "char_count": 348
+      },
+      {
+        "child_id": "05-06-c04",
+        "section": "- どんどん内側に安心が生まれる",
+        "char_count": 343
+      },
+      {
+        "child_id": "05-06-c05",
+        "section": "外側の承認 → 内側の安心へのシフト",
+        "char_count": 270
+      }
+    ]
+  },
+  "05-07": {
+    "parent_file": "lecture05/05-07_解決法2_自分の味方.md",
+    "children": [
+      {
+        "child_id": "05-07-c01",
+        "section": "解決法②:自分が自分の味方になる実践",
+        "char_count": 325
+      },
+      {
+        "child_id": "05-07-c02",
+        "section": "これを無意識にいろんな場面でやっています。",
+        "char_count": 330
+      },
+      {
+        "child_id": "05-07-c03",
+        "section": "- この人が正解なのか？",
+        "char_count": 337
+      },
+      {
+        "child_id": "05-07-c04",
+        "section": "**自分の本音に気づく:**",
+        "char_count": 330
+      },
+      {
+        "child_id": "05-07-c05",
+        "section": "- それで嫌うんだったら、その人と付き合わない方がいい",
+        "char_count": 335
+      }
+    ]
+  },
+  "05-08": {
+    "parent_file": "lecture05/05-08_理解者とつながる.md",
+    "children": [
+      {
+        "child_id": "05-08-c01",
+        "section": "自分を理解してくれる人とつながる",
+        "char_count": 332
+      },
+      {
+        "child_id": "05-08-c02",
+        "section": "- 「あなたが好き」",
+        "char_count": 331
+      },
+      {
+        "child_id": "05-08-c03",
+        "section": "注意すべきポイント:",
+        "char_count": 329
+      },
+      {
+        "child_id": "05-08-c04",
+        "section": "批判されても大丈夫",
+        "char_count": 337
+      },
+      {
+        "child_id": "05-08-c05",
+        "section": "ポジティブなサイクル",
+        "char_count": 334
+      }
+    ]
+  },
+  "05-09": {
+    "parent_file": "lecture05/05-09_注意点とサポート.md",
+    "children": [
+      {
+        "child_id": "05-09-c01",
+        "section": "実践における注意点とサポートの重要性",
+        "char_count": 343
+      },
+      {
+        "child_id": "05-09-c02",
+        "section": "という方法もとても有効です。",
+        "char_count": 328
+      },
+      {
+        "child_id": "05-09-c03",
+        "section": "- 無理のない形で課題に取り組める",
+        "char_count": 332
+      },
+      {
+        "child_id": "05-09-c04",
+        "section": "- サポートが受けられる",
+        "char_count": 331
+      },
+      {
+        "child_id": "05-09-c05",
+        "section": "- 話を聞いてもらう経験",
+        "char_count": 331
+      }
+    ]
+  },
+  "05-10": {
+    "parent_file": "lecture05/05-10_愛着と心理療法.md",
+    "children": [
+      {
+        "child_id": "05-10-c01",
+        "section": "愛着理論と心理療法",
+        "char_count": 140
+      },
+      {
+        "child_id": "05-10-c02",
+        "section": "愛着スタイル別の治療的配慮",
+        "char_count": 138
+      },
+      {
+        "child_id": "05-10-c03",
+        "section": "- 予測可能で一貫した関わり",
+        "char_count": 141
+      }
+    ]
+  },
+  "06-01": {
+    "parent_file": "lecture06/06-01_パニック障害とは.md",
+    "children": [
+      {
+        "child_id": "06-01-c01",
+        "section": "パニック障害とは何か:基本理解",
+        "char_count": 327
+      },
+      {
+        "child_id": "06-01-c02",
+        "section": "身を脅かすような危険や課題、大きな仕事などをいっぱい抱えると:",
+        "char_count": 332
+      },
+      {
+        "child_id": "06-01-c03",
+        "section": "こうした条件が重なった時にパニック発作を起こす可能性があります。",
+        "char_count": 328
+      },
+      {
+        "child_id": "06-01-c04",
+        "section": "重要なポイント",
+        "char_count": 339
+      }
+    ]
+  },
+  "06-02": {
+    "parent_file": "lecture06/06-02_予期不安と広場恐怖.md",
+    "children": [
+      {
+        "child_id": "06-02-c01",
+        "section": "予期不安と広場恐怖:悪循環のメカニズム",
+        "char_count": 335
+      },
+      {
+        "child_id": "06-02-c02",
+        "section": "- 今日はプレゼンがあるなと思ってプレッシャーを受けていた",
+        "char_count": 327
+      },
+      {
+        "child_id": "06-02-c03",
+        "section": "- 実際には人が集まる場所全般への恐怖",
+        "char_count": 346
+      },
+      {
+        "child_id": "06-02-c04",
+        "section": "- 買い物に行けない",
+        "char_count": 332
+      },
+      {
+        "child_id": "06-02-c05",
+        "section": "- 次も同じ場所を避けてしまう",
+        "char_count": 334
+      }
+    ]
+  },
+  "06-03": {
+    "parent_file": "lecture06/06-03_なりやすい性格.md",
+    "children": [
+      {
+        "child_id": "06-03-c01",
+        "section": "パニック障害になりやすい性格特徴",
+        "char_count": 332
+      },
+      {
+        "child_id": "06-03-c02",
+        "section": "パニック発作を起こしやすい",
+        "char_count": 337
+      },
+      {
+        "child_id": "06-03-c03",
+        "section": "克服へのプレッシャー",
+        "char_count": 345
+      },
+      {
+        "child_id": "06-03-c04",
+        "section": "我慢強さはポジティブに聞こえますが、実は問題があります。",
+        "char_count": 348
+      },
+      {
+        "child_id": "06-03-c05",
+        "section": "- パニック障害の一番の要因",
+        "char_count": 334
+      }
+    ]
+  },
+  "06-04": {
+    "parent_file": "lecture06/06-04_克服法の全体像.md",
+    "children": [
+      {
+        "child_id": "06-04-c01",
+        "section": "克服法の全体像と準備の重要性",
+        "char_count": 343
+      },
+      {
+        "child_id": "06-04-c02",
+        "section": "- 呼吸法",
+        "char_count": 337
+      },
+      {
+        "child_id": "06-04-c03",
+        "section": "- パニックが起きやすい",
+        "char_count": 335
+      },
+      {
+        "child_id": "06-04-c04",
+        "section": "- **定着させる**",
+        "char_count": 329
+      },
+      {
+        "child_id": "06-04-c05",
+        "section": "克服法の全体構造",
+        "char_count": 322
+      }
+    ]
+  },
+  "06-05": {
+    "parent_file": "lecture06/06-05_準備1_呼吸法.md",
+    "children": [
+      {
+        "child_id": "06-05-c01",
+        "section": "準備体操①:気分の安定化を学ぶ - 呼吸法",
+        "char_count": 331
+      },
+      {
+        "child_id": "06-05-c02",
+        "section": "- 屈伸",
+        "char_count": 353
+      },
+      {
+        "child_id": "06-05-c03",
+        "section": "**吸息域より吐息域を長くした呼吸**をしていただきたいです。",
+        "char_count": 348
+      },
+      {
+        "child_id": "06-05-c04",
+        "section": "- お腹が膨らむのを意識",
+        "char_count": 328
+      },
+      {
+        "child_id": "06-05-c05",
+        "section": "自分に合った比率を見つける",
+        "char_count": 346
+      }
+    ]
+  },
+  "06-06": {
+    "parent_file": "lecture06/06-06_準備2_グラウンディング.md",
+    "children": [
+      {
+        "child_id": "06-06-c01",
+        "section": "準備体操①:気分の安定化 - グラウンディング",
+        "char_count": 336
+      },
+      {
+        "child_id": "06-06-c02",
+        "section": "- 「また あの時こういう風になった」(過去)",
+        "char_count": 327
+      },
+      {
+        "child_id": "06-06-c03",
+        "section": "- 現実感覚が戻る",
+        "char_count": 333
+      },
+      {
+        "child_id": "06-06-c04",
+        "section": "- マイクがあったり",
+        "char_count": 347
+      },
+      {
+        "child_id": "06-06-c05",
+        "section": "- 足と床にも接触している圧迫感を感じる",
+        "char_count": 344
+      }
+    ]
+  },
+  "06-07": {
+    "parent_file": "lecture06/06-07_準備3_安全基地.md",
+    "children": [
+      {
+        "child_id": "06-07-c01",
+        "section": "準備体操②:心の安全基地を作る",
+        "char_count": 333
+      },
+      {
+        "child_id": "06-07-c02",
+        "section": "基本原則",
+        "char_count": 334
+      },
+      {
+        "child_id": "06-07-c03",
+        "section": "- 話を聞いてもらう",
+        "char_count": 339
+      },
+      {
+        "child_id": "06-07-c04",
+        "section": "ということが大事なんです。",
+        "char_count": 343
+      },
+      {
+        "child_id": "06-07-c05",
+        "section": "- 香りのいいものを置いたり",
+        "char_count": 338
+      }
+    ]
+  },
+  "06-08": {
+    "parent_file": "lecture06/06-08_準備4_思考の柔軟化.md",
+    "children": [
+      {
+        "child_id": "06-08-c01",
+        "section": "準備体操③:思考を柔軟にする",
+        "char_count": 328
+      },
+      {
+        "child_id": "06-08-c02",
+        "section": "そういったものがあって:",
+        "char_count": 357
+      },
+      {
+        "child_id": "06-08-c03",
+        "section": "これを**認知再構成法**と言ったりします。",
+        "char_count": 337
+      },
+      {
+        "child_id": "06-08-c04",
+        "section": "- 誰も覚えていない",
+        "char_count": 310
+      }
+    ]
+  },
+  "06-09": {
+    "parent_file": "lecture06/06-09_暴露療法の実践.md",
+    "children": [
+      {
+        "child_id": "06-09-c01",
+        "section": "暴露療法の正しい実践方法",
+        "char_count": 336
+      },
+      {
+        "child_id": "06-09-c02",
+        "section": "実際にその場で起きたことが怖くないかもしれない、という発想から:",
+        "char_count": 341
+      },
+      {
+        "child_id": "06-09-c03",
+        "section": "暴露療法の誤解",
+        "char_count": 328
+      },
+      {
+        "child_id": "06-09-c04",
+        "section": "- トラウマ的にフラッシュバックを起こして",
+        "char_count": 359
+      },
+      {
+        "child_id": "06-09-c05",
+        "section": "恐怖の原理",
+        "char_count": 382
+      }
+    ]
+  },
+  "06-10": {
+    "parent_file": "lecture06/06-10_暴露療法のステップ.md",
+    "children": [
+      {
+        "child_id": "06-10-c01",
+        "section": "暴露療法の具体的ステップと注意点",
+        "char_count": 328
+      },
+      {
+        "child_id": "06-10-c02",
+        "section": "- 人はそんなにいない",
+        "char_count": 334
+      },
+      {
+        "child_id": "06-10-c03",
+        "section": "- **グラウンディング**",
+        "char_count": 331
+      },
+      {
+        "child_id": "06-10-c04",
+        "section": "**という風に学習できるので**:",
+        "char_count": 348
+      },
+      {
+        "child_id": "06-10-c05",
+        "section": "小さい恐怖度から始める理由",
+        "char_count": 330
+      }
+    ]
+  },
+  "06-11": {
+    "parent_file": "lecture06/06-11_自分を責めない.md",
+    "children": [
+      {
+        "child_id": "06-11-c01",
+        "section": "自分を責めないこと:回復への心構え",
+        "char_count": 338
+      },
+      {
+        "child_id": "06-11-c02",
+        "section": "パニック発作が起きる理由",
+        "char_count": 342
+      },
+      {
+        "child_id": "06-11-c03",
+        "section": "- しっかりとそのお薬の相談をしていただきたいと思います",
+        "char_count": 335
+      },
+      {
+        "child_id": "06-11-c04",
+        "section": "- 「よく頑張ってきたね」",
+        "char_count": 338
+      },
+      {
+        "child_id": "06-11-c05",
+        "section": "- 一人で抱え込まない",
+        "char_count": 334
+      }
+    ]
+  },
+  "06-12": {
+    "parent_file": "lecture06/06-12_治療の見通し.md",
+    "children": [
+      {
+        "child_id": "06-12-c01",
+        "section": "治療の見通しと希望",
+        "char_count": 362
+      },
+      {
+        "child_id": "06-12-c02",
+        "section": "正常な反応",
+        "char_count": 345
+      },
+      {
+        "child_id": "06-12-c03",
+        "section": "薬物療法の重要性",
+        "char_count": 333
+      },
+      {
+        "child_id": "06-12-c04",
+        "section": "**心の勉強会**を定期的に開催:",
+        "char_count": 342
+      },
+      {
+        "child_id": "06-12-c05",
+        "section": "3. **オンラインカウンセリング**",
+        "char_count": 330
+      }
+    ]
+  },
+  "06-13": {
+    "parent_file": "lecture06/06-13_トラウマからの回復.md",
+    "children": [
+      {
+        "child_id": "06-13-c01",
+        "section": "トラウマからの回復プロセス",
+        "char_count": 137
+      },
+      {
+        "child_id": "06-13-c02",
+        "section": "- トラウマ記憶の処理",
+        "char_count": 136
+      },
+      {
+        "child_id": "06-13-c03",
+        "section": "回復を支える要因",
+        "char_count": 139
+      }
+    ]
+  },
+  "07-01": {
+    "parent_file": "lecture07/07-01_罪悪感とは何か.md",
+    "children": [
+      {
+        "child_id": "07-01-c01",
+        "section": "罪悪感とは何か - 無意識下のルールと自己否定",
+        "char_count": 344
+      },
+      {
+        "child_id": "07-01-c02",
+        "section": "機能的ルールと非機能的ルール",
+        "char_count": 350
+      },
+      {
+        "child_id": "07-01-c03",
+        "section": "意識の表層では様々なことを見聞きしているが、心の奥底（無意識）にはトラウマや辛い記憶、そして「自分を",
+        "char_count": 342
+      },
+      {
+        "child_id": "07-01-c04",
+        "section": "**非機能的ルール**: 過度に自分を制限するルール、幼少期の親子関係から形成",
+        "char_count": 163
+      }
+    ]
+  },
+  "07-02": {
+    "parent_file": "lecture07/07-02_罪悪感を手放すステップ1-2.md",
+    "children": [
+      {
+        "child_id": "07-02-c01",
+        "section": "罪悪感を手放す4つのステップ(1) - 感情の認識とルールの特定",
+        "char_count": 360
+      },
+      {
+        "child_id": "07-02-c02",
+        "section": "なぜ抑圧するのか",
+        "char_count": 326
+      },
+      {
+        "child_id": "07-02-c03",
+        "section": "無意識のルールを見つける",
+        "char_count": 313
+      },
+      {
+        "child_id": "07-02-c04",
+        "section": "意識化すると疑問が湧く：「なぜこんなに相手を優先しなければいけないのだろう?」",
+        "char_count": 451
+      }
+    ]
+  },
+  "07-03": {
+    "parent_file": "lecture07/07-03_罪悪感を手放すステップ3-4.md",
+    "children": [
+      {
+        "child_id": "07-03-c01",
+        "section": "罪悪感を手放す4つのステップ(2) - 自分の価値観の発見と本心に基づく行動",
+        "char_count": 318
+      },
+      {
+        "child_id": "07-03-c02",
+        "section": "これは「他人を優先すべき」という厳しいルールとは異なる、**自分を尊重する新しい価値観**である。",
+        "char_count": 367
+      },
+      {
+        "child_id": "07-03-c03",
+        "section": "多くの場合、予想していたほど悪い結果にはならない。相手も「わかった、また今度ね」と普通に受け入れてく",
+        "char_count": 362
+      },
+      {
+        "child_id": "07-03-c04",
+        "section": "- 「自分を優先しても大丈夫だよ」",
+        "char_count": 324
+      },
+      {
+        "child_id": "07-03-c05",
+        "section": "**ステップ1: 感情を認識して受け入れる**",
+        "char_count": 337
+      }
+    ]
+  },
+  "07-04": {
+    "parent_file": "lecture07/07-04_健全な罪悪感と不健全な罪悪感.md",
+    "children": [
+      {
+        "child_id": "07-04-c01",
+        "section": "健全な罪悪感と不健全な罪悪感",
+        "char_count": 143
+      },
+      {
+        "child_id": "07-04-c02",
+        "section": "な罪悪感",
+        "char_count": 143
+      },
+      {
+        "child_id": "07-04-c03",
+        "section": "良くなかった。次は違うやり方をしよう」",
+        "char_count": 144
+      }
+    ]
+  },
+  "07-05": {
+    "parent_file": "lecture07/07-05_罪悪感からの解放.md",
+    "children": [
+      {
+        "child_id": "07-05-c01",
+        "section": "罪悪感からの解放と自己許し",
+        "char_count": 155
+      },
+      {
+        "child_id": "07-05-c02",
+        "section": "自分を人間として受け入れること",
+        "char_count": 156
+      },
+      {
+        "child_id": "07-05-c03",
+        "section": "- この経験から何を学べるか",
+        "char_count": 157
+      }
+    ]
+  },
+  "08-01": {
+    "parent_file": "lecture08/08-01_セルフモニタリング.md",
+    "children": [
+      {
+        "child_id": "08-01-c01",
+        "section": "セルフモニタリング - 問題を明確化する第一歩",
+        "char_count": 319
+      },
+      {
+        "child_id": "08-01-c02",
+        "section": "- 環境そのものに問題がある",
+        "char_count": 333
+      },
+      {
+        "child_id": "08-01-c03",
+        "section": "5. **身体反応**: 体にどんな反応があるか（動悸、肩こり、倦怠感、吐き気、腹痛、下痢など）",
+        "char_count": 327
+      },
+      {
+        "child_id": "08-01-c04",
+        "section": "ストレス反応の中で悪循環を見出し、捉え方と行動のパターンを変えることで、感情や身体反応も間接的に改善",
+        "char_count": 320
+      }
+    ]
+  },
+  "08-02": {
+    "parent_file": "lecture08/08-02_マインドセット前編.md",
+    "children": [
+      {
+        "child_id": "08-02-c01",
+        "section": "問題解決の4つのマインドセット(1) - 問題は当たり前、仕分けが重要",
+        "char_count": 329
+      },
+      {
+        "child_id": "08-02-c02",
+        "section": "問題が起きたことを問題視していない。「どうしよう」ではなく「どうしようかな」と考え、すかさず問題解決",
+        "char_count": 316
+      },
+      {
+        "child_id": "08-02-c03",
+        "section": "**人生も同様**: 生きているだけでいろんな問題がやってくる。その度に止まらないで「なるほど、これ",
+        "char_count": 335
+      },
+      {
+        "child_id": "08-02-c04",
+        "section": "- 「会社の上司が変わんないかな」「あの人さえいなければ」と思っても仕方ない",
+        "char_count": 350
+      },
+      {
+        "child_id": "08-02-c05",
+        "section": "**マインド2**: 解決できることとできないことを仕分ける。変えられないものに執着しない",
+        "char_count": 152
+      }
+    ]
+  },
+  "08-03": {
+    "parent_file": "lecture08/08-03_マインドセット後編.md",
+    "children": [
+      {
+        "child_id": "08-03-c01",
+        "section": "問題解決の4つのマインドセット(2) - 小分け思考とポジティブな未来",
+        "char_count": 348
+      },
+      {
+        "child_id": "08-03-c02",
+        "section": "**今日中にできる解決行動は何か**:",
+        "char_count": 365
+      },
+      {
+        "child_id": "08-03-c03",
+        "section": "マインド4: 問題解決後のポジティブな未来を想像する",
+        "char_count": 322
+      },
+      {
+        "child_id": "08-03-c04",
+        "section": "こうした将来の良いことを想像すると、「そんな未来を手にしたい」と思って頑張れる。",
+        "char_count": 360
+      },
+      {
+        "child_id": "08-03-c05",
+        "section": "自分を労る・褒める",
+        "char_count": 324
+      }
+    ]
+  },
+  "08-04": {
+    "parent_file": "lecture08/08-04_恥と罪悪感の違い.md",
+    "children": [
+      {
+        "child_id": "08-04-c01",
+        "section": "恥と罪悪感の違い",
+        "char_count": 140
+      },
+      {
+        "child_id": "08-04-c02",
+        "section": "消えたい",
+        "char_count": 140
+      },
+      {
+        "child_id": "08-04-c03",
+        "section": "性、依存症につながりやすい",
+        "char_count": 141
+      }
+    ]
+  },
+  "08-05": {
+    "parent_file": "lecture08/08-05_恥への対処とヴァルネラビリティ.md",
+    "children": [
+      {
+        "child_id": "08-05-c01",
+        "section": "恥への対処とヴァルネラビリティ",
+        "char_count": 151
+      },
+      {
+        "child_id": "08-05-c02",
+        "section": "4つの要素",
+        "char_count": 151
+      },
+      {
+        "child_id": "08-05-c03",
+        "section": "について話す**",
+        "char_count": 152
+      }
+    ]
+  },
+  "09-01": {
+    "parent_file": "lecture09/09-01_定義の難しさ.md",
+    "children": [
+      {
+        "child_id": "09-01-c01",
+        "section": "臨床心理学の定義の難しさ - 曖昧さと本質",
+        "char_count": 319
+      },
+      {
+        "child_id": "09-01-c02",
+        "section": "根本的な問題 - 「心理」とは何か",
+        "char_count": 335
+      },
+      {
+        "child_id": "09-01-c03",
+        "section": "辞書からの定義",
+        "char_count": 369
+      },
+      {
+        "child_id": "09-01-c04",
+        "section": "それを応用したのが臨床心理学なので、やはりすごくぼやっとした学問である。",
+        "char_count": 208
+      }
+    ]
+  },
+  "09-02": {
+    "parent_file": "lecture09/09-02_歴史的背景.md",
+    "children": [
+      {
+        "child_id": "09-02-c01",
+        "section": "中世から近代への転換 - 臨床心理学誕生の歴史的背景",
+        "char_count": 337
+      },
+      {
+        "child_id": "09-02-c02",
+        "section": "- 人間は合理的に考えて、感じて、判断して、自分の力でやっていける",
+        "char_count": 317
+      },
+      {
+        "child_id": "09-02-c03",
+        "section": "精神病者の解放 - ピネル",
+        "char_count": 351
+      },
+      {
+        "child_id": "09-02-c04",
+        "section": "政府が管理するのを今は嫌がるので、どんどん個人化している。一方でカウンターとして集団主義的なところも",
+        "char_count": 392
+      }
+    ]
+  },
+  "09-03": {
+    "parent_file": "lecture09/09-03_主要理論.md",
+    "children": [
+      {
+        "child_id": "09-03-c01",
+        "section": "臨床心理学の主要理論 - フロイト、行動療法、ロジャース",
+        "char_count": 427
+      },
+      {
+        "child_id": "09-03-c02",
+        "section": "**問題**: 正しい部分もあるが、「フロイトが言ったことは全部当てはまる」という感じではなく、エビ",
+        "char_count": 353
+      },
+      {
+        "child_id": "09-03-c03",
+        "section": "1. まず人がいないところで、パニックや不安症状が起こらないということを味わう",
+        "char_count": 334
+      },
+      {
+        "child_id": "09-03-c04",
+        "section": "**3つの条件**:",
+        "char_count": 373
+      },
+      {
+        "child_id": "09-03-c05",
+        "section": "セクション5",
+        "char_count": 181
+      }
+    ]
+  },
+  "09-04": {
+    "parent_file": "lecture09/09-04_専門業務.md",
+    "children": [
+      {
+        "child_id": "09-04-c01",
+        "section": "ボストン会議とシステムズアプローチ、臨床心理士の4つの専門業務",
+        "char_count": 354
+      },
+      {
+        "child_id": "09-04-c02",
+        "section": "- A君が席を立つ → B君が注意し始めて収拾がつかなくなる → その声でC君がイライラし始める →",
+        "char_count": 384
+      },
+      {
+        "child_id": "09-04-c03",
+        "section": "2. 臨床心理面接",
+        "char_count": 332
+      },
+      {
+        "child_id": "09-04-c04",
+        "section": "**活動内容**:",
+        "char_count": 330
+      },
+      {
+        "child_id": "09-04-c05",
+        "section": "まとめ - 臨床心理学の本質",
+        "char_count": 230
+      }
+    ]
+  },
+  "09-05": {
+    "parent_file": "lecture09/09-05_査定と診断の違い.md",
+    "children": [
+      {
+        "child_id": "09-05-c01",
+        "section": "査定と診断の本質的違い",
+        "char_count": 160
+      },
+      {
+        "child_id": "09-05-c02",
+        "section": "査定（Assessment）",
+        "char_count": 158
+      },
+      {
+        "child_id": "09-05-c03",
+        "section": "- その人がどう自分を理解したらより良く生きられるか",
+        "char_count": 160
+      }
+    ]
+  },
+  "10-01": {
+    "parent_file": "lecture10/10-01_心理学の定義と歴史.md",
+    "children": [
+      {
+        "child_id": "10-01-c01",
+        "section": "心理学の定義と歴史 - 心の謎を科学的に解明する学問",
+        "char_count": 408
+      },
+      {
+        "child_id": "10-01-c02",
+        "section": "**物体の運動の例**: 何か物を投げたら放物線を描いて落ちる。なぜそうなるのかが不思議。これを研究",
+        "char_count": 314
+      },
+      {
+        "child_id": "10-01-c03",
+        "section": "目に見えないものをどうやって研究するのか",
+        "char_count": 342
+      },
+      {
+        "child_id": "10-01-c04",
+        "section": "セクション4",
+        "char_count": 184
+      }
+    ]
+  },
+  "10-02": {
+    "parent_file": "lecture10/10-02_科学的な方法.md",
+    "children": [
+      {
+        "child_id": "10-02-c01",
+        "section": "科学的な方法とは - 仮説・データ収集・統計分析の3ステップ",
+        "char_count": 339
+      },
+      {
+        "child_id": "10-02-c02",
+        "section": "- **髪の色だけが異なる**",
+        "char_count": 331
+      },
+      {
+        "child_id": "10-02-c03",
+        "section": "| 黒髪 | 女性 | 8.0% |",
+        "char_count": 367
+      },
+      {
+        "child_id": "10-02-c04",
+        "section": "心理学とは地道な作業",
+        "char_count": 284
+      }
+    ]
+  },
+  "10-03": {
+    "parent_file": "lecture10/10-03_ポピュラー心理学.md",
+    "children": [
+      {
+        "child_id": "10-03-c01",
+        "section": "ポピュラー心理学 - 世間に出回る「心理学ではない何か」",
+        "char_count": 332
+      },
+      {
+        "child_id": "10-03-c02",
+        "section": "**2. 種類が違う**:",
+        "char_count": 331
+      },
+      {
+        "child_id": "10-03-c03",
+        "section": "**5. 表現が違う**:",
+        "char_count": 376
+      },
+      {
+        "child_id": "10-03-c04",
+        "section": "**恋愛は研究されていないのか**: 恋愛は**社会心理学**という研究領域の中で研究されている。",
+        "char_count": 432
+      }
+    ]
+  },
+  "10-04": {
+    "parent_file": "lecture10/10-04_心理学の有用性.md",
+    "children": [
+      {
+        "child_id": "10-04-c01",
+        "section": "心理学はちゃんと役に立つ - 楽に生きることができるようになる",
+        "char_count": 401
+      },
+      {
+        "child_id": "10-04-c02",
+        "section": "**具体例 - 花瓶を落とす**: 僕が花瓶をガッシャーンと落とした。周りの人が「だからお前はダメな",
+        "char_count": 369
+      },
+      {
+        "child_id": "10-04-c03",
+        "section": "**必要以上に悩まずに済む**。",
+        "char_count": 341
+      },
+      {
+        "child_id": "10-04-c04",
+        "section": "**客観的に自分を見つめ直すきっかけになる**。",
+        "char_count": 315
+      },
+      {
+        "child_id": "10-04-c05",
+        "section": "- **自分自身とか自分の身の回りの人がうつ病になってしまうリスクを減らせる**",
+        "char_count": 444
+      }
+    ]
+  },
+  "10-05": {
+    "parent_file": "lecture10/10-05_心理学の有用性.md",
+    "children": [
+      {
+        "child_id": "10-05-c01",
+        "section": "心理学の有用性と限界",
+        "char_count": 145
+      },
+      {
+        "child_id": "10-05-c02",
+        "section": "- エビデンスに基づく介入",
+        "char_count": 144
+      },
+      {
+        "child_id": "10-05-c03",
+        "section": "時代による変化",
+        "char_count": 144
+      }
+    ]
+  },
+  "11-01": {
+    "parent_file": "lecture11/11-01_強迫性障害の定義.md",
+    "children": [
+      {
+        "child_id": "11-01-c01",
+        "section": "強迫性障害とは - 定義と2つの基本概念",
+        "char_count": 353
+      },
+      {
+        "child_id": "11-01-c02",
+        "section": "**具体例 - 汚染恐怖**:",
+        "char_count": 322
+      },
+      {
+        "child_id": "11-01-c03",
+        "section": "- 肌荒れするほど洗う(肌荒れの方が心配なレベル)",
+        "char_count": 476
+      }
+    ]
+  },
+  "11-02": {
+    "parent_file": "lecture11/11-02_チェッカーとウォッシャー.md",
+    "children": [
+      {
+        "child_id": "11-02-c01",
+        "section": "強迫性障害の代表的な2つのタイプ - チェッカーとウォッシャー",
+        "char_count": 326
+      },
+      {
+        "child_id": "11-02-c02",
+        "section": "**特徴**: 確認したにもかかわらず不安が押し寄せるから、また確認してしまう。このループから抜け出",
+        "char_count": 326
+      },
+      {
+        "child_id": "11-02-c03",
+        "section": "**3. 顔・体の洗浄**:",
+        "char_count": 340
+      },
+      {
+        "child_id": "11-02-c04",
+        "section": "- **でも不安だから**、不安を打ち消すために鍵の確認をしに行く",
+        "char_count": 260
+      }
+    ]
+  },
+  "11-03": {
+    "parent_file": "lecture11/11-03_悪循環メカニズム.md",
+    "children": [
+      {
+        "child_id": "11-03-c01",
+        "section": "暴露反応妨害法(1) - 強迫性障害の悪循環メカニズム",
+        "char_count": 333
+      },
+      {
+        "child_id": "11-03-c02",
+        "section": "- 暴露反応妨害法を早速やりたい",
+        "char_count": 319
+      },
+      {
+        "child_id": "11-03-c03",
+        "section": "- これは誰にでもある普通の行為",
+        "char_count": 323
+      },
+      {
+        "child_id": "11-03-c04",
+        "section": "**記憶の疑い**: おそらく鍵をかけたような記憶があるんだけど、自分を疑う気持ちがあり、引き返しち",
+        "char_count": 411
+      },
+      {
+        "child_id": "11-03-c05",
+        "section": "セクション5",
+        "char_count": 173
+      }
+    ]
+  },
+  "11-04": {
+    "parent_file": "lecture11/11-04_暴露反応妨害法の実践.md",
+    "children": [
+      {
+        "child_id": "11-04-c01",
+        "section": "暴露反応妨害法(2) - 実践方法と不安曲線",
+        "char_count": 337
+      },
+      {
+        "child_id": "11-04-c02",
+        "section": "**グラフのイメージ**:",
+        "char_count": 347
+      },
+      {
+        "child_id": "11-04-c03",
+        "section": "暴露反応妨害法のパターン",
+        "char_count": 326
+      },
+      {
+        "child_id": "11-04-c04",
+        "section": "- 最初は不安のピークが高い",
+        "char_count": 419
+      }
+    ]
+  },
+  "11-05": {
+    "parent_file": "lecture11/11-05_発症要因.md",
+    "children": [
+      {
+        "child_id": "11-05-c01",
+        "section": "強迫性障害の発症要因 - ストレスと置き換え行動",
+        "char_count": 345
+      },
+      {
+        "child_id": "11-05-c02",
+        "section": "**具体例**:",
+        "char_count": 331
+      },
+      {
+        "child_id": "11-05-c03",
+        "section": "ステップ1: ストレスの蓄積",
+        "char_count": 331
+      },
+      {
+        "child_id": "11-05-c04",
+        "section": "**包括的なアプローチ**:",
+        "char_count": 225
+      }
+    ]
+  },
+  "11-06": {
+    "parent_file": "lecture11/11-06_ストレス管理の3つの柱.md",
+    "children": [
+      {
+        "child_id": "11-06-c01",
+        "section": "ストレス管理の3つの柱 - 強迫性障害の根本対策",
+        "char_count": 322
+      },
+      {
+        "child_id": "11-06-c02",
+        "section": "- 仕事の量や質",
+        "char_count": 341
+      },
+      {
+        "child_id": "11-06-c03",
+        "section": "**コーピングのレパートリーを増やす**:",
+        "char_count": 382
+      },
+      {
+        "child_id": "11-06-c04",
+        "section": "3つの柱の統合",
+        "char_count": 370
+      }
+    ]
+  },
+  "11-07": {
+    "parent_file": "lecture11/11-07_家族支援と治療モチベーション.md",
+    "children": [
+      {
+        "child_id": "11-07-c01",
+        "section": "家族支援と治療モチベーション - 回復を支える環境づくり",
+        "char_count": 356
+      },
+      {
+        "child_id": "11-07-c02",
+        "section": "**3. 過度な犠牲**:",
+        "char_count": 340
+      },
+      {
+        "child_id": "11-07-c03",
+        "section": "- 小さな目標を一つずつクリアする",
+        "char_count": 323
+      },
+      {
+        "child_id": "11-07-c04",
+        "section": "**心のパートナーとは**: 治療を一緒に歩んでくれる存在。",
+        "char_count": 331
+      },
+      {
+        "child_id": "11-07-c05",
+        "section": "セクション5",
+        "char_count": 180
+      }
+    ]
+  },
+  "11-08": {
+    "parent_file": "lecture11/11-08_アサーションの実践.md",
+    "children": [
+      {
+        "child_id": "11-08-c01",
+        "section": "アサーションの実践技法",
+        "char_count": 206
+      },
+      {
+        "child_id": "11-08-c02",
+        "section": "客観的に状況を描写する",
+        "char_count": 206
+      },
+      {
+        "child_id": "11-08-c03",
+        "section": "YOUメッセージとの違い",
+        "char_count": 208
+      }
+    ]
+  },
+  "11-09": {
+    "parent_file": "lecture11/11-09_対人関係療法の基本.md",
+    "children": [
+      {
+        "child_id": "11-09-c01",
+        "section": "対人関係療法（IPT）の基本",
+        "char_count": 164
+      },
+      {
+        "child_id": "11-09-c02",
+        "section": "- 未解決の悲嘆",
+        "char_count": 164
+      },
+      {
+        "child_id": "11-09-c03",
+        "section": "4. 対人関係の欠如",
+        "char_count": 166
+      }
+    ]
+  },
+  "12-01": {
+    "parent_file": "lecture12/12-01_うつ病の定義.md",
+    "children": [
+      {
+        "child_id": "12-01-c01",
+        "section": "うつ病とは - 定義と基本的な理解",
+        "char_count": 323
+      },
+      {
+        "child_id": "12-01-c02",
+        "section": "**2. 実際の深刻さ**:",
+        "char_count": 343
+      },
+      {
+        "child_id": "12-01-c03",
+        "section": "**誰でもなりうる**:",
+        "char_count": 405
+      }
+    ]
+  },
+  "12-02": {
+    "parent_file": "lecture12/12-02_うつ病の症状.md",
+    "children": [
+      {
+        "child_id": "12-02-c01",
+        "section": "うつ病の症状 - 精神症状と身体症状",
+        "char_count": 334
+      },
+      {
+        "child_id": "12-02-c02",
+        "section": "- 人と会いたくない",
+        "char_count": 339
+      },
+      {
+        "child_id": "12-02-c03",
+        "section": "- **中途覚醒**: 夜中に何度も目が覚める",
+        "char_count": 337
+      },
+      {
+        "child_id": "12-02-c04",
+        "section": "- 朝起きた時が一番辛い",
+        "char_count": 479
+      }
+    ]
+  },
+  "12-03": {
+    "parent_file": "lecture12/12-03_認知の歪み.md",
+    "children": [
+      {
+        "child_id": "12-03-c01",
+        "section": "うつ病と認知の歪み - ベックの認知療法",
+        "char_count": 331
+      },
+      {
+        "child_id": "12-03-c02",
+        "section": "うつ病の人は、以下の3つの領域で否定的に考える傾向がある：",
+        "char_count": 339
+      },
+      {
+        "child_id": "12-03-c03",
+        "section": "否定的自動思考",
+        "char_count": 332
+      },
+      {
+        "child_id": "12-03-c04",
+        "section": "2. 過度の一般化",
+        "char_count": 355
+      },
+      {
+        "child_id": "12-03-c05",
+        "section": "6. すべき思考",
+        "char_count": 419
+      }
+    ]
+  },
+  "12-04": {
+    "parent_file": "lecture12/12-04_うつ病の治療.md",
+    "children": [
+      {
+        "child_id": "12-04-c01",
+        "section": "うつ病の治療 - 薬物療法と心理療法",
+        "char_count": 346
+      },
+      {
+        "child_id": "12-04-c02",
+        "section": "**注意点**:",
+        "char_count": 342
+      },
+      {
+        "child_id": "12-04-c03",
+        "section": "- 無理に励まさない",
+        "char_count": 335
+      },
+      {
+        "child_id": "12-04-c04",
+        "section": "- 再発に注意",
+        "char_count": 345
+      },
+      {
+        "child_id": "12-04-c05",
+        "section": "- 一人で抱え込まない",
+        "char_count": 220
+      }
+    ]
+  },
+  "12-05": {
+    "parent_file": "lecture12/12-05_パニック障害の治療.md",
+    "children": [
+      {
+        "child_id": "12-05-c01",
+        "section": "パニック障害の心理療法",
+        "char_count": 161
+      },
+      {
+        "child_id": "12-05-c02",
+        "section": "認知再構成",
+        "char_count": 160
+      },
+      {
+        "child_id": "12-05-c03",
+        "section": "ation）",
+        "char_count": 161
+      }
+    ]
+  },
+  "13-01": {
+    "parent_file": "lecture13/13-01_パーソナリティ障害の定義.md",
+    "children": [
+      {
+        "child_id": "13-01-c01",
+        "section": "パーソナリティ障害とは - 定義と基本的理解",
+        "char_count": 328
+      },
+      {
+        "child_id": "13-01-c02",
+        "section": "- 長期間にわたって続く",
+        "char_count": 343
+      },
+      {
+        "child_id": "13-01-c03",
+        "section": "**E基準・F基準 - 除外診断**:",
+        "char_count": 333
+      },
+      {
+        "child_id": "13-01-c04",
+        "section": "- 環境要因",
+        "char_count": 376
+      }
+    ]
+  },
+  "13-02": {
+    "parent_file": "lecture13/13-02_3つのクラスター分類.md",
+    "children": [
+      {
+        "child_id": "13-02-c01",
+        "section": "パーソナリティ障害の3つのクラスター分類",
+        "char_count": 342
+      },
+      {
+        "child_id": "13-02-c02",
+        "section": "- 奇妙な考えや行動",
+        "char_count": 335
+      },
+      {
+        "child_id": "13-02-c03",
+        "section": "- 外見で注目を引こうとする",
+        "char_count": 339
+      },
+      {
+        "child_id": "13-02-c04",
+        "section": "- 柔軟性の欠如",
+        "char_count": 338
+      },
+      {
+        "child_id": "13-02-c05",
+        "section": "**重複することが多い**:",
+        "char_count": 265
+      }
+    ]
+  },
+  "13-03": {
+    "parent_file": "lecture13/13-03_境界性パーソナリティ障害.md",
+    "children": [
+      {
+        "child_id": "13-03-c01",
+        "section": "境界性パーソナリティ障害(BPD) - 特徴と症状",
+        "char_count": 335
+      },
+      {
+        "child_id": "13-03-c02",
+        "section": "- 実際にまたは想像の中で見捨てられることを避けようと必死",
+        "char_count": 331
+      },
+      {
+        "child_id": "13-03-c03",
+        "section": "- 自分が誰か分からない",
+        "char_count": 337
+      },
+      {
+        "child_id": "13-03-c04",
+        "section": "- 気分が激しく変動する",
+        "char_count": 333
+      },
+      {
+        "child_id": "13-03-c05",
+        "section": "周囲への影響",
+        "char_count": 321
+      }
+    ]
+  },
+  "13-04": {
+    "parent_file": "lecture13/13-04_パーソナリティ障害の治療.md",
+    "children": [
+      {
+        "child_id": "13-04-c01",
+        "section": "パーソナリティ障害の治療 - 弁証法的行動療法を中心に",
+        "char_count": 358
+      },
+      {
+        "child_id": "13-04-c02",
+        "section": "**特徴**:",
+        "char_count": 335
+      },
+      {
+        "child_id": "13-04-c03",
+        "section": "**なぜ重要か**:",
+        "char_count": 329
+      },
+      {
+        "child_id": "13-04-c04",
+        "section": "- 望まない感情を減らす",
+        "char_count": 346
+      },
+      {
+        "child_id": "13-04-c05",
+        "section": "- 週1回のグループセッション",
+        "char_count": 326
+      }
+    ]
+  },
+  "13-05": {
+    "parent_file": "lecture13/13-05_社交不安障害の認知モデル.md",
+    "children": [
+      {
+        "child_id": "13-05-c01",
+        "section": "社交不安障害の認知モデル",
+        "char_count": 171
+      },
+      {
+        "child_id": "13-05-c02",
+        "section": "される」",
+        "char_count": 171
+      },
+      {
+        "child_id": "13-05-c03",
+        "section": "手を隠す",
+        "char_count": 170
+      }
+    ]
+  },
+  "14-01": {
+    "parent_file": "lecture14/14-01_発達障害の定義.md",
+    "children": [
+      {
+        "child_id": "14-01-c01",
+        "section": "発達障害とは - 定義と基本的理解",
+        "char_count": 330
+      },
+      {
+        "child_id": "14-01-c02",
+        "section": "**1. 自閉スペクトラム症（ASD）**:",
+        "char_count": 331
+      },
+      {
+        "child_id": "14-01-c03",
+        "section": "グレーゾーン",
+        "char_count": 352
+      },
+      {
+        "child_id": "14-01-c04",
+        "section": "**「発達障害は増えている」**:",
+        "char_count": 437
+      }
+    ]
+  },
+  "14-02": {
+    "parent_file": "lecture14/14-02_自閉スペクトラム症.md",
+    "children": [
+      {
+        "child_id": "14-02-c01",
+        "section": "自閉スペクトラム症(ASD) - 特徴と支援",
+        "char_count": 339
+      },
+      {
+        "child_id": "14-02-c02",
+        "section": "**具体例**:",
+        "char_count": 340
+      },
+      {
+        "child_id": "14-02-c03",
+        "section": "- 興味のないことには無関心",
+        "char_count": 359
+      },
+      {
+        "child_id": "14-02-c04",
+        "section": "- **視覚過敏**: 明るい光、蛍光灯のちらつきが苦手",
+        "char_count": 337
+      },
+      {
+        "child_id": "14-02-c05",
+        "section": "- 静かな場所を確保",
+        "char_count": 240
+      }
+    ]
+  },
+  "14-03": {
+    "parent_file": "lecture14/14-03_ADHD.md",
+    "children": [
+      {
+        "child_id": "14-03-c01",
+        "section": "注意欠如・多動症(ADHD) - 特徴と支援",
+        "char_count": 332
+      },
+      {
+        "child_id": "14-03-c02",
+        "section": "2. 多動性",
+        "char_count": 345
+      },
+      {
+        "child_id": "14-03-c03",
+        "section": "- 不注意が目立つ",
+        "char_count": 352
+      },
+      {
+        "child_id": "14-03-c04",
+        "section": "- 「脳のメモ帳」のようなもの",
+        "char_count": 348
+      },
+      {
+        "child_id": "14-03-c05",
+        "section": "- 整理整頓のシステム",
+        "char_count": 451
+      }
+    ]
+  },
+  "14-04": {
+    "parent_file": "lecture14/14-04_大人の発達障害.md",
+    "children": [
+      {
+        "child_id": "14-04-c01",
+        "section": "大人の発達障害 - 発見と適応",
+        "char_count": 330
+      },
+      {
+        "child_id": "14-04-c02",
+        "section": "大人で発達障害が疑われるきっかけ",
+        "char_count": 339
+      },
+      {
+        "child_id": "14-04-c03",
+        "section": "- 「自分はダメだ」という思い込み",
+        "char_count": 343
+      },
+      {
+        "child_id": "14-04-c04",
+        "section": "- 「納得した」「楽になった」という人も",
+        "char_count": 338
+      },
+      {
+        "child_id": "14-04-c05",
+        "section": "- なぜ困っていたか分かる",
+        "char_count": 306
+      }
+    ]
+  },
+  "14-05": {
+    "parent_file": "lecture14/14-05_うつ病の心理療法.md",
+    "children": [
+      {
+        "child_id": "14-05-c01",
+        "section": "うつ病の心理療法",
+        "char_count": 149
+      },
+      {
+        "child_id": "14-05-c02",
+        "section": "全か無か思考",
+        "char_count": 150
+      },
+      {
+        "child_id": "14-05-c03",
+        "section": "喜びと達成感の評価",
+        "char_count": 151
+      }
+    ]
+  },
+  "15-01": {
+    "parent_file": "lecture15/15-01_心理アセスメントの概要.md",
+    "children": [
+      {
+        "child_id": "15-01-c01",
+        "section": "心理アセスメントとは - 目的と方法",
+        "char_count": 325
+      },
+      {
+        "child_id": "15-01-c02",
+        "section": "- 治療の進捗を確認",
+        "char_count": 343
+      },
+      {
+        "child_id": "15-01-c03",
+        "section": "- **場面観察**: 特定の場面を設定して観察",
+        "char_count": 349
+      },
+      {
+        "child_id": "15-01-c04",
+        "section": "- 援助の方向性を考える",
+        "char_count": 477
+      }
+    ]
+  },
+  "15-02": {
+    "parent_file": "lecture15/15-02_知能検査.md",
+    "children": [
+      {
+        "child_id": "15-02-c01",
+        "section": "知能検査 - WAIS・WISCを中心に",
+        "char_count": 337
+      },
+      {
+        "child_id": "15-02-c02",
+        "section": "- 成人用（16歳以上）",
+        "char_count": 332
+      },
+      {
+        "child_id": "15-02-c03",
+        "section": "- 知識: 一般的な知識を問う",
+        "char_count": 332
+      },
+      {
+        "child_id": "15-02-c04",
+        "section": "- 符号: 記号と数字を対応させる",
+        "char_count": 328
+      },
+      {
+        "child_id": "15-02-c05",
+        "section": "知能検査の活用",
+        "char_count": 349
+      }
+    ]
+  },
+  "15-03": {
+    "parent_file": "lecture15/15-03_性格検査.md",
+    "children": [
+      {
+        "child_id": "15-03-c01",
+        "section": "性格検査 - 質問紙法と投影法",
+        "char_count": 330
+      },
+      {
+        "child_id": "15-03-c02",
+        "section": "- 虚偽や防衛を検出できる",
+        "char_count": 337
+      },
+      {
+        "child_id": "15-03-c03",
+        "section": "**概要**:",
+        "char_count": 331
+      },
+      {
+        "child_id": "15-03-c04",
+        "section": "- 何に見えたか（内容）",
+        "char_count": 337
+      },
+      {
+        "child_id": "15-03-c05",
+        "section": "- 過度な解釈を避ける",
+        "char_count": 450
+      }
+    ]
+  },
+  "15-04": {
+    "parent_file": "lecture15/15-04_その他の検査と限界.md",
+    "children": [
+      {
+        "child_id": "15-04-c01",
+        "section": "その他の心理検査と検査の限界",
+        "char_count": 349
+      },
+      {
+        "child_id": "15-04-c02",
+        "section": "**SDS（自己評価式抑うつ尺度）**:",
+        "char_count": 326
+      },
+      {
+        "child_id": "15-04-c03",
+        "section": "- 50項目の自己記入式",
+        "char_count": 356
+      },
+      {
+        "child_id": "15-04-c04",
+        "section": "- 前頭葉機能を評価",
+        "char_count": 344
+      },
+      {
+        "child_id": "15-04-c05",
+        "section": "- 過度な解釈のリスク",
+        "char_count": 423
+      }
+    ]
+  },
+  "15-05": {
+    "parent_file": "lecture15/15-05_セルフコンパッションの実践.md",
+    "children": [
+      {
+        "child_id": "15-05-c01",
+        "section": "セルフコンパッションの実践",
+        "char_count": 182
+      },
+      {
+        "child_id": "15-05-c02",
+        "section": "」（マインドフルネス）",
+        "char_count": 182
+      },
+      {
+        "child_id": "15-05-c03",
+        "section": "と励まし",
+        "char_count": 184
+      }
+    ]
+  },
+  "16-01": {
+    "parent_file": "lecture16/16-01_はじめに_ネガティブ思考の悩みと認知行動療法.md",
+    "children": [
+      {
+        "child_id": "16-01-c01",
+        "section": "はじめに - ネガティブ思考の悩みと認知行動療法",
+        "char_count": 344
+      },
+      {
+        "child_id": "16-01-c02",
+        "section": "でもその先が...",
+        "char_count": 386
+      },
+      {
+        "child_id": "16-01-c03",
+        "section": "**だから、それのコツを今日はお伝えしていきたい**と思います。",
+        "char_count": 312
+      }
+    ]
+  },
+  "16-02": {
+    "parent_file": "lecture16/16-02_出来事と感情の関係_認知が結果を決める.md",
+    "children": [
+      {
+        "child_id": "16-02-c01",
+        "section": "出来事と感情の関係 - 認知が結果を決める",
+        "char_count": 327
+      },
+      {
+        "child_id": "16-02-c02",
+        "section": "**だから、どこに行っても、自分にとって悪いことが起きるっていうのは、なんかおかしいんですよ**。",
+        "char_count": 340
+      },
+      {
+        "child_id": "16-02-c03",
+        "section": "コップ半分の水の例",
+        "char_count": 333
+      },
+      {
+        "child_id": "16-02-c04",
+        "section": "- うわー、いっぱい入ってれば助かるのに",
+        "char_count": 473
+      }
+    ]
+  },
+  "16-03": {
+    "parent_file": "lecture16/16-03_認知の歪み_前編.md",
+    "children": [
+      {
+        "child_id": "16-03-c01",
+        "section": "認知の歪みを知る - 10種類の典型的パターン(前編)",
+        "char_count": 329
+      },
+      {
+        "child_id": "16-03-c02",
+        "section": "自己理解のために",
+        "char_count": 322
+      },
+      {
+        "child_id": "16-03-c03",
+        "section": "全か無か思考の定義",
+        "char_count": 358
+      },
+      {
+        "child_id": "16-03-c04",
+        "section": "だから、やっぱりね、この**パーフェクトっていうものを求められる文化**もありますので、仕方ないんだ",
+        "char_count": 350
+      },
+      {
+        "child_id": "16-03-c05",
+        "section": "だから例えば、男女、男の人は男らしく、女の人は女らしくね。でもこれってもう最近良くないって言われてま",
+        "char_count": 317
+      }
+    ]
+  },
+  "16-04": {
+    "parent_file": "lecture16/16-04_認知の歪み_後編.md",
+    "children": [
+      {
+        "child_id": "16-04-c01",
+        "section": "認知の歪みを知る - 10種類の典型的パターン(後編)",
+        "char_count": 327
+      },
+      {
+        "child_id": "16-04-c02",
+        "section": "7. 感情的決めつけ",
+        "char_count": 359
+      },
+      {
+        "child_id": "16-04-c03",
+        "section": "**感情的決めつけ**っていうのも、ちょっと認知の歪みとされてますね。",
+        "char_count": 348
+      },
+      {
+        "child_id": "16-04-c04",
+        "section": "9. レッテル貼り",
+        "char_count": 338
+      },
+      {
+        "child_id": "16-04-c05",
+        "section": "**極度に偏った思考に陥った人のこと**を、レッテル貼りしてるっていう風に言ったりします。",
+        "char_count": 369
+      }
+    ]
+  },
+  "16-05": {
+    "parent_file": "lecture16/16-05_認知再構成法_3ステップ.md",
+    "children": [
+      {
+        "child_id": "16-05-c01",
+        "section": "認知再構成法の実践(1) - 3ステップの手法",
+        "char_count": 353
+      },
+      {
+        "child_id": "16-05-c02",
+        "section": "3ステップの手法",
+        "char_count": 329
+      },
+      {
+        "child_id": "16-05-c03",
+        "section": "なぜ数値化するのか",
+        "char_count": 350
+      },
+      {
+        "child_id": "16-05-c04",
+        "section": "どの認知の歪みか",
+        "char_count": 333
+      },
+      {
+        "child_id": "16-05-c05",
+        "section": "**3ステップの手法**:",
+        "char_count": 230
+      }
+    ]
+  },
+  "16-06": {
+    "parent_file": "lecture16/16-06_気分を整えてから考える.md",
+    "children": [
+      {
+        "child_id": "16-06-c01",
+        "section": "認知再構成法の実践(2) - 気分を整えてから考える",
+        "char_count": 327
+      },
+      {
+        "child_id": "16-06-c02",
+        "section": "これよく私がよく言う、気分一致効果で、**悲しい時に考えても悲しい考え方しか生まれない**です。",
+        "char_count": 433
+      },
+      {
+        "child_id": "16-06-c03",
+        "section": "キリンのフィギュアの例",
+        "char_count": 330
+      },
+      {
+        "child_id": "16-06-c04",
+        "section": "**重要な注意点: 気分一致効果**",
+        "char_count": 345
+      }
+    ]
+  },
+  "16-07": {
+    "parent_file": "lecture16/16-07_心のストレッチ.md",
+    "children": [
+      {
+        "child_id": "16-07-c01",
+        "section": "認知再構成法の実践(3) - 心のストレッチで柔軟に考える",
+        "char_count": 325
+      },
+      {
+        "child_id": "16-07-c02",
+        "section": "こういうデメリットもありますよね。",
+        "char_count": 332
+      },
+      {
+        "child_id": "16-07-c03",
+        "section": "「え、そんなの気にしなくていいよ」",
+        "char_count": 336
+      },
+      {
+        "child_id": "16-07-c04",
+        "section": "もし100人に「人がこっちを見てたらどう思いますか?」って聞いたら、どんな答えが返ってくるでしょう:",
+        "char_count": 320
+      },
+      {
+        "child_id": "16-07-c05",
+        "section": "**街頭インタビュー**: 100人100色、いろんな考え方がある",
+        "char_count": 164
+      }
+    ]
+  },
+  "16-08": {
+    "parent_file": "lecture16/16-08_合理的な思考を見つける.md",
+    "children": [
+      {
+        "child_id": "16-08-c01",
+        "section": "認知再構成法の実践(4) - 合理的な思考を見つける",
+        "char_count": 321
+      },
+      {
+        "child_id": "16-08-c02",
+        "section": "- 物事にはいろんな捉え方がある",
+        "char_count": 354
+      },
+      {
+        "child_id": "16-08-c03",
+        "section": "合理的な思考の例",
+        "char_count": 353
+      },
+      {
+        "child_id": "16-08-c04",
+        "section": "感情の変化を確認",
+        "char_count": 329
+      },
+      {
+        "child_id": "16-08-c05",
+        "section": "いわゆる、この自分の自動思考がこの中でどれかっていうのは、**私はそこまで重要じゃない**。",
+        "char_count": 320
+      }
+    ]
+  },
+  "16-09": {
+    "parent_file": "lecture16/16-09_認知の歪みの背景.md",
+    "children": [
+      {
+        "child_id": "16-09-c01",
+        "section": "認知の歪みの背景 - なぜ歪みを持つのか",
+        "char_count": 348
+      },
+      {
+        "child_id": "16-09-c02",
+        "section": "そうはならない人もいる",
+        "char_count": 320
+      },
+      {
+        "child_id": "16-09-c03",
+        "section": "でも時にしてですね、**この10個の認知の歪みを全部網羅してる方っていうのはいて**。でしかもそれは",
+        "char_count": 354
+      },
+      {
+        "child_id": "16-09-c04",
+        "section": "個人化の例",
+        "char_count": 373
+      },
+      {
+        "child_id": "16-09-c05",
+        "section": "だから、何かと責められたりして、「そう、私が悪いの、ごめんなさい」と「私のせいでした」って思えた方が",
+        "char_count": 386
+      }
+    ]
+  },
+  "16-10": {
+    "parent_file": "lecture16/16-10_まとめと専門家の支援.md",
+    "children": [
+      {
+        "child_id": "16-10-c01",
+        "section": "認知再構成法のまとめと専門家の支援",
+        "char_count": 334
+      },
+      {
+        "child_id": "16-10-c02",
+        "section": "- 大切な人だったら何てアドバイスする?",
+        "char_count": 322
+      },
+      {
+        "child_id": "16-10-c03",
+        "section": "専門家の支援の重要性",
+        "char_count": 355
+      },
+      {
+        "child_id": "16-10-c04",
+        "section": "2. **認知の歪み10種類**: 自己理解のために知っておく",
+        "char_count": 319
+      },
+      {
+        "child_id": "16-10-c05",
+        "section": "- ポジティブ思考ではなく合理的思考を目指す",
+        "char_count": 185
+      }
+    ]
+  }
+}

@@ -651,7 +651,7 @@ export function MichelleChatClient() {
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff4f7] via-[#ffe9f1] to-[#ffdfe8]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
           <p className="text-lg font-semibold text-[#a34264]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#b1637d]">ミシェル心理学AIをご利用いただくにはログインしてください。</p>
+          <p className="mt-4 text-sm text-[#b1637d]">テープ式心理学AIをご利用いただくにはログインしてください。</p>
         </div>
       </div>
     );
@@ -854,7 +854,7 @@ export function MichelleChatClient() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="font-semibold text-[#a34264]">{activeSession?.title || "ミシェル心理学AI"}</span>
+            <span className="font-semibold text-[#a34264]">{activeSession?.title || "テープ式心理学AI"}</span>
             {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#e091b3]" />}
           </div>
           {messages.length > 0 && (

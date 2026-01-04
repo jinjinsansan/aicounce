@@ -5,6 +5,7 @@ const requiredEnvVars = [
   "SUPABASE_PROJECT_ID",
   "OPENAI_API_KEY",
   "MICHELLE_ASSISTANT_ID",
+  "CLINICAL_ASSISTANT_ID",
   "USE_SINR_RAG",
   "NEXT_PUBLIC_SENTRY_DSN",
 ];
@@ -15,6 +16,8 @@ const optionalEnvVars = [
   "DEEPSEEK_API_KEY",
   "RAG_SOURCE_FOLDER",
   "SENTRY_DSN",
+  "MICHELLE_PHASE_MODEL",
+  "CLINICAL_PHASE_MODEL",
 ];
 
 function checkEnv() {

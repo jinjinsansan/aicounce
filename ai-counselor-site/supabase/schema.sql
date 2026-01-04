@@ -278,6 +278,136 @@ as $$
   limit greatest(match_count, 1);
 $$;
 
+-- Clinical Psychology AI Counselor (Dr. Sato SINR対応) -------------------
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'clinical_message_role') then
+    create type clinical_message_role as enum ('user', 'assistant', 'system');
+  end if;
+end$$;
+
+create table if not exists public.clinical_sessions (
+  id uuid primary key default gen_random_uuid(),
+  auth_user_id uuid not null references public.users(id) on delete cascade,
+  title text,
+  openai_thread_id text,
+  total_tokens integer not null default 0,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.clinical_messages (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references public.clinical_sessions(id) on delete cascade,
+  role clinical_message_role not null,
+  content text not null,
+  tokens_used integer not null default 0,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.clinical_knowledge_parents (
+  id uuid primary key default gen_random_uuid(),
+  content text not null,
+  source text not null,
+  parent_index integer not null,
+  metadata jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.clinical_knowledge_children (
+  id uuid primary key default gen_random_uuid(),
+  parent_id uuid not null references public.clinical_knowledge_parents(id) on delete cascade,
+  content text not null,
+  embedding vector(1536),
+  child_index integer not null,
+  metadata jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists clinical_sessions_user_idx on public.clinical_sessions (auth_user_id);
+create index if not exists clinical_messages_session_idx on public.clinical_messages (session_id);
+create index if not exists clinical_knowledge_parents_source_idx on public.clinical_knowledge_parents(source);
+create index if not exists clinical_knowledge_children_parent_idx on public.clinical_knowledge_children(parent_id);
+create index if not exists clinical_knowledge_children_embedding_idx
+  on public.clinical_knowledge_children using ivfflat (embedding vector_cosine_ops) with (lists = 100);
+
+alter table public.clinical_sessions enable row level security;
+alter table public.clinical_messages enable row level security;
+alter table public.clinical_knowledge_parents enable row level security;
+alter table public.clinical_knowledge_children enable row level security;
+
+drop policy if exists clinical_sessions_select_own on public.clinical_sessions;
+create policy clinical_sessions_select_own
+  on public.clinical_sessions
+  for select using (auth.uid() = auth_user_id);
+
+drop policy if exists clinical_sessions_mutate_own on public.clinical_sessions;
+create policy clinical_sessions_mutate_own
+  on public.clinical_sessions
+  for all using (auth.uid() = auth_user_id) with check (auth.uid() = auth_user_id);
+
+drop policy if exists clinical_messages_select on public.clinical_messages;
+create policy clinical_messages_select
+  on public.clinical_messages
+  for select using (
+    exists (
+      select 1 from public.clinical_sessions cs
+      where cs.id = clinical_messages.session_id
+        and cs.auth_user_id = auth.uid()
+    )
+  );
+
+drop policy if exists clinical_messages_insert on public.clinical_messages;
+create policy clinical_messages_insert
+  on public.clinical_messages
+  for insert with check (
+    exists (
+      select 1 from public.clinical_sessions cs
+      where cs.id = clinical_messages.session_id
+        and cs.auth_user_id = auth.uid()
+    )
+  );
+
+drop policy if exists clinical_knowledge_parents_service_role on public.clinical_knowledge_parents;
+create policy clinical_knowledge_parents_service_role
+  on public.clinical_knowledge_parents
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists clinical_knowledge_children_service_role on public.clinical_knowledge_children;
+create policy clinical_knowledge_children_service_role
+  on public.clinical_knowledge_children
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+create or replace function public.match_clinical_knowledge_sinr(
+  query_embedding vector(1536),
+  match_count int default 5,
+  similarity_threshold double precision default 0.65
+)
+returns table (
+  parent_id uuid,
+  parent_content text,
+  parent_metadata jsonb,
+  parent_source text,
+  child_similarity double precision
+)
+language sql
+stable
+as $$
+  select distinct on (p.id)
+    p.id as parent_id,
+    p.content as parent_content,
+    p.metadata as parent_metadata,
+    p.source as parent_source,
+    1 - (c.embedding <=> query_embedding) as child_similarity
+  from public.clinical_knowledge_children c
+  join public.clinical_knowledge_parents p on c.parent_id = p.id
+  where c.embedding is not null
+    and 1 - (c.embedding <=> query_embedding) >= similarity_threshold
+  order by p.id, c.embedding <=> query_embedding
+  limit greatest(match_count, 1);
+$$;
+
 -- LLM Models -----------------------------------------------------------------
 create table if not exists public.llm_models (
   id uuid primary key default gen_random_uuid(),

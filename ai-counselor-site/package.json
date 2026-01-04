@@ -14,7 +14,8 @@
     "release:smoke": "ts-node scripts/smoke-test.ts",
     "supabase:types": "if [ -z \"$SUPABASE_PROJECT_ID\" ]; then echo 'SUPABASE_PROJECT_ID is required'; exit 1; fi; supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts",
     "rag:insert": "ts-node scripts/insert-rag-data.ts",
-    "michelle:upload": "ts-node scripts/michelle-knowledge/upload-to-rag.ts"
+    "michelle:upload": "ts-node scripts/michelle-knowledge/upload-to-rag.ts",
+    "clinical:upload": "ts-node scripts/clinical-knowledge/upload-to-rag.ts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.32.1",
