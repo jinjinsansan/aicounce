@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
@@ -7,14 +6,7 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
           <div className="md:col-span-2 space-y-4">
-            <div className="relative h-10 w-48">
-              <Image
-                src="/images/logo/logo_horizontal.png"
-                alt="AIカウンセリング事務所"
-                fill
-                className="object-contain"
-              />
-            </div>
+            <p className="text-lg font-bold text-slate-900">メンタルAIチーム</p>
             <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
               24時間365日、あなたの心に寄り添うAIパートナー。人間不在の安心感と専門知の信頼性を、いつでも何度でも。
             </p>
@@ -38,7 +30,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} AI Counseling Office. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Mental AI Team. All rights reserved.</p>
           <p>Made with care for mental health.</p>
         </div>
       </div>

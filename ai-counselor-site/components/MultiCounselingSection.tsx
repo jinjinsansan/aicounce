@@ -17,7 +17,7 @@ export default function MultiCounselingSection() {
             PREMIUM FEATURE
           </span>
           <h2 className="text-3xl font-black text-slate-900 sm:text-4xl">
-            マルチカウンセリングチャット
+            チームカウンセリングチャット
           </h2>
           <p className="mt-4 text-base text-slate-600 sm:text-lg">
             複数のAIカウンセラーが同時に、あなたの相談に多角的な視点を提示します。
@@ -61,7 +61,7 @@ export default function MultiCounselingSection() {
                 <Users size={22} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900">マルチカウンセリング</h3>
+                <h3 className="text-xl font-bold text-slate-900">チームカウンセリング</h3>
                 <p className="text-sm text-slate-500">複数AIの意見を同時に</p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function MultiCounselingSection() {
         </div>
 
         <div className="mt-10 text-center text-sm text-slate-600">
-          マルチカウンセリングチャットは <span className="font-semibold text-slate-900">プレミアムプラン</span> でご利用いただけます
+          チームカウンセリングチャットは <span className="font-semibold text-slate-900">プレミアムプラン</span> でご利用いただけます
         </div>
       </div>
     </section>

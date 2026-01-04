@@ -5,7 +5,7 @@ import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import AppHeader from "@/components/AppHeader";
 
 export const metadata: Metadata = {
-  title: "AIカウンセリング事務所 | もう、誰にも気を使わなくていい",
+  title: "メンタルAIチーム | もう、誰にも気を使わなくていい",
   description:
     "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
   icons: {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     apple: "/images/logo/logo_square.png",
   },
   openGraph: {
-    title: "AIカウンセリング事務所",
+    title: "メンタルAIチーム",
     description:
       "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
     images: ["/images/logo/logo_square.png"],
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "AIカウンセリング事務所",
+    title: "メンタルAIチーム",
     description:
       "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
     images: ["/images/logo/logo_square.png"],

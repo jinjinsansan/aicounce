@@ -41,7 +41,7 @@ export default function PricingSection() {
       description: "より深い対話を求める方へ",
       features: [
         "ベーシックプランの全機能",
-        "マルチカウンセリングチャット",
+        "チームカウンセリングチャット",
         "複数AIの同時相談・比較",
         "専門家の多角的な視点",
         "より深い洞察と気づき",
