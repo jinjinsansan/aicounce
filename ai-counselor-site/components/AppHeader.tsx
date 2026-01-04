@@ -38,13 +38,13 @@ export default function AppHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 text-sm font-semibold text-slate-900">
-          <div className="relative h-8 w-40 overflow-hidden">
+          <div className="relative h-10 w-48 overflow-hidden">
             <Image
               src="/images/logo/logo_horizontal.png"
               alt="AIカウンセリング事務所"
               fill
               className="object-contain"
-              sizes="180px"
+              sizes="220px"
               priority
             />
           </div>
