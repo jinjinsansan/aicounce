@@ -871,8 +871,8 @@ export function MichelleChatClient() {
             ) : messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-8">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="relative h-32 w-32 overflow-hidden rounded-full bg-white shadow-lg">
-                    <Image src="/images/counselors/michelle.png" alt="Michelle" fill className="object-cover" />
+                <div className="relative h-32 w-32 overflow-hidden rounded-2xl bg-white shadow-lg">
+                  <Image src="/images/counselors/michelle.png" alt="Michelle" fill className="object-contain" sizes="128px" />
                   </div>
                   <div className="text-center">
                     <h2 className="text-2xl font-bold text-[#a34264]">こんにちは、ミシェルです</h2>
@@ -901,8 +901,8 @@ export function MichelleChatClient() {
                     <div className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
                     >
                       {message.role === "assistant" && (
-                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-white shadow">
-                          <Image src="/images/counselors/michelle.png" alt="Michelle" fill className="object-cover" />
+                        <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-white shadow">
+                          <Image src="/images/counselors/michelle.png" alt="Michelle" fill className="object-contain" sizes="48px" />
                         </div>
                       )}
                       <div
