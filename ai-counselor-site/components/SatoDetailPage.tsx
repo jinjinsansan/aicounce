@@ -25,7 +25,7 @@ export default function SatoDetailPage() {
       icon: Brain,
       title: "臨床心理学の知見",
       description:
-        "田所先生による16本の専門講義をSINR方式で分解。面接技法や感情整理のプロセスを丁寧に提示します。",
+        "臨床心理学の専門資料500件以上をSINR方式で整理。面接技法や感情整理のプロセスを文脈ごとに提示します。",
     },
     {
       icon: ShieldCheck,
@@ -168,7 +168,7 @@ export default function SatoDetailPage() {
             相談の進め方
           </h2>
           <p className="mt-4 text-center text-slate-600">
-            ですます調で静かに寄り添いながら、心の輪郭を一緒に描いていきます
+            静かなテンポで寄り添いながら、心の輪郭を一緒に描いていきます
           </p>
 
           <div className="mt-12 space-y-6">
@@ -199,7 +199,7 @@ export default function SatoDetailPage() {
                 Knowledge Base
               </p>
               <h2 className="font-shippori mt-4 text-3xl font-bold sm:text-4xl">
-                16本の臨床心理学講義とSINR検索で、文脈の抜けを防ぎます。
+                500件以上の臨床心理学ノートとSINR検索で、文脈の抜けを防ぎます。
               </h2>
               <p className="mt-4 text-base leading-relaxed text-white/90">
                 認知評価・感情理解・介入提案を親和性の高い順に提示。必要に応じて医療機関への
@@ -211,7 +211,7 @@ export default function SatoDetailPage() {
                 <BookOpenCheck className="text-white" size={24} />
                 <div>
                   <p className="text-lg font-semibold">臨床心理学講義</p>
-                  <p className="text-white/80">16本・計523チャンクを参照</p>
+                  <p className="text-white/80">500件以上・計523チャンクを参照</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

@@ -118,11 +118,20 @@ export function ClinicalChatClient() {
         setNeedsAuth(true);
         return;
       }
-      if (!res.ok) throw new Error("Failed to load sessions");
+      if (res.status === 404) {
+        setError("臨床心理カウンセラーは現在ご利用いただけません");
+        return;
+      }
+      if (!res.ok) {
+        console.error("Failed to load clinical sessions", res.status);
+        setError("セッション情報の取得に失敗しました");
+        return;
+      }
       const data = (await res.json()) as SessionsResponse;
       setSessions(data.sessions ?? []);
     } catch (err) {
-      console.error(err);
+      console.error("loadSessions error", err);
+      setError("セッション情報の取得に失敗しました");
     } finally {
       setIsLoading((prev) => ({ ...prev, sessions: false }));
       setHasInitializedSessions(true);
@@ -149,7 +158,18 @@ export function ClinicalChatClient() {
           setHasLoadedMessages(true);
           return;
         }
-        if (!res.ok) throw new Error("Failed to load messages");
+        if (res.status === 404) {
+          console.warn("Clinical session not found", sessionId);
+          setActiveSessionId(null);
+          setHasLoadedMessages(true);
+          return;
+        }
+        if (!res.ok) {
+          console.error("Failed to load clinical messages", res.status);
+          setError("メッセージの取得に失敗しました");
+          setHasLoadedMessages(true);
+          return;
+        }
 
         const data = (await res.json()) as MessagesResponse;
         debugLog("[loadMessages] Received data:", {
@@ -396,9 +416,18 @@ export function ClinicalChatClient() {
       if (!res.ok) {
         let serverMessage = "フェーズ診断に失敗しました";
         try {
-          const errorBody = (await res.json()) as { error?: string };
-          if (errorBody?.error) {
-            serverMessage = errorBody.error;
+          const raw = await res.text();
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw) as { error?: string };
+              if (parsed.error) {
+                serverMessage = parsed.error;
+              } else {
+                serverMessage = raw;
+              }
+            } catch {
+              serverMessage = raw;
+            }
           }
         } catch {}
         throw new Error(serverMessage);
@@ -528,14 +557,18 @@ export function ClinicalChatClient() {
 
       if (!res.ok) {
         let serverMessage = "ネットワークエラーが発生しました";
-
         try {
-          const errorBody = (await res.json()) as { error?: string };
-          if (errorBody?.error) {
-            serverMessage = errorBody.error;
+          const raw = await res.text();
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw) as { error?: string };
+              serverMessage = parsed.error ?? raw;
+            } catch {
+              serverMessage = raw;
+            }
           }
         } catch (parseError) {
-          console.error("Failed to parse error response", parseError);
+          console.error("Failed to read error response", parseError);
         }
         throw new Error(serverMessage);
       }
@@ -648,10 +681,10 @@ export function ClinicalChatClient() {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#eff6ff] via-[#e0f2fe] to-[#bae6fd]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#f7fbff] via-[#edf5ff] to-[#dceeff]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
-          <p className="text-lg font-semibold text-[#a34264]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#b1637d]">臨床心理AIカウンセラー（ドクター・サトウ）をご利用いただくにはログインしてください。</p>
+          <p className="text-lg font-semibold text-[#1d4ed8]">ログインが必要です</p>
+          <p className="mt-4 text-sm text-[#1e3a8a]">臨床心理AIカウンセラー（ドクター・サトウ）をご利用いただくにはログインしてください。</p>
         </div>
       </div>
     );
@@ -666,9 +699,9 @@ export function ClinicalChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#eff6ff] via-[#dbeafe] to-[#bfdbfe]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#f7fbff] via-[#e4f2ff] to-[#cfe4ff]">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#f472b6]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#38bdf8]" />
         </div>
       </div>
     );
@@ -678,13 +711,13 @@ export function ClinicalChatClient() {
   const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
   const showMessagesSkeleton = isLoading.messages && activeSessionId && messages.length === 0;
   const sessionSkeletonNodes = Array.from({ length: 4 }).map((_, idx) => (
-    <div key={`session-skeleton-${idx}`} className="mb-2 h-12 animate-pulse rounded-2xl bg-[#ffeaf3]" />
+    <div key={`session-skeleton-${idx}`} className="mb-2 h-12 animate-pulse rounded-2xl bg-[#e6f3ff]" />
   ));
   const messageSkeletonNodes = (
     <div className="mx-auto max-w-3xl space-y-4" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
       {Array.from({ length: 3 }).map((_, idx) => (
         <div key={`message-skeleton-${idx}`} className="flex gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#ffd4e3]/60" />
+          <div className="h-10 w-10 rounded-full bg-[#d7e9ff]/60" />
           <div className="h-20 flex-1 rounded-2xl bg-white/70 shadow-inner animate-pulse" />
         </div>
       ))}
@@ -693,7 +726,7 @@ export function ClinicalChatClient() {
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#eff6ff] via-[#e0f2fe] to-[#bae6fd] text-[#7b364d]"
+      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#f7fbff] via-[#edf5ff] to-[#dceeff] text-[#123a66]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -711,17 +744,17 @@ export function ClinicalChatClient() {
         </div>
       )}
       <aside
-        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd4e3] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
+        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#d7e9ff] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-start gap-2 rounded-2xl border border-[#ffd4e3] bg-[#fff8fb] text-[#a34264] shadow-sm hover:bg-white"
+          className="mb-6 w-full justify-start gap-2 rounded-2xl border border-[#d7e9ff] bg-[#f8fbff] text-[#1d4ed8] shadow-sm hover:bg-white"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f472b6]">チャット</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#38bdf8]">チャット</p>
         <div className="flex-1 overflow-y-auto">
           {showSessionSkeleton ? (
             <div>{sessionSkeletonNodes}</div>
@@ -744,8 +777,8 @@ export function ClinicalChatClient() {
                 className={cn(
                   "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                   session.id === activeSessionId
-                    ? "border-[#ffc0d9] bg-[#fff0f7] text-[#8b2e52]"
-                    : "border-transparent bg-transparent text-[#b1637d] hover:border-[#ffd4e3] hover:bg-[#fff8fb]",
+                    ? "border-[#c4ddff] bg-[#f0f7ff] text-[#1e40af]"
+                    : "border-transparent bg-transparent text-[#1e3a8a] hover:border-[#d7e9ff] hover:bg-[#f8fbff]",
                 )}
               >
                 <div className="flex min-w-0 items-center gap-2">
@@ -757,7 +790,7 @@ export function ClinicalChatClient() {
                 <button
                   type="button"
                   onClick={(event) => handleDeleteSession(session.id, event)}
-                  className="rounded-full p-1 text-[#e091b3] opacity-0 transition group-hover:opacity-100 hover:bg-white"
+                  className="rounded-full p-1 text-[#93c5fd] opacity-0 transition group-hover:opacity-100 hover:bg-white"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -765,7 +798,7 @@ export function ClinicalChatClient() {
             ))
           )}
           {sessions.length === 0 && !isLoading.sessions && (
-            <p className="text-center text-xs text-[#d494ab]">まだチャット履歴がありません。</p>
+            <p className="text-center text-xs text-[#60a5fa]">まだチャット履歴がありません。</p>
           )}
         </div>
       </aside>
@@ -773,9 +806,9 @@ export function ClinicalChatClient() {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#ffd4e3] bg-white/95 px-4 py-6 shadow-xl">
+          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#d7e9ff] bg-white/95 px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-semibold text-[#a34264]">履歴</span>
+              <span className="text-sm font-semibold text-[#1d4ed8]">履歴</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -786,11 +819,11 @@ export function ClinicalChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 gap-2 rounded-2xl border border-[#ffd4e3] bg-[#fff8fb] text-[#a34264] hover:bg-white"
+              className="mb-4 gap-2 rounded-2xl border border-[#d7e9ff] bg-[#f8fbff] text-[#1d4ed8] hover:bg-white"
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f472b6]">チャット</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#38bdf8]">チャット</p>
             <div className="flex-1 overflow-y-auto">
               {showSessionSkeleton ? (
                 <div>{sessionSkeletonNodes}</div>
@@ -815,8 +848,8 @@ export function ClinicalChatClient() {
                     className={cn(
                       "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                       session.id === activeSessionId
-                        ? "border-[#ffc0d9] bg-[#fff0f7] text-[#8b2e52]"
-                        : "border-transparent bg-transparent text-[#b1637d] hover:border-[#ffd4e3] hover:bg-[#fff8fb]",
+                        ? "border-[#c4ddff] bg-[#f0f7ff] text-[#1e40af]"
+                        : "border-transparent bg-transparent text-[#1e3a8a] hover:border-[#d7e9ff] hover:bg-[#f8fbff]",
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -828,7 +861,7 @@ export function ClinicalChatClient() {
                     <button
                       type="button"
                       onClick={(event) => handleDeleteSession(session.id, event)}
-                      className="rounded-full p-1 text-[#e091b3] transition hover:bg-white"
+                      className="rounded-full p-1 text-[#93c5fd] transition hover:bg-white"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -836,7 +869,7 @@ export function ClinicalChatClient() {
                 ))
               )}
               {sessions.length === 0 && !isLoading.sessions && (
-                <p className="text-center text-xs text-[#d494ab]">まだチャット履歴がありません。</p>
+                <p className="text-center text-xs text-[#60a5fa]">まだチャット履歴がありません。</p>
               )}
             </div>
           </div>
@@ -844,27 +877,27 @@ export function ClinicalChatClient() {
       )}
 
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
-        <header className="flex items-center justify-between border-b border-[#ffd7e8] px-4 py-3 text-sm text-[#b1637d]">
+        <header className="flex items-center justify-between border-b border-[#dbeeff] px-4 py-3 text-sm text-[#1e3a8a]">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full border border-[#ffd4e3] bg-white text-[#f472b6] hover:bg-[#fff8fb] md:hidden"
+              className="rounded-full border border-[#d7e9ff] bg-white text-[#38bdf8] hover:bg-[#f8fbff] md:hidden"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="font-semibold text-[#a34264]">{activeSession?.title || "臨床心理AI（ドクター・サトウ）"}</span>
-            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#e091b3]" />}
+            <span className="font-semibold text-[#1d4ed8]">{activeSession?.title || "臨床心理AI（ドクター・サトウ）"}</span>
+            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#93c5fd]" />}
           </div>
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-[#b1637d]" onClick={handleShare}>
+            <Button variant="ghost" size="sm" className="text-[#1e3a8a]" onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" /> 共有
             </Button>
           )}
         </header>
 
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff4f7] to-[#ffeef5]" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#f4f9ff] to-[#eaf3ff]" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="px-4 pt-4">
             {showMessagesSkeleton ? (
               messageSkeletonNodes
@@ -875,9 +908,9 @@ export function ClinicalChatClient() {
                       <Image src="/images/counselors/dr_satou.png" alt="Dr. Sato" fill className="object-cover" />
                     </div>
                     <div className="text-center">
-                      <h2 className="text-2xl font-bold text-[#a34264]">こんにちは、ドクター・サトウです</h2>
-                      <p className="mt-2 text-sm text-[#b1637d]">感情の揺れや不安があるときは、安心できるペースでお話しください。</p>
-                      <p className="mt-1 text-sm text-[#b1637d]">臨床心理の視点で、整理とセルフケアのヒントを一緒に探します。</p>
+                      <h2 className="text-2xl font-bold text-[#1d4ed8]">こんにちは、ドクター・サトウです</h2>
+                      <p className="mt-2 text-sm text-[#1e3a8a]">感情の揺れや不安があるときは、安心できるペースでお話しください。</p>
+                      <p className="mt-1 text-sm text-[#1e3a8a]">臨床心理の視点で、整理とセルフケアのヒントを一緒に探します。</p>
                     </div>
                   </div>
 
@@ -887,7 +920,7 @@ export function ClinicalChatClient() {
                       key={prompt}
                       onClick={() => handleSendMessage(prompt)}
                       disabled={isLoading.sending}
-                      className="rounded-xl border border-[#ffd4e3] bg-white px-6 py-4 text-center text-sm text-[#7b364d] shadow-sm transition-all hover:bg-[#fff8fb] hover:shadow-md disabled:opacity-50"
+                      className="rounded-xl border border-[#d7e9ff] bg-white px-6 py-4 text-center text-sm text-[#123a66] shadow-sm transition-all hover:bg-[#f8fbff] hover:shadow-md disabled:opacity-50"
                     >
                       {prompt}
                     </button>
@@ -909,8 +942,8 @@ export function ClinicalChatClient() {
                         className={cn(
                           "max-w-[80%] rounded-2xl px-5 py-3 shadow-sm",
                           message.role === "user"
-                            ? "bg-[#ff9ec5] text-white"
-                            : "bg-white border border-[#ffd4e3] text-[#7b364d]",
+                            ? "bg-[#8ab4ff] text-white"
+                            : "bg-white border border-[#d7e9ff] text-[#123a66]",
                         )}
                       >
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -919,16 +952,16 @@ export function ClinicalChatClient() {
                         {message.pending && (
                           <div className="flex items-center gap-2">
                             <div className="flex gap-1">
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f472b6] [animation-delay:-0.3s]" />
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f472b6] [animation-delay:-0.15s]" />
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f472b6]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#38bdf8] [animation-delay:-0.3s]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#38bdf8] [animation-delay:-0.15s]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#38bdf8]" />
                             </div>
-                            <p className="text-xs text-[#c07b8f]">{thinkingMessages[currentThinkingIndex]}</p>
+                            <p className="text-xs text-[#2563eb]">{thinkingMessages[currentThinkingIndex]}</p>
                           </div>
                         )}
                       </div>
                       {message.role === "user" && (
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#a34264] shadow">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#1d4ed8] shadow">
                           <User className="h-5 w-5 text-white" />
                         </div>
                       )}
@@ -939,7 +972,7 @@ export function ClinicalChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#a34264] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
                           onClick={() => handleGuidedAction("back")}
                           disabled={guidedActionLoading !== null || isLoading.sending}
                         >
@@ -948,7 +981,7 @@ export function ClinicalChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#a34264] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
                           onClick={() => handleGuidedAction("deeper")}
                           disabled={guidedActionLoading !== null || isLoading.sending}
                         >
@@ -957,7 +990,7 @@ export function ClinicalChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#a34264] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
                           onClick={() => handleGuidedAction("next")}
                           disabled={guidedActionLoading !== null || isLoading.sending}
                         >
@@ -966,7 +999,7 @@ export function ClinicalChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#a34264] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
                           onClick={handlePhaseInsightRequest}
                           disabled={isPhaseInsightLoading || !activeSessionId}
                         >
@@ -974,7 +1007,7 @@ export function ClinicalChatClient() {
                           {isPhaseInsightLoading ? "判定中..." : "フェーズ判定"}
                         </Button>
                         {phaseInsight && (
-                          <span className="text-[9px] text-[#b1637d]">{GUIDED_PHASE_LABELS[phaseInsight.phase]}</span>
+                          <span className="text-[9px] text-[#1e3a8a]">{GUIDED_PHASE_LABELS[phaseInsight.phase]}</span>
                         )}
                       </div>
                     )}
@@ -988,14 +1021,14 @@ export function ClinicalChatClient() {
 
         <div
           ref={composerRef}
-          className="sticky bottom-0 left-0 right-0 border-t border-[#ffd7e8] bg-white/95 px-4 pt-2 z-50"
+          className="sticky bottom-0 left-0 right-0 border-t border-[#dbeeff] bg-white/95 px-4 pt-2 z-50"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)",
           }}
         >
           <div className="mx-auto max-w-3xl">
-            {error && <p className="mb-2 text-xs font-medium text-[#a34264]">{error}</p>}
-            <div className="flex items-end gap-3 rounded-3xl border border-[#ffd7e8] bg-white/90 px-4 py-3 shadow-sm">
+            {error && <p className="mb-2 text-xs font-medium text-[#1d4ed8]">{error}</p>}
+            <div className="flex items-end gap-3 rounded-3xl border border-[#dbeeff] bg-white/90 px-4 py-3 shadow-sm">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -1014,19 +1047,19 @@ export function ClinicalChatClient() {
                 autoCorrect="off"
                 autoCapitalize="off"
                 disabled={isLoading.sending}
-                className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#7b364d] placeholder:text-[#c790a3] focus:outline-none disabled:opacity-60 md:text-sm"
+                className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#123a66] placeholder:text-[#5a78ff] focus:outline-none disabled:opacity-60 md:text-sm"
                 rows={1}
               />
               <button
                 type="button"
                 onClick={() => handleSendMessage()}
                 disabled={isLoading.sending || !input.trim() || hasPendingResponse}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#f472b6] to-[#fb7185] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#38bdf8] to-[#0ea5e9] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-2 text-center text-xs text-[#c07b8f]">ドクター・サトウAIは誤った情報を生成する場合があります。</p>
+            <p className="mt-2 text-center text-xs text-[#2563eb]">ドクター・サトウAIは誤った情報を生成する場合があります。</p>
           </div>
         </div>
       </main>
