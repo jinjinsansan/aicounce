@@ -35,23 +35,23 @@ export default function AppHeader() {
     : baseNavLinks;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold text-slate-800">
-          <div className="relative h-8 w-8 overflow-hidden rounded-lg">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-3 text-sm font-semibold text-slate-900">
+          <div className="relative h-8 w-40 overflow-hidden">
             <Image
-              src="/images/logo_square.png"
-              alt="AI Counselor Office Logo"
+              src="/images/logo/logo_horizontal.png"
+              alt="AIカウンセリング事務所"
               fill
-              className="object-cover"
-              sizes="32px"
+              className="object-contain"
+              sizes="180px"
+              priority
             />
           </div>
-          <span>AIカウンセリング事務所</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
           {navLinks.map((link) => {
             const isActive =
               pathname === link.href || pathname?.startsWith(`${link.href}/`);
@@ -59,7 +59,7 @@ export default function AppHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={isActive ? "text-orange-600" : "hover:text-slate-900 transition-colors"}
+                className={isActive ? "text-slate-900" : "hover:text-slate-900 transition-colors"}
               >
                 {link.label}
               </Link>
@@ -70,14 +70,14 @@ export default function AppHeader() {
               type="button"
               onClick={handleSignOut}
               disabled={isSigningOut}
-              className="rounded-full bg-slate-900 px-4 py-2 text-white transition-colors hover:bg-slate-800"
+              className="rounded-full bg-slate-900 px-4 py-2 text-white transition-colors hover:bg-black"
             >
               {isSigningOut ? "..." : "サインアウト"}
             </button>
           ) : (
             <Link
               href="/login"
-              className="rounded-full border border-slate-200 px-4 py-2 text-slate-900 transition-colors hover:border-slate-300 hover:bg-slate-50"
+              className="rounded-full border border-slate-300 px-4 py-2 text-slate-900 transition-colors hover:bg-slate-100"
             >
               ログイン
             </Link>
@@ -102,7 +102,7 @@ export default function AppHeader() {
 
       {/* Mobile Navigation Overlay */}
       {isMobileMenuOpen && (
-        <div className="absolute top-16 left-0 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md md:hidden shadow-lg animate-in slide-in-from-top-2">
+        <div className="absolute top-16 left-0 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md md:hidden shadow-lg animate-in slide-in-from-top-2">
           <nav className="flex flex-col p-4 space-y-4">
             {navLinks.map((link) => {
               const isActive =
@@ -113,7 +113,7 @@ export default function AppHeader() {
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block rounded-lg px-4 py-3 text-base font-medium transition-colors ${
-                    isActive ? "bg-orange-50 text-orange-600" : "text-slate-600 hover:bg-slate-50"
+                    isActive ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   {link.label}
@@ -129,7 +129,7 @@ export default function AppHeader() {
                     setIsMobileMenuOpen(false);
                   }}
                   disabled={isSigningOut}
-                  className="w-full rounded-lg bg-slate-900 px-4 py-3 text-center text-white transition-colors hover:bg-slate-800"
+                  className="w-full rounded-lg bg-slate-900 px-4 py-3 text-center text-white transition-colors hover:bg-black"
                 >
                   {isSigningOut ? "サインアウト中..." : "サインアウト"}
                 </button>
@@ -137,7 +137,7 @@ export default function AppHeader() {
                 <Link
                   href="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full rounded-lg border border-slate-200 px-4 py-3 text-center text-slate-900 transition-colors hover:bg-slate-50"
+                  className="block w-full rounded-lg border border-slate-300 px-4 py-3 text-center text-slate-900 transition-colors hover:bg-slate-100"
                 >
                   ログイン
                 </Link>

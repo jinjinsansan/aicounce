@@ -3,89 +3,60 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden rounded-none bg-[#FFF8F0] px-4 py-12 text-slate-800 sm:rounded-3xl sm:px-6 sm:py-20 sm:shadow-sm sm:ring-1 sm:ring-orange-100/50 md:rounded-[40px] md:px-12 md:py-32">
-      {/* Soft Background Blobs */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-orange-200/30 blur-3xl" />
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-green-200/30 blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100/20 blur-[100px]" />
-
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center">
-        {/* Text Content */}
-        <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
-          <div className="inline-flex items-center rounded-full bg-white px-4 py-1.5 text-sm font-medium text-orange-600 shadow-sm ring-1 ring-orange-100">
-            <span className="mr-2 flex h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
-            24時間365日 即時対応
+    <section className="relative overflow-hidden bg-white px-4 py-16 sm:px-6 sm:py-20 md:py-24">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+        {/* Text */}
+        <div className="order-2 space-y-8 lg:order-1">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" /> 24時間365日 即応
           </div>
 
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-6xl font-serif">
-            もう、誰にも
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">
-              気を使わなくていい。
-            </span>
-          </h1>
+          <div className="space-y-4">
+            <h1 className="text-4xl font-black leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
+              もう、誰にも<br />気を使わなくていい。
+            </h1>
+            <p className="text-lg leading-relaxed text-slate-600">
+              人間が一切介在しない、AIだけのカウンセリング事務所。<br className="hidden sm:inline" />
+              10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。
+            </p>
+          </div>
 
-          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 lg:mx-0 font-sans font-medium">
-            人間が一切介在しない、AIだけのカウンセリング事務所。<br/>
-            臨床心理学からスピリチュアルまで、専門知識を学習したAIが<br className="hidden sm:inline"/>
-            あなたの心に寄り添い、否定することなく話を聞き続けます。
-          </p>
-
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               href="#counselors"
-              className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-orange-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-orange-200 transition duration-300 hover:bg-orange-400 hover:shadow-orange-300 sm:w-auto"
+              className="flex items-center justify-center rounded-full bg-slate-900 px-7 py-3 text-sm font-semibold text-white transition hover:bg-black"
             >
-              <span className="mr-2">カウンセラーを選ぶ</span>
-              <span className="transition-transform group-hover:translate-x-1">→</span>
+              カウンセラーを選ぶ
             </Link>
             <Link
               href="#about"
-              className="inline-flex w-full items-center justify-center rounded-full bg-white px-8 py-4 text-base font-bold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 sm:w-auto"
+              className="flex items-center justify-center rounded-full border border-slate-300 px-7 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
             >
-              事務所について
+              サービスについて
             </Link>
           </div>
 
-          <div className="mt-8 flex items-center justify-center gap-8 border-t border-slate-200 pt-8 lg:justify-start">
-            <div>
-              <p className="text-3xl font-bold text-slate-900">10名</p>
-              <p className="text-xs text-slate-500">専門AIカウンセラー</p>
-            </div>
-            <div className="h-10 w-px bg-slate-200" />
-            <div>
-              <p className="text-3xl font-bold text-slate-900">0秒</p>
-              <p className="text-xs text-slate-500">待ち時間</p>
-            </div>
-            <div className="h-10 w-px bg-slate-200" />
-            <div>
-              <p className="text-3xl font-bold text-slate-900">¥1,980</p>
-              <p className="text-xs text-slate-500">月額使い放題</p>
-            </div>
+          <div className="grid grid-cols-3 gap-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+            {[{ label: "専門AI", value: "10名" }, { label: "待ち時間", value: "0秒" }, { label: "月額", value: "¥1,980" }].map((item) => (
+              <div key={item.label} className="space-y-1 text-center">
+                <p className="text-2xl font-bold text-slate-900">{item.value}</p>
+                <p className="text-xs text-slate-500">{item.label}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Visual Content */}
-        <div className="relative mx-auto w-full max-w-md lg:max-w-full order-1 lg:order-2">
-          <div className="relative aspect-square overflow-visible rounded-[40px] border border-white/50 bg-white/40 backdrop-blur-md shadow-2xl ring-1 ring-white/60">
-            <div className="relative h-full w-full overflow-hidden rounded-[40px]">
-              <Image
-                src="/images/hero_image.png"
-                alt="AI Counselor Interface"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-              />
-            </div>
-            
-            {/* Floating Badges */}
-            <div className="absolute -right-6 top-10 z-20 animate-bounce rounded-xl border border-white bg-white/90 px-4 py-2 text-xs font-bold text-orange-500 shadow-lg backdrop-blur-md delay-700">
-              ✨ 秘密厳守
-            </div>
-            <div className="absolute -left-6 bottom-20 z-20 animate-bounce rounded-xl border border-white bg-white/90 px-4 py-2 text-xs font-bold text-blue-500 shadow-lg backdrop-blur-md">
-              🌙 24H対応
-            </div>
+        {/* Visual */}
+        <div className="order-1 lg:order-2">
+          <div className="relative h-[320px] w-full overflow-hidden rounded-[32px] border border-slate-200 bg-slate-50 shadow-sm sm:h-[400px] lg:h-[460px]">
+            <Image
+              src="/images/hero/team_lineup.png"
+              alt="10人のプロフェッショナルAIカウンセラーチーム"
+              fill
+              className="object-contain"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
           </div>
         </div>
       </div>

@@ -3,62 +3,43 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="relative w-full bg-slate-900 text-white">
-      {/* Decorative Image Strip - Reduced height */}
-      <div className="relative w-full h-32 md:h-48 overflow-hidden">
-        <Image
-          src="/images/footer.png"
-          alt="Footer Background"
-          fill
-          className="object-cover opacity-40 object-bottom"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-      </div>
-      
-      <div className="container mx-auto px-6 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-white p-1">
-                <Image
-                  src="/images/logo_square.png"
-                  alt="Logo"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <span className="text-2xl font-bold font-serif">AIカウンセリング事務所</span>
+    <footer className="border-t border-slate-200 bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-4">
+            <div className="relative h-10 w-48">
+              <Image
+                src="/images/logo/logo_horizontal.png"
+                alt="AIカウンセリング事務所"
+                fill
+                className="object-contain"
+              />
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-              24時間365日、あなたの心に寄り添うAIパートナー。<br />
-              人間不在の安心感と、専門知の信頼性をあなたに。<br />
-              いつでも、何度でも、気兼ねなくお話しください。
+            <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
+              24時間365日、あなたの心に寄り添うAIパートナー。人間不在の安心感と専門知の信頼性を、いつでも何度でも。
             </p>
           </div>
-          
-          <div>
-            <h4 className="font-bold mb-6 text-slate-200 border-b border-slate-800 pb-2 inline-block">リンク</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li><Link href="/" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>ホーム</Link></li>
-              <li><Link href="/#counselors" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>カウンセラー一覧</Link></li>
-              <li><Link href="/#about" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>事務所について</Link></li>
-              <li><Link href="/login" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>ログイン / 登録</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-bold mb-6 text-slate-200 border-b border-slate-800 pb-2 inline-block">法的事項</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li><Link href="#" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>利用規約</Link></li>
-              <li><Link href="#" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>プライバシーポリシー</Link></li>
-              <li><Link href="#" className="hover:text-orange-400 transition flex items-center gap-2"><span>›</span>特定商取引法に基づく表記</Link></li>
-            </ul>
+
+          <div className="grid grid-cols-2 gap-6 text-sm text-slate-700 md:justify-items-end">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">リンク</p>
+              <Link href="/" className="block hover:text-slate-900">ホーム</Link>
+              <Link href="/#counselors" className="block hover:text-slate-900">カウンセラー一覧</Link>
+              <Link href="/#about" className="block hover:text-slate-900">事務所について</Link>
+              <Link href="/login" className="block hover:text-slate-900">ログイン / 登録</Link>
+            </div>
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">法的事項</p>
+              <Link href="#" className="block hover:text-slate-900">利用規約</Link>
+              <Link href="#" className="block hover:text-slate-900">プライバシーポリシー</Link>
+              <Link href="#" className="block hover:text-slate-900">特定商取引法に基づく表記</Link>
+            </div>
           </div>
         </div>
-        
-        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} AI Counselor Office. All rights reserved.</p>
-          <p>Made with ❤️ for Mental Health</p>
+
+        <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} AI Counseling Office. All rights reserved.</p>
+          <p>Made with care for mental health.</p>
         </div>
       </div>
     </footer>
