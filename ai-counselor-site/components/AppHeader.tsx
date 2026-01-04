@@ -8,6 +8,7 @@ import { useChatStore } from "@/store/chatStore";
 const baseNavLinks = [
   { href: "/", label: "ホーム" },
   { href: "/counselor/michele", label: "カウンセラー" },
+  { href: "/team", label: "チームカウンセリング" },
 ];
 export default function AppHeader() {
   const pathname = usePathname();
