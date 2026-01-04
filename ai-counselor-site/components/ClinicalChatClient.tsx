@@ -637,7 +637,7 @@ export function ClinicalChatClient() {
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-start gap-2 rounded-2xl border border-[#d7e9ff] bg-[#f8fbff] text-[#1d4ed8] shadow-sm hover:bg-white"
+          className="mb-6 w-full justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d9eaff] via-[#c9e2ff] to-[#b7d8ff] text-[#0f3e9e] font-semibold shadow-[0_10px_30px_rgba(120,170,255,0.35)] transition hover:shadow-[0_12px_34px_rgba(120,170,255,0.5)]"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -706,7 +706,7 @@ export function ClinicalChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 gap-2 rounded-2xl border border-[#d7e9ff] bg-[#f8fbff] text-[#1d4ed8] hover:bg-white"
+              className="mb-4 w-full justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#d9eaff] via-[#c9e2ff] to-[#b7d8ff] text-[#0f3e9e] font-semibold shadow-[0_10px_30px_rgba(120,170,255,0.35)] transition hover:shadow-[0_12px_34px_rgba(120,170,255,0.5)]"
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
