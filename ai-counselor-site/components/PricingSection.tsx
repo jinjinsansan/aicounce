@@ -16,7 +16,7 @@ export default function PricingSection() {
             誰でも日常的に利用できるインフラを目指しました。
           </p>
 
-          <div className="relative overflow-hidden rounded-[48px] bg-white shadow-2xl ring-1 ring-slate-100 transform transition-all hover:scale-[1.02]">
+          <div className="relative overflow-hidden rounded-none bg-white shadow-sm ring-0 transition-all sm:rounded-3xl sm:shadow-xl sm:ring-1 sm:ring-slate-100 md:rounded-[48px] md:shadow-2xl hover:scale-[1.02]">
             <div className="absolute top-0 right-0 rounded-bl-[40px] bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-3 text-sm font-bold text-white shadow-lg">
               おすすめ / Most Popular
             </div>

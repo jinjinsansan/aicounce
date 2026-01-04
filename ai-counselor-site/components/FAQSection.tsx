@@ -25,7 +25,7 @@ const faqs = [
 
 export default function FAQSection() {
   return (
-    <section id="faq" className="rounded-[40px] bg-slate-50 py-24 px-6 md:px-12">
+    <section id="faq" className="rounded-none bg-slate-50 px-4 py-12 sm:rounded-3xl sm:px-6 sm:py-24 md:rounded-[40px] md:px-12">
       <div className="mx-auto max-w-3xl">
         <SectionHeading
           eyebrow="FAQ"
@@ -37,7 +37,7 @@ export default function FAQSection() {
           {faqs.map((faq) => (
             <details
               key={faq.question}
-              className="group rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md open:ring-orange-100"
+              className="group rounded-2xl bg-white p-4 shadow-none ring-0 transition-all sm:rounded-3xl sm:p-6 sm:shadow-sm sm:ring-1 sm:ring-slate-100 hover:shadow-md open:ring-orange-100"
             >
               <summary className="flex cursor-pointer items-center justify-between text-lg font-bold text-slate-800 marker:content-none">
                 {faq.question}

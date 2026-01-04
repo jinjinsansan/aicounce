@@ -51,7 +51,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col gap-20 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-2 py-6 sm:gap-20 sm:px-4 sm:py-8 lg:px-8">
         
         {/* Hero Area */}
         <HeroSection />

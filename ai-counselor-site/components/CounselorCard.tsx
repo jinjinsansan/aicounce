@@ -19,7 +19,7 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
   };
 
   return (
-    <div className="group flex h-full flex-col rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
+    <div className="group flex h-full flex-col rounded-2xl border-0 bg-white p-4 shadow-none transition-all duration-300 sm:rounded-3xl sm:border sm:border-slate-100 sm:p-6 sm:shadow-sm hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
       <div className="flex items-center gap-4">
         <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-100 shadow-md transition-transform group-hover:scale-105 overflow-hidden">
           {counselor.iconUrl ? (

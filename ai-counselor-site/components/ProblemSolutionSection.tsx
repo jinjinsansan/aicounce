@@ -19,7 +19,7 @@ export default function ProblemSolutionSection() {
           
         {/* Story Flow - Step 1: Problem */}
         <div className="mx-auto max-w-5xl">
-          <div className="relative mb-24 rounded-[40px] bg-slate-50 p-8 md:p-16">
+          <div className="relative mb-12 rounded-none bg-slate-50 p-4 sm:mb-24 sm:rounded-3xl sm:p-8 md:rounded-[40px] md:p-16">
             <div className="grid gap-12 md:grid-cols-2 md:items-center">
               <div className="order-2 md:order-1">
                 <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
@@ -65,7 +65,7 @@ export default function ProblemSolutionSection() {
           </div>
 
           {/* Story Flow - Step 2: Solution */}
-          <div className="relative mb-24 rounded-[40px] bg-gradient-to-br from-orange-50 to-amber-50 p-8 md:p-16 border border-orange-100 shadow-xl shadow-orange-100/50">
+          <div className="relative mb-12 rounded-none border-0 bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-none sm:mb-24 sm:rounded-3xl sm:border sm:border-orange-100 sm:p-8 sm:shadow-lg sm:shadow-orange-100/50 md:rounded-[40px] md:p-16 md:shadow-xl">
             <div className="grid gap-12 md:grid-cols-2 md:items-center">
               <div className="order-2 md:order-1">
                 <div className="relative aspect-square rounded-[32px] overflow-hidden bg-white/60 shadow-inner">

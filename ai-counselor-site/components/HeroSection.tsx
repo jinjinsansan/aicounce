@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden rounded-[40px] bg-[#FFF8F0] px-6 py-20 text-slate-800 shadow-sm ring-1 ring-orange-100/50 md:px-12 md:py-32">
+    <section className="relative overflow-hidden rounded-none bg-[#FFF8F0] px-4 py-12 text-slate-800 sm:rounded-3xl sm:px-6 sm:py-20 sm:shadow-sm sm:ring-1 sm:ring-orange-100/50 md:rounded-[40px] md:px-12 md:py-32">
       {/* Soft Background Blobs */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-orange-200/30 blur-3xl" />
       <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-green-200/30 blur-3xl" />
