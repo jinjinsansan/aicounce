@@ -211,12 +211,15 @@ async function main() {
         metadata: parentMetadata,
       });
 
-      // Original table
+      // Original table（フォールバック用RAG）
       const parentEmbedding = await generateEmbedding(parent.content);
-      await supabase.from("michelle_knowledge").insert({
-        content: parent.content,
-        embedding: parentEmbedding,
-        metadata: parentMetadata,
+      await supabaseRequest("michelle_knowledge", {
+        method: "POST",
+        body: {
+          content: parent.content,
+          embedding: parentEmbedding,
+          metadata: parentMetadata,
+        },
       });
 
       for (const child of parent.children) {
