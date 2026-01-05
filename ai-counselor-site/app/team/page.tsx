@@ -22,6 +22,7 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
 };
 
 const MAX_DEFAULT_ROUNDS = 3;
+const DEBATE_ROUNDS = 3;
 
 function isGreetingOnly(text: string) {
   const t = text.trim();
@@ -39,6 +40,7 @@ export default function TeamCounselingPage() {
   const [maxRounds, setMaxRounds] = useState(MAX_DEFAULT_ROUNDS);
   const [stopRequested, setStopRequested] = useState(false);
   const [autoRoundsLeft, setAutoRoundsLeft] = useState(0);
+  const [debateMode, setDebateMode] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const availableParticipants: Participant[] = useMemo(
@@ -82,16 +84,6 @@ export default function TeamCounselingPage() {
       if (!res.ok) throw new Error("failed");
       const data: { responses?: { author: string; authorId: string; content: string; iconUrl: string }[] } =
         await res.json();
-      // モデレーターの進行コメントを挿入
-      const moderatorMsg: ChatMessage = {
-        id: `moderator-${Date.now()}`,
-        role: "assistant",
-        author: "司会",
-        authorId: "moderator",
-        content: "投稿を確認しました。順番に各カウンセラーの見解を共有します。",
-      };
-      appendMessages([moderatorMsg]);
-
       // 順番に表示（見やすさ優先）
       for (let idx = 0; idx < (data.responses || []).length; idx++) {
         const r = (data.responses || [])[idx];
@@ -125,9 +117,10 @@ export default function TeamCounselingPage() {
     appendMessages([userMsg]);
     setInput("");
     setRound(0);
-    setMaxRounds(MAX_DEFAULT_ROUNDS);
+    const rounds = debateMode ? DEBATE_ROUNDS : 1;
+    setMaxRounds(rounds);
     setStopRequested(false);
-    setAutoRoundsLeft(isGreetingOnly(userMsg.content) ? 0 : MAX_DEFAULT_ROUNDS - 1);
+    setAutoRoundsLeft(isGreetingOnly(userMsg.content) ? 0 : Math.max(0, rounds - 1));
     await runRound(userMsg.content);
   };
 
@@ -135,8 +128,8 @@ export default function TeamCounselingPage() {
     setStopRequested(false);
     const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
     if (!lastUser) return;
-    setMaxRounds((m) => m + 1);
-    setAutoRoundsLeft((n) => Math.max(n, 1));
+    setMaxRounds((m) => (debateMode ? m + 1 : 1));
+    setAutoRoundsLeft((n) => (debateMode ? Math.max(n, 1) : 0));
     await runRound(lastUser);
   };
 
@@ -149,7 +142,7 @@ export default function TeamCounselingPage() {
   };
 
   useEffect(() => {
-    if (round > 0 && round < maxRounds && autoRoundsLeft > 0 && !isRunning && !stopRequested) {
+    if (round > 0 && round < maxRounds && debateMode && autoRoundsLeft > 0 && !isRunning && !stopRequested) {
       const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
       if (lastUser) {
         runRound(lastUser);
@@ -189,6 +182,13 @@ export default function TeamCounselingPage() {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant={debateMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDebateMode((v) => !v)}
+              >
+                {debateMode ? "AI同士の議論: ON" : "AI同士の議論: OFF"}
+              </Button>
               <Button variant="outline" size="sm" onClick={handleStop} disabled={!isRunning}>
                 <Pause className="mr-1 h-4 w-4" /> 停止
               </Button>

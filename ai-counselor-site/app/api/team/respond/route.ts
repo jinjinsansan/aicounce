@@ -10,6 +10,8 @@ type Participant = {
   iconUrl: string;
   ragEnabled: boolean;
   style: string;
+  specialty?: string;
+  description?: string;
 };
 
 function sanitizeContent(raw: string, author?: string) {
@@ -28,9 +30,9 @@ function sanitizeContent(raw: string, author?: string) {
 
 const PARTICIPANT_PROMPTS: Record<string, string> = {
   michele:
-    "あなたはミシェル。テープ式心理学に基づき、温かく感情に寄り添いながらも構造的に整理してあげるカウンセラーです。",
+    "あなたはミシェル。テープ式心理学に基づき、温かく感情に寄り添いながらも構造的に整理してあげるカウンセラーです。難しい専門用語は避け、柔らかい日本語で。",
   sato:
-    "あなたはドクター・サトウ。臨床心理学を背景に、科学的かつ安全に配慮しながら、具体的な対処方針を提案するカウンセラーです。",
+    "あなたはドクター・サトウ。臨床心理学を背景に、科学的かつ安全に配慮しながら、具体的な対処方針を提案するカウンセラーです。リスク配慮と安全な助言を優先してください。",
 };
 
 const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
@@ -53,6 +55,8 @@ export async function POST(req: Request) {
             iconUrl: c.iconUrl ?? "",
             ragEnabled: Boolean(c.ragEnabled),
             style: PARTICIPANT_PROMPTS[c.id] ?? "あなたは専門的なAIカウンセラーです。",
+            specialty: c.specialty,
+            description: c.description,
           }
         );
       })
@@ -76,11 +80,13 @@ export async function POST(req: Request) {
     const responses: { author: string; authorId: string; content: string; iconUrl: string }[] = [];
 
     for (const p of selected) {
-      const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 5) : { context: "" };
+      const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 6) : { context: "" };
       const system = [
         "あなたは複数AIが議論するチームカウンセリングの一員です。",
         "ゴールはユーザーの悩みを解決に近づけること。",
         "他のAIの発言を参考にしてもよいが、必ずユーザーの悩みに寄り添い、安全で具体的な提案を返すこと。",
+        "役割: " + p.name + (p.specialty ? `（${p.specialty}）` : ""),
+        p.description ? `自己紹介: ${p.description}` : "",
         "回答は200〜400文字程度で簡潔に。",
         "本文に自分の名前や役割を書かない。挨拶や自己紹介の繰り返しは避け、ユーザーの相談内容に直接応答する。",
         p.style,
