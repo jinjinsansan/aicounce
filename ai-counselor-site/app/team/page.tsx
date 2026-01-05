@@ -240,6 +240,37 @@ export default function TeamCounselingPage() {
     setAutoRoundsLeft(0);
   };
 
+  const handleNewChat = async () => {
+    if (isRunning) return;
+
+    try {
+      // Create a new session
+      const res = await fetch("/api/team/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "チームカウンセリング",
+          participants: participants,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Failed to create new session");
+        return;
+      }
+
+      const data = await res.json();
+      setSessionId(data.session.id);
+      setMessages([]);
+      setRound(0);
+      setMaxRounds(MAX_DEFAULT_ROUNDS);
+      setStopRequested(false);
+      setAutoRoundsLeft(0);
+    } catch (error) {
+      console.error("Failed to create new chat", error);
+    }
+  };
+
   useEffect(() => {
     if (round > 0 && round < maxRounds && debateMode && autoRoundsLeft > 0 && !isRunning && !stopRequested) {
       const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
@@ -274,7 +305,18 @@ export default function TeamCounselingPage() {
       <div className="mx-auto hidden max-w-6xl gap-6 px-4 py-6 md:flex lg:py-10">
         {/* Sidebar */}
         <aside className="w-full max-w-xs rounded-2xl border border-[#f5d0c5]/30 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-          <h2 className="mb-3 text-sm font-semibold text-[#8b5a3c]">参加AI（最大5名）</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[#8b5a3c]">参加AI（最大5名）</h2>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleNewChat}
+              disabled={isRunning}
+              className="border-[#f5d0c5]/50 text-xs text-[#6b4423] hover:bg-[#fff9f5]"
+            >
+              新規チャット
+            </Button>
+          </div>
           <div className="space-y-2">
             {availableParticipants.map((p) => {
               const checked = participants.includes(p.id);
@@ -405,10 +447,21 @@ export default function TeamCounselingPage() {
         {/* Mobile Header */}
         <header className="border-b border-[#f5d0c5]/30 bg-white/80 px-4 py-3 backdrop-blur-sm">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
-            <span className="rounded-full border border-[#f5d0c5]/50 bg-[#fff9f5] px-2 py-0.5 text-xs text-[#8b5a3c]">
-              ラウンド {round}/{maxRounds}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+              <span className="rounded-full border border-[#f5d0c5]/50 bg-[#fff9f5] px-2 py-0.5 text-xs text-[#8b5a3c]">
+                ラウンド {round}/{maxRounds}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleNewChat}
+              disabled={isRunning}
+              className="border-[#f5d0c5]/50 text-xs text-[#6b4423] hover:bg-[#fff9f5]"
+            >
+              新規
+            </Button>
           </div>
         </header>
 
