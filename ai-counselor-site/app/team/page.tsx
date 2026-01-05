@@ -24,6 +24,7 @@ export default function TeamCounselingPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [round, setRound] = useState(0);
   const [maxRounds, setMaxRounds] = useState(MAX_DEFAULT_ROUNDS);
+  const [stopRequested, setStopRequested] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const availableParticipants: Participant[] = useMemo(
@@ -96,10 +97,12 @@ export default function TeamCounselingPage() {
     setInput("");
     setRound(0);
     setMaxRounds(MAX_DEFAULT_ROUNDS);
+    setStopRequested(false);
     await runRound(userMsg.content);
   };
 
   const handleContinue = async () => {
+    setStopRequested(false);
     setMaxRounds((m) => m + 1);
     await runRound(messages[messages.length - 1]?.content ?? "続けてください");
   };
@@ -107,10 +110,12 @@ export default function TeamCounselingPage() {
   const handleStop = () => {
     abortRef.current?.abort();
     setIsRunning(false);
+    setStopRequested(true);
+    setMaxRounds((current) => Math.min(current, round));
   };
 
   useEffect(() => {
-    if (round > 0 && round < maxRounds && !isRunning) {
+    if (round > 0 && round < maxRounds && !isRunning && !stopRequested) {
       runRound(messages[messages.length - 1]?.content ?? "続けてください");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
