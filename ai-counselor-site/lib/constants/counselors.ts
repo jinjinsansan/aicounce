@@ -85,21 +85,6 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     comingSoon: true,
   },
   {
-    id: "christ",
-    name: "キリスト様",
-    specialty: "聖書カウンセラー",
-    description:
-      "聖書の御言葉をもとに、愛と慈しみで心を包み込み、確かな希望へと導きます。",
-    iconUrl: "/images/counselors/christ.svg",
-    modelType: "openai",
-    modelName: "gpt-4o-mini",
-    ragEnabled: true,
-    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.christ,
-    tags: ["聖書", "慈愛", "希望"],
-    responseTime: "即時",
-    sessionCount: 0,
-  },
-  {
     id: "nazare",
     name: "ナザレ",
     specialty: "聖書カウンセリング",

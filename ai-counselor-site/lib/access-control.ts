@@ -17,6 +17,7 @@ export type AccessState = {
 };
 
 const BASIC_PLANS: PlanTier[] = ["basic", "premium"];
+const ADMIN_EMAILS = new Set(["goldbenchan@gmail.com"]);
 
 export async function resolveAccessState(userId: string): Promise<AccessState> {
   const supabase = getServiceSupabase();
@@ -39,7 +40,7 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
       .maybeSingle(),
     supabase
       .from("users")
-      .select("line_linked_at")
+      .select("line_linked_at, email")
       .eq("id", userId)
       .maybeSingle(),
     supabase
@@ -60,6 +61,9 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
     subscription && subscription.status === "active" && (!periodEnd || periodEnd.getTime() > Date.now()),
   );
 
+  const userEmail = user?.email?.toLowerCase() ?? null;
+  const isAdmin = Boolean(userEmail && ADMIN_EMAILS.has(userEmail));
+
   const trialExpiresAt = trial?.trial_expires_at ?? undefined;
   const onTrial = Boolean(
     trialExpiresAt && new Date(trialExpiresAt).getTime() > Date.now(),
@@ -77,16 +81,20 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
     campaignExpiresAt && new Date(campaignExpiresAt).getTime() > Date.now(),
   );
 
-  const canUseIndividual = hasActiveSubscription
-    ? BASIC_PLANS.includes(planTier)
-    : onTrial || hasCampaignAccess;
-  const canUseTeam = hasActiveSubscription
-    ? planTier === "premium"
-    : onTrial || hasCampaignAccess;
+  const canUseIndividual = isAdmin
+    ? true
+    : hasActiveSubscription
+        ? BASIC_PLANS.includes(planTier)
+        : onTrial || hasCampaignAccess;
+  const canUseTeam = isAdmin
+    ? true
+    : hasActiveSubscription
+        ? planTier === "premium"
+        : onTrial || hasCampaignAccess;
 
   return {
-    plan: hasActiveSubscription ? planTier : "none",
-    hasActiveSubscription,
+    plan: isAdmin || hasActiveSubscription ? planTier : "none",
+    hasActiveSubscription: isAdmin ? true : hasActiveSubscription,
     onTrial,
     trialExpiresAt,
     lineLinked,
