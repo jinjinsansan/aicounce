@@ -12,6 +12,20 @@ type Participant = {
   style: string;
 };
 
+function sanitizeContent(raw: string, author?: string) {
+  const text = raw.trim();
+  if (!author) return text;
+  const patterns = [
+    new RegExp(`^\\[?${author}\\]?[:：]?\\s*`),
+    new RegExp(`^${author}[:：]?\\s*`),
+  ];
+  for (const p of patterns) {
+    const cleaned = text.replace(p, "").trim();
+    if (cleaned !== text) return cleaned;
+  }
+  return text;
+}
+
 const PARTICIPANT_PROMPTS: Record<string, string> = {
   michele:
     "あなたはミシェル。テープ式心理学に基づき、温かく感情に寄り添いながらも構造的に整理してあげるカウンセラーです。",
@@ -68,6 +82,7 @@ export async function POST(req: Request) {
         "ゴールはユーザーの悩みを解決に近づけること。",
         "他のAIの発言を参考にしてもよいが、必ずユーザーの悩みに寄り添い、安全で具体的な提案を返すこと。",
         "回答は200〜400文字程度で簡潔に。",
+        "本文に自分の名前や役割を書かない。挨拶や自己紹介の繰り返しは避け、ユーザーの相談内容に直接応答する。",
         p.style,
         context ? "参考情報（RAG検索結果）:\n" + context : "",
       ].join("\n");
@@ -88,7 +103,7 @@ export async function POST(req: Request) {
       });
 
       const content = completion.choices[0].message.content ?? "";
-      responses.push({ author: p.name, authorId: p.id, content, iconUrl: p.iconUrl });
+      responses.push({ author: p.name, authorId: p.id, content: sanitizeContent(content, p.name), iconUrl: p.iconUrl });
     }
 
     return NextResponse.json({ responses });
