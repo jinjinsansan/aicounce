@@ -15,6 +15,12 @@ type ChatMessage = {
   iconUrl?: string;
 };
 
+const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
+  michele: { bubble: "bg-[#fff3f8]", text: "text-[#7b364d]", border: "border-[#ffd4e3]" },
+  sato: { bubble: "bg-[#eef4ff]", text: "text-[#1d3a8a]", border: "border-[#d7e9ff]" },
+  moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
+};
+
 const MAX_DEFAULT_ROUNDS = 3;
 
 export default function TeamCounselingPage() {
@@ -68,15 +74,29 @@ export default function TeamCounselingPage() {
       if (!res.ok) throw new Error("failed");
       const data: { responses?: { author: string; authorId: string; content: string; iconUrl: string }[] } =
         await res.json();
-      const responses: ChatMessage[] = (data.responses || []).map((r, idx: number) => ({
-        id: `assistant-${Date.now()}-${idx}`,
+      // モデレーターの進行コメントを挿入
+      const moderatorMsg: ChatMessage = {
+        id: `moderator-${Date.now()}`,
         role: "assistant",
-        author: r.author,
-        authorId: r.authorId,
-        content: r.content,
-        iconUrl: r.iconUrl,
-      }));
-      appendMessages(responses);
+        author: "司会",
+        authorId: "moderator",
+        content: "投稿を確認しました。順番に各カウンセラーの見解を共有します。",
+      };
+      appendMessages([moderatorMsg]);
+
+      // 順番に表示（見やすさ優先）
+      for (let idx = 0; idx < (data.responses || []).length; idx++) {
+        const r = (data.responses || [])[idx];
+        const msg: ChatMessage = {
+          id: `assistant-${Date.now()}-${idx}`,
+          role: "assistant",
+          author: r.author,
+          authorId: r.authorId,
+          content: r.content,
+          iconUrl: r.iconUrl,
+        };
+        appendMessages([msg]);
+      }
       setRound((r) => r + 1);
     } catch (e) {
       console.error(e);
@@ -103,6 +123,8 @@ export default function TeamCounselingPage() {
 
   const handleContinue = async () => {
     setStopRequested(false);
+    // 直近がユーザー発言でない場合は何もしない
+    if (messages[messages.length - 1]?.role !== "user") return;
     setMaxRounds((m) => m + 1);
     await runRound(messages[messages.length - 1]?.content ?? "続けてください");
   };
@@ -116,7 +138,10 @@ export default function TeamCounselingPage() {
 
   useEffect(() => {
     if (round > 0 && round < maxRounds && !isRunning && !stopRequested) {
-      runRound(messages[messages.length - 1]?.content ?? "続けてください");
+      const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
+      if (lastUser) {
+        runRound(lastUser);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round]);
@@ -165,14 +190,28 @@ export default function TeamCounselingPage() {
             {messages.length === 0 && (
               <p className="text-center text-sm text-slate-500">ここに悩みを投稿すると、選択したAIが順番に議論を始めます。</p>
             )}
-            {messages.map((m) => (
-              <div key={m.id} className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <span className="font-semibold text-slate-700">{m.author ?? (m.role === "user" ? "あなた" : "AI")}</span>
+            {messages.map((m) => {
+              const color = COLOR_MAP[m.authorId ?? ""] ?? { bubble: "bg-white", text: "text-slate-800", border: "border-slate-200" };
+              return (
+                <div
+                  key={m.id}
+                  className={`flex flex-col gap-1 rounded-xl border ${color.border} ${color.bubble} px-3 py-2 shadow-sm`}
+                >
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    {m.iconUrl && (
+                      <div className="h-6 w-6 overflow-hidden rounded-full border border-slate-200 bg-white">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={m.iconUrl} alt={m.author ?? "AI"} className="h-full w-full object-contain" />
+                      </div>
+                    )}
+                    <span className={`font-semibold ${color.text}`}>
+                      {m.author ?? (m.role === "user" ? "あなた" : "AI")}
+                    </span>
+                  </div>
+                  <p className={`text-sm whitespace-pre-wrap ${color.text}`}>{m.content}</p>
                 </div>
-                <p className="text-sm text-slate-800 whitespace-pre-wrap">{m.content}</p>
-              </div>
-            ))}
+              );
+            })}
             {isRunning && (
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
