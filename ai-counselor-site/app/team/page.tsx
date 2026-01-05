@@ -54,47 +54,62 @@ export default function TeamCounselingPage() {
   useEffect(() => {
     const initSession = async () => {
       try {
-        // Create a new session
-        const res = await fetch("/api/team/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: "チームカウンセリング",
-            participants: ["michele", "sato"],
-          }),
-        });
+        // Try to load the most recent session first
+        const sessionsRes = await fetch("/api/team/sessions");
+        let currentSessionId: string | null = null;
 
-        if (!res.ok) {
-          console.error("Failed to create session");
-          return;
+        if (sessionsRes.ok) {
+          const sessionsData = await sessionsRes.json();
+          if (sessionsData.sessions && sessionsData.sessions.length > 0) {
+            // Use the most recent session
+            currentSessionId = sessionsData.sessions[0].id;
+            setSessionId(currentSessionId);
+
+            // Load messages from existing session
+            const messagesRes = await fetch(`/api/team/sessions/${currentSessionId}/messages`);
+            if (messagesRes.ok) {
+              const messagesData = await messagesRes.json();
+              if (messagesData.messages && messagesData.messages.length > 0) {
+                setMessages(
+                  messagesData.messages.map((m: {
+                    id: string;
+                    role: "user" | "assistant";
+                    content: string;
+                    author?: string;
+                    author_id?: string;
+                    icon_url?: string;
+                  }) => ({
+                    id: m.id,
+                    role: m.role,
+                    content: m.content,
+                    author: m.author,
+                    authorId: m.author_id,
+                    iconUrl: m.icon_url,
+                  }))
+                );
+              }
+            }
+          }
         }
 
-        const data = await res.json();
-        setSessionId(data.session.id);
+        // Create a new session only if none exist
+        if (!currentSessionId) {
+          const res = await fetch("/api/team/sessions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: "チームカウンセリング",
+              participants: ["michele", "sato"],
+            }),
+          });
 
-        // Try to load existing messages (in case of page refresh)
-        const messagesRes = await fetch(`/api/team/sessions/${data.session.id}/messages`);
-        if (messagesRes.ok) {
-          const messagesData = await messagesRes.json();
-          if (messagesData.messages && messagesData.messages.length > 0) {
-            setMessages(
-              messagesData.messages.map((m: {
-                id: string;
-                role: "user" | "assistant";
-                content: string;
-                author?: string;
-                author_id?: string;
-                icon_url?: string;
-              }) => ({
-                id: m.id,
-                role: m.role,
-                content: m.content,
-                author: m.author,
-                authorId: m.author_id,
-                iconUrl: m.icon_url,
-              }))
-            );
+          if (!res.ok) {
+            console.error("Failed to create session");
+            return;
           }
+
+          const data = await res.json();
+          setSessionId(data.session.id);
         }
       } catch (error) {
         console.error("Failed to initialize session", error);
@@ -234,6 +249,13 @@ export default function TeamCounselingPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round]);
+
+  // Cleanup: abort ongoing requests on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   if (isLoadingSession) {
     return (

@@ -17,6 +17,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ sessionI
   }
 
   // Verify session ownership
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: teamSession, error: sessionError } = await (supabase as any)
     .from("team_sessions")
     .select("id")
@@ -28,6 +29,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ sessionI
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("team_messages")
     .select("id, role, content, author, author_id, icon_url, created_at")
@@ -56,6 +58,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ session
   }
 
   // Verify session ownership
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: teamSession, error: sessionError } = await (supabase as any)
     .from("team_sessions")
     .select("id")
@@ -75,6 +78,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ session
   }
 
   // Insert messages
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("team_messages")
     .insert(
@@ -101,6 +105,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ session
   }
 
   // Update session timestamp
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any)
     .from("team_sessions")
     .update({ updated_at: new Date().toISOString() })

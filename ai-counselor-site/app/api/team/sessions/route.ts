@@ -15,6 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("team_sessions")
     .select("id, title, participants, updated_at")
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { title, participants } = body;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("team_sessions")
     .insert({
