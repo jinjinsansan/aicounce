@@ -11,7 +11,15 @@ function deriveTags(specialty: string) {
     .filter(Boolean);
 }
 
-function mapRowToCounselor(row: CounselorRow): Counselor {
+type CounselorRowWithStats = CounselorRow & {
+  counselor_stats?: { session_count: number | null } | { session_count: number | null }[] | null;
+};
+
+function mapRowToCounselor(row: CounselorRowWithStats): Counselor {
+  const stats = Array.isArray(row.counselor_stats)
+    ? row.counselor_stats[0]
+    : row.counselor_stats ?? null;
+
   return {
     id: row.id,
     name: row.name,
@@ -25,7 +33,7 @@ function mapRowToCounselor(row: CounselorRow): Counselor {
     ragSourceId: row.rag_source_id,
     tags: deriveTags(row.specialty),
     responseTime: DEFAULT_RESPONSE_TIME,
-    sessionCount: 0,
+    sessionCount: stats?.session_count ?? 0,
   };
 }
 
@@ -39,7 +47,7 @@ export async function fetchCounselors(): Promise<Counselor[]> {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from("counselors")
-      .select("*")
+      .select("*, counselor_stats(session_count)")
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -52,7 +60,7 @@ export async function fetchCounselors(): Promise<Counselor[]> {
       return FALLBACK_COUNSELORS;
     }
 
-    return data.map(mapRowToCounselor);
+    return (data as CounselorRowWithStats[]).map(mapRowToCounselor);
   } catch (error) {
     console.error("Unexpected counselor fetch error", error);
     return FALLBACK_COUNSELORS;
@@ -75,7 +83,7 @@ export async function fetchCounselorById(
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from("counselors")
-      .select("*")
+      .select("*, counselor_stats(session_count)")
       .eq("id", counselorId)
       .single();
 
@@ -88,7 +96,7 @@ export async function fetchCounselorById(
     }
 
     if (data) {
-      return mapRowToCounselor(data);
+      return mapRowToCounselor(data as CounselorRowWithStats);
     }
 
     return (

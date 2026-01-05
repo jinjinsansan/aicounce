@@ -108,7 +108,39 @@ export interface Database {
           parent_index?: number;
           source?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "counselor_stats_counselor_id_fkey";
+            columns: ["id"];
+            referencedRelation: "counselor_stats";
+            referencedColumns: ["counselor_id"];
+          }
+        ];
+      };
+      counselor_stats: {
+        Row: {
+          counselor_id: string;
+          session_count: number;
+          updated_at: string | null;
+        };
+        Insert: {
+          counselor_id: string;
+          session_count?: number;
+          updated_at?: string | null;
+        };
+        Update: {
+          counselor_id?: string;
+          session_count?: number;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "counselor_stats_counselor_id_fkey";
+            columns: ["counselor_id"];
+            referencedRelation: "counselors";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       clinical_knowledge_children: {
         Row: {
@@ -1119,6 +1151,12 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      increment_counselor_session: {
+        Args: {
+          target_counselor: string;
+        };
+        Returns: void;
+      };
       match_rag_chunks: {
         Args: {
           query_embedding: unknown;

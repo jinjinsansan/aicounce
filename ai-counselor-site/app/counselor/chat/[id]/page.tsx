@@ -198,6 +198,7 @@ function StandardChatExperience({ counselorId }: { counselorId: string }) {
             counselorId={counselorId}
             conversationId={conversationId ?? undefined}
             onConversationResolved={handleConversationCreated}
+            enableRag={Boolean(counselor?.ragEnabled)}
           />
         </main>
       </div>

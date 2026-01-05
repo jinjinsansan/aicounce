@@ -8,6 +8,7 @@ import { searchRagContext } from "@/lib/rag";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
+import { incrementCounselorSessionCount } from "@/lib/counselor-stats";
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,6 +101,9 @@ export async function POST(request: NextRequest) {
 
       if (!error && data) {
         activeConversationId = data.id;
+        if (adminSupabase) {
+          await incrementCounselorSessionCount(counselorId, adminSupabase);
+        }
       }
     }
 

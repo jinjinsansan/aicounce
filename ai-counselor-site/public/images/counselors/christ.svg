@@ -1,0 +1,18 @@
+<svg width="320" height="320" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Christ Counselor Icon">
+  <defs>
+    <linearGradient id="sunrise" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff7ed" />
+      <stop offset="100%" stop-color="#fde68a" />
+    </linearGradient>
+    <linearGradient id="robe" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#f97316" />
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="64" fill="#fffdf7" />
+  <circle cx="160" cy="120" r="96" fill="url(#sunrise)" />
+  <path d="M160 40v160" stroke="#f97316" stroke-width="20" stroke-linecap="round" />
+  <path d="M90 120h140" stroke="#f97316" stroke-width="20" stroke-linecap="round" />
+  <path d="M96 208c32-24 96-24 128 0" stroke="#f97316" stroke-width="18" stroke-linecap="round" fill="none" />
+  <path d="M80 240c48-36 112-36 160 0" fill="url(#robe)" opacity="0.35" />
+</svg>

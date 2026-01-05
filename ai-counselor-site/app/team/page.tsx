@@ -72,7 +72,8 @@ export default function TeamCounselingPage() {
   const [requiresLogin, setRequiresLogin] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const desktopTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const mobileTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -384,8 +385,8 @@ export default function TeamCounselingPage() {
     await appendMessages([userMsg], activeSessionId);
     setInput("");
 
-    if (isMobile && textareaRef.current) {
-      textareaRef.current.blur();
+    if (isMobile && mobileTextareaRef.current) {
+      mobileTextareaRef.current.blur();
     }
 
     await runRound(trimmed, activeSessionId, historySeed);
@@ -842,11 +843,11 @@ export default function TeamCounselingPage() {
           >
             <div className="flex gap-2">
               <textarea
-                ref={textareaRef}
+                ref={desktopTextareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="悩みや相談を入力してください"
-                className="flex-1 min-h-[44px] max-h-32 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-sm text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30 resize-none"
+                className="flex-1 min-h-[44px] max-h-32 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-base text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30 resize-none md:text-sm"
                 rows={1}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -864,6 +865,8 @@ export default function TeamCounselingPage() {
                 enterKeyHint="send"
                 autoComplete="off"
                 autoCorrect="off"
+                autoCapitalize="off"
+                inputMode="text"
               />
               <Button
                 onClick={handleSend}
@@ -991,11 +994,11 @@ export default function TeamCounselingPage() {
           <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3" style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}>
             <div className="flex gap-2">
               <textarea
-                ref={textareaRef}
+                ref={mobileTextareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="悩みや相談を入力してください"
-                className="flex-1 min-h-[44px] max-h-32 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-sm text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30 resize-none"
+                className="flex-1 min-h-[48px] max-h-32 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-base leading-relaxed text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30 resize-none"
                 rows={1}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -1011,6 +1014,8 @@ export default function TeamCounselingPage() {
                 autoComplete="off"
                 autoCorrect="off"
                 enterKeyHint="send"
+                autoCapitalize="off"
+                inputMode="text"
               />
               <Button
                 onClick={handleSend}

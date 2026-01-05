@@ -7,12 +7,14 @@ interface ChatInterfaceProps {
   counselorId: string;
   conversationId?: string | null;
   onConversationResolved?: (conversationId: string) => void;
+  enableRag?: boolean;
 }
 
 export default function ChatInterface({
   counselorId,
   conversationId,
   onConversationResolved,
+  enableRag = false,
 }: ChatInterfaceProps) {
   const { input, setInput, isSending, sendMessage } = useChatStore();
 
@@ -20,6 +22,7 @@ export default function ChatInterface({
     const newConversationId = await sendMessage({
       counselorId,
       conversationId,
+      useRag: enableRag,
     });
 
     if (
@@ -29,7 +32,7 @@ export default function ChatInterface({
     ) {
       onConversationResolved(newConversationId);
     }
-  }, [conversationId, counselorId, onConversationResolved, sendMessage]);
+  }, [conversationId, counselorId, enableRag, onConversationResolved, sendMessage]);
 
   const handleInputChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {

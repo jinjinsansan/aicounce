@@ -251,6 +251,12 @@ create table if not exists public.counselors (
   updated_at timestamptz default timezone('utc', now())
 );
 
+create table if not exists public.counselor_stats (
+  counselor_id uuid primary key references public.counselors(id) on delete cascade,
+  session_count integer not null default 0,
+  updated_at timestamptz default timezone('utc', now())
+);
+
 -- Conversations --------------------------------------------------------------
 create table if not exists public.conversations (
   id uuid primary key default gen_random_uuid(),
@@ -307,6 +313,21 @@ create index if not exists idx_rag_chunks_embedding
   on public.rag_chunks
   using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
+
+create or replace function public.increment_counselor_session (target_counselor uuid)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.counselor_stats (counselor_id, session_count)
+  values (target_counselor, 1)
+  on conflict (counselor_id)
+  do update set
+    session_count = public.counselor_stats.session_count + 1,
+    updated_at = timezone('utc', now());
+end;
+$$;
 
 -- RAG Search Logs -----------------------------------------------------------
 create table if not exists public.rag_search_logs (

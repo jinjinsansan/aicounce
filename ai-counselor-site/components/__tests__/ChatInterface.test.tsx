@@ -46,6 +46,7 @@ describe("ChatInterface", () => {
     expect(sendMessage).toHaveBeenCalledWith({
       counselorId: "michele",
       conversationId: undefined,
+      useRag: false,
     });
     expect(handleResolved).toHaveBeenCalledWith("conv-123");
   });

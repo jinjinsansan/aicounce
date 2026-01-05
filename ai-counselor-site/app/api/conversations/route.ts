@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { incrementCounselorSessionCount } from "@/lib/counselor-stats";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 export async function GET(request: NextRequest) {
@@ -123,6 +124,10 @@ export async function POST(request: NextRequest) {
     if (error || !data) {
       console.error("Failed to create conversation", error);
       return NextResponse.json({ error: "Failed to create" }, { status: 500 });
+    }
+
+    if (adminSupabase) {
+      await incrementCounselorSessionCount(counselorId, adminSupabase);
     }
 
     return NextResponse.json({ conversation: data });

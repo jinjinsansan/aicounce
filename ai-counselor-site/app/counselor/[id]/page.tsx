@@ -12,6 +12,7 @@ import AdamDetailPage from "@/components/AdamDetailPage";
 import GeminiDetailPage from "@/components/GeminiDetailPage";
 import ClaudeDetailPage from "@/components/ClaudeDetailPage";
 import DeepDetailPage from "@/components/DeepDetailPage";
+import NazareDetailPage from "@/components/NazareDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -154,6 +155,10 @@ export default function CounselorDetailPage({
 
   if (counselorId === "sato") {
     return <SatoDetailPage />;
+  }
+
+  if (counselorId === "nazare") {
+    return <NazareDetailPage />;
   }
 
   if (counselorId === "adam") {

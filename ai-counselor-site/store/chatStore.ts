@@ -13,6 +13,7 @@ type ChatState = {
   sendMessage: (payload: {
     counselorId: string;
     conversationId?: string | null;
+    useRag?: boolean;
   }) => Promise<string | null>;
 };
 
@@ -42,7 +43,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setInput: (value) => set({ input: value }),
   setMessages: (messages) => set({ messages }),
   appendMessage: (message) => set({ messages: [...get().messages, message] }),
-  sendMessage: async ({ counselorId, conversationId }) => {
+  sendMessage: async ({ counselorId, conversationId, useRag }) => {
     const { input } = get();
     if (!input.trim() || get().isSending) return conversationId ?? null;
 
@@ -64,6 +65,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           counselorId,
           conversationId,
           message: userContent,
+          useRag,
         }),
       });
 
