@@ -194,7 +194,7 @@ export async function POST(req: Request) {
           ...chatHistory,
           { role: "user", content: userMessage },
         ],
-        max_tokens: 800,
+        max_tokens: 600,
         temperature: 0.7,
       });
 

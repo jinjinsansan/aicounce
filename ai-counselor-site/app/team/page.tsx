@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
-import { CheckSquare, Square, Loader2, Pause, Play, Send } from "lucide-react";
+import { CheckSquare, Square, Loader2, Send, User } from "lucide-react";
 
 type Participant = { id: string; name: string; iconUrl: string };
 type ChatMessage = {
@@ -18,18 +18,9 @@ type ChatMessage = {
 const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
   michele: { bubble: "bg-[#fff3f8]", text: "text-[#7b364d]", border: "border-[#ffd4e3]" },
   sato: { bubble: "bg-[#eef4ff]", text: "text-[#1d3a8a]", border: "border-[#d7e9ff]" },
+  adam: { bubble: "bg-[#f5f5f5]", text: "text-[#374151]", border: "border-[#e5e7eb]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
-
-const MAX_DEFAULT_ROUNDS = 3;
-const DEBATE_ROUNDS = 3;
-
-function isGreetingOnly(text: string) {
-  const t = text.trim();
-  if (t.length === 0) return true;
-  const greetings = ["おはよう", "こんにちは", "こんばんは", "お疲れ", "初めまして", "はじめまして"];
-  return t.length <= 12 && greetings.some((g) => t.includes(g));
-}
 
 export default function TeamCounselingPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -37,14 +28,12 @@ export default function TeamCounselingPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  const [round, setRound] = useState(0);
-  const [maxRounds, setMaxRounds] = useState(MAX_DEFAULT_ROUNDS);
-  const [stopRequested, setStopRequested] = useState(false);
-  const [autoRoundsLeft, setAutoRoundsLeft] = useState(0);
-  const [debateMode, setDebateMode] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const availableParticipants: Participant[] = useMemo(
     () => FALLBACK_COUNSELORS.map((c) => ({ id: c.id, name: c.name, iconUrl: c.iconUrl ?? "" })),
@@ -197,8 +186,6 @@ export default function TeamCounselingPage() {
         newMessages.push(msg);
       }
       await appendMessages(newMessages);
-      setRound((r) => r + 1);
-      setAutoRoundsLeft((n) => (n > 0 ? n - 1 : 0));
     } catch (e) {
       console.error(e);
     } finally {
@@ -208,7 +195,7 @@ export default function TeamCounselingPage() {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoadingSession) return;
+    if (!input.trim() || isLoadingSession || isRunning) return;
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -216,29 +203,13 @@ export default function TeamCounselingPage() {
     };
     await appendMessages([userMsg]);
     setInput("");
-    setRound(0);
-    const rounds = debateMode ? DEBATE_ROUNDS : 1;
-    setMaxRounds(rounds);
-    setStopRequested(false);
-    setAutoRoundsLeft(isGreetingOnly(userMsg.content) ? 0 : Math.max(0, rounds - 1));
+    
+    // モバイルでの送信後のキーボード処理
+    if (isMobile && textareaRef.current) {
+      textareaRef.current.blur();
+    }
+    
     await runRound(userMsg.content);
-  };
-
-  const handleContinue = async () => {
-    setStopRequested(false);
-    const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
-    if (!lastUser) return;
-    setMaxRounds((m) => (debateMode ? m + 1 : 1));
-    setAutoRoundsLeft((n) => (debateMode ? Math.max(n, 1) : 0));
-    await runRound(lastUser);
-  };
-
-  const handleStop = () => {
-    abortRef.current?.abort();
-    setIsRunning(false);
-    setStopRequested(true);
-    setMaxRounds((current) => Math.min(current, round));
-    setAutoRoundsLeft(0);
   };
 
   const handleNewChat = async () => {
@@ -272,10 +243,6 @@ export default function TeamCounselingPage() {
       const data = await res.json();
       setSessionId(data.session.id);
       setMessages([]);
-      setRound(0);
-      setMaxRounds(MAX_DEFAULT_ROUNDS);
-      setStopRequested(false);
-      setAutoRoundsLeft(0);
     } catch (error) {
       console.error("Failed to create new chat", error);
       alert("新規チャットの作成に失敗しました。ネットワーク接続を確認してください。");
@@ -284,15 +251,29 @@ export default function TeamCounselingPage() {
     }
   };
 
+  // モバイル検出とキーボード対応
   useEffect(() => {
-    if (round > 0 && round < maxRounds && debateMode && autoRoundsLeft > 0 && !isRunning && !stopRequested) {
-      const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
-      if (lastUser) {
-        runRound(lastUser);
-      }
+    setIsMobile(window.innerWidth < 768);
+    
+    // 初回マウント時、モバイルでテキストエリアをぼかす
+    if (window.innerWidth < 768 && textareaRef.current) {
+      textareaRef.current.blur();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [round]);
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // メッセージが追加されたら最下部にスクロール
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   // Cleanup: abort ongoing requests on unmount
   useEffect(() => {
@@ -353,50 +334,34 @@ export default function TeamCounselingPage() {
 
         {/* Main Chat */}
         <div className="flex min-h-[75vh] flex-1 flex-col rounded-2xl border border-[#f5d0c5]/30 bg-white/80 shadow-md backdrop-blur-sm">
-          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
-              <span className="rounded-full border border-[#f5d0c5]/50 bg-white/60 px-2 py-0.5 text-xs text-[#8b5a3c]">
-                ラウンド {round}/{maxRounds}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant={debateMode ? "default" : "outline"}
-                size="sm"
-                onClick={() => setDebateMode((v) => !v)}
-                className={debateMode ? "bg-[#d97757] hover:bg-[#c96647]" : ""}
-              >
-                {debateMode ? "AI同士の議論: ON" : "AI同士の議論: OFF"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleStop}
-                disabled={!isRunning}
-                className="border-[#f5d0c5]/50 hover:bg-[#fff9f5]"
-              >
-                <Pause className="mr-1 h-4 w-4" /> 停止
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleContinue}
-                disabled={isRunning || participants.length === 0}
-                className="border-[#f5d0c5]/50 hover:bg-[#fff9f5]"
-              >
-                <Play className="mr-1 h-4 w-4" /> 続ける
-              </Button>
-            </div>
+          <header className="flex items-center justify-between border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3">
+            <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+            {participants.length > 0 && (
+              <span className="text-xs text-[#8b5a3c]">{participants.length}人のAIが参加中</span>
+            )}
           </header>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {messages.length === 0 && (
               <p className="text-center text-sm text-[#8b5a3c]">
-                ここに悩みを投稿すると、選択したAIが順番に議論を始めます。
+                悩みや相談を投稿すると、選択したAIがそれぞれの専門性を活かして応答します。
               </p>
             )}
             {messages.map((m) => {
+              if (m.role === "user") {
+                return (
+                  <div key={m.id} className="flex flex-col gap-2 rounded-2xl border border-[#f5d0c5]/30 bg-white px-4 py-3 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#a34264]">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-[#6b4423]">あなた</span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#6b4423]">{m.content}</p>
+                  </div>
+                );
+              }
+              
               const color = COLOR_MAP[m.authorId ?? ""] ?? {
                 bubble: "bg-white",
                 text: "text-[#6b4423]",
@@ -415,7 +380,7 @@ export default function TeamCounselingPage() {
                       </div>
                     )}
                     <span className={`text-xs font-semibold ${color.text}`}>
-                      {m.author ?? (m.role === "user" ? "あなた" : "AI")}
+                      {m.author ?? "AI"}
                     </span>
                   </div>
                   <p className={`whitespace-pre-wrap text-sm leading-relaxed ${color.text}`}>{m.content}</p>
@@ -427,28 +392,43 @@ export default function TeamCounselingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3">
+          <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3" style={{ paddingBottom: isMobile ? "calc(1rem + env(safe-area-inset-bottom))" : "0.75rem" }}>
             <div className="flex gap-2">
-              <input
+              <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="悩みを投稿するとチームが議論を始めます"
-                className="flex-1 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-sm text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30"
+                placeholder="悩みや相談を入力してください"
+                className="flex-1 min-h-[44px] max-h-32 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-sm text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30 resize-none"
+                rows={1}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();
                   }
                 }}
+                onFocus={() => {
+                  if (isMobile) {
+                    setTimeout(() => {
+                      if (messagesEndRef.current) {
+                        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }, 300);
+                  }
+                }}
+                enterKeyHint="send"
+                autoComplete="off"
+                autoCorrect="off"
               />
               <Button
                 onClick={handleSend}
-                disabled={!input.trim() || isRunning}
-                className="min-w-[90px] bg-[#d97757] hover:bg-[#c96647]"
+                disabled={!input.trim() || isRunning || isLoadingSession}
+                className="min-w-[60px] h-[44px] bg-[#d97757] hover:bg-[#c96647] flex items-center justify-center"
               >
-                <Send className="mr-1 h-4 w-4" /> 送信
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -460,12 +440,7 @@ export default function TeamCounselingPage() {
         {/* Mobile Header */}
         <header className="border-b border-[#f5d0c5]/30 bg-white/80 px-4 py-3 backdrop-blur-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
-              <span className="rounded-full border border-[#f5d0c5]/50 bg-[#fff9f5] px-2 py-0.5 text-xs text-[#8b5a3c]">
-                ラウンド {round}/{maxRounds}
-              </span>
-            </div>
+            <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
             <Button
               size="sm"
               variant="outline"
@@ -504,45 +479,31 @@ export default function TeamCounselingPage() {
           </div>
         </details>
 
-        {/* Mobile Controls */}
-        <div className="flex flex-wrap gap-2 border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-2">
-          <Button
-            variant={debateMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => setDebateMode((v) => !v)}
-            className={debateMode ? "bg-[#d97757] hover:bg-[#c96647]" : "flex-1"}
-          >
-            {debateMode ? "議論: ON" : "議論: OFF"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleStop}
-            disabled={!isRunning}
-            className="border-[#f5d0c5]/50 hover:bg-[#fff9f5]"
-          >
-            <Pause className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleContinue}
-            disabled={isRunning || participants.length === 0}
-            className="border-[#f5d0c5]/50 hover:bg-[#fff9f5]"
-          >
-            <Play className="h-4 w-4" />
-          </Button>
-        </div>
+
 
         {/* Mobile Chat Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {messages.length === 0 && (
               <p className="text-center text-sm text-[#8b5a3c]">
-                ここに悩みを投稿すると、選択したAIが順番に議論を始めます。
+                悩みや相談を投稿すると、選択したAIがそれぞれの専門性を活かして応答します。
               </p>
             )}
             {messages.map((m) => {
+              if (m.role === "user") {
+                return (
+                  <div key={m.id} className="flex flex-col gap-2 rounded-2xl border border-[#f5d0c5]/30 bg-white px-3 py-3 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#a34264]">
+                        <User className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-[#6b4423]">あなた</span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#6b4423]">{m.content}</p>
+                  </div>
+                );
+              }
+              
               const color = COLOR_MAP[m.authorId ?? ""] ?? {
                 bubble: "bg-white",
                 text: "text-[#6b4423]",
@@ -561,7 +522,7 @@ export default function TeamCounselingPage() {
                       </div>
                     )}
                     <span className={`text-xs font-semibold ${color.text}`}>
-                      {m.author ?? (m.role === "user" ? "あなた" : "AI")}
+                      {m.author ?? "AI"}
                     </span>
                   </div>
                   <p className={`whitespace-pre-wrap text-sm leading-relaxed ${color.text}`}>{m.content}</p>
@@ -573,21 +534,31 @@ export default function TeamCounselingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Mobile Input (Fixed) */}
-          <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3" style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}>
             <div className="flex gap-2">
-              <input
+              <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="悩みを投稿"
-                className="flex-1 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-sm text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30"
+                placeholder="悩みや相談を入力してください"
+                className="flex-1 min-h-[44px] max-h-32 rounded-xl border border-[#f5d0c5]/50 bg-white px-3 py-2 text-sm text-[#6b4423] placeholder-[#c9a394] focus:outline-none focus:ring-2 focus:ring-[#d97757]/30 resize-none"
+                rows={1}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();
                   }
+                }}
+                onFocus={() => {
+                  setTimeout(() => {
+                    if (messagesEndRef.current) {
+                      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }, 300);
                 }}
                 autoComplete="off"
                 autoCorrect="off"
@@ -595,8 +566,8 @@ export default function TeamCounselingPage() {
               />
               <Button
                 onClick={handleSend}
-                disabled={!input.trim() || isRunning}
-                className="bg-[#d97757] hover:bg-[#c96647]"
+                disabled={!input.trim() || isRunning || isLoadingSession}
+                className="min-w-[60px] h-[44px] bg-[#d97757] hover:bg-[#c96647] flex items-center justify-center"
               >
                 <Send className="h-4 w-4" />
               </Button>
