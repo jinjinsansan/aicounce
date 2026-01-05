@@ -7,6 +7,12 @@ import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import MichelleChatClient from "@/components/MichelleChatClient";
 import ClinicalChatClient from "@/components/ClinicalChatClient";
+import {
+  AdamChatClient,
+  GeminiChatClient,
+  ClaudeChatClient,
+  DeepChatClient,
+} from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
@@ -160,6 +166,22 @@ export default function ChatPage({
 
   if (counselorId === "sato") {
     return <ClinicalChatClient />;
+  }
+
+  if (counselorId === "adam") {
+    return <AdamChatClient />;
+  }
+
+  if (counselorId === "gemini") {
+    return <GeminiChatClient />;
+  }
+
+  if (counselorId === "claude") {
+    return <ClaudeChatClient />;
+  }
+
+  if (counselorId === "deep") {
+    return <DeepChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;

@@ -1,4 +1,5 @@
 import type { Counselor } from "@/types";
+import { COUNSELOR_SYSTEM_PROMPTS } from "@/lib/prompts/counselorPrompts";
 
 export const FALLBACK_COUNSELORS: Counselor[] = [
   {
@@ -88,6 +89,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     modelType: "openai",
     modelName: "gpt-4o-mini",
     ragEnabled: false,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.adam,
     tags: ["汎用", "中立", "実用"],
     responseTime: "即時",
     sessionCount: 1500,
@@ -101,6 +103,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     modelType: "gemini",
     modelName: "gemini-1.5-pro",
     ragEnabled: false,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.gemini,
     tags: ["多角的", "双面性", "発見"],
     responseTime: "即時",
     sessionCount: 450,
@@ -114,6 +117,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     modelType: "claude",
     modelName: "claude-3-sonnet-20240229",
     ragEnabled: false,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.claude,
     tags: ["倫理的", "丁寧", "思慮"],
     responseTime: "即時",
     sessionCount: 980,
@@ -127,6 +131,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     modelType: "deepseek",
     modelName: "deepseek-chat",
     ragEnabled: false,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.deep,
     tags: ["探求", "詳細", "知識"],
     responseTime: "即時",
     sessionCount: 220,

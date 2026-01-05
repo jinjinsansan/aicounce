@@ -18,7 +18,10 @@ type ChatMessage = {
 const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
   michele: { bubble: "bg-[#fff3f8]", text: "text-[#7b364d]", border: "border-[#ffd4e3]" },
   sato: { bubble: "bg-[#eef4ff]", text: "text-[#1d3a8a]", border: "border-[#d7e9ff]" },
-  adam: { bubble: "bg-[#f5f5f5]", text: "text-[#374151]", border: "border-[#e5e7eb]" },
+  adam: { bubble: "bg-[#ecfdf5]", text: "text-[#065f46]", border: "border-[#a7f3d0]" },
+  gemini: { bubble: "bg-[#fdf2ff]", text: "text-[#6b21a8]", border: "border-[#f3e8ff]" },
+  claude: { bubble: "bg-[#f4f4f5]", text: "text-[#3f3f46]", border: "border-[#e4e4e7]" },
+  deep: { bubble: "bg-[#eefdfd]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
 

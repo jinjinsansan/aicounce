@@ -6,6 +6,9 @@ import { searchRagContext } from "@/lib/rag";
 import { MICHELLE_SYSTEM_PROMPT } from "@/lib/team/prompts/michelle";
 import { SATO_SYSTEM_PROMPT } from "@/lib/team/prompts/sato";
 import { ADAM_SYSTEM_PROMPT } from "@/lib/team/prompts/adam";
+import { GEMINI_SYSTEM_PROMPT } from "@/lib/team/prompts/gemini";
+import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
+import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
 
 type Participant = {
   id: string;
@@ -65,6 +68,18 @@ const AI_ROLES = {
     greeting: "こんにちは。一般的なAIカウンセラーのアダムです。中立的で実用的なアドバイスを提供します。",
     role: "常識的で実用的なアドバイスと多角的な視点の提供",
   },
+  gemini: {
+    greeting: "こんにちは。二つの視点で整理するジェミニです。多角的に状況を捉えます。",
+    role: "視点の切り替えと選択肢の提示",
+  },
+  claude: {
+    greeting: "こんにちは。思慮深く整理するクロードです。落ち着いて考えていきましょう。",
+    role: "価値観の確認と論理的な整理",
+  },
+  deep: {
+    greeting: "こんにちは。詳細に分析するディープです。構造的に状況を見ていきます。",
+    role: "要因分析と知識に基づく提案",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -86,6 +101,24 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["実用的", "多角的", "常識的", "バランス"],
     systemPrompt: ADAM_SYSTEM_PROMPT,
     negativeInstruction: "特定の心理学理論の専門用語（ガムテープ、認知の歪みなど）は使わないでください。一般的でわかりやすい言葉を使ってください。",
+  },
+  gemini: {
+    name: "双視点カウンセリング",
+    terms: ["二面性", "多角的", "比較", "柔軟"],
+    systemPrompt: GEMINI_SYSTEM_PROMPT,
+    negativeInstruction: "専門的な診断名や過度な専門用語は避け、視点の違いを丁寧に説明してください。",
+  },
+  claude: {
+    name: "倫理的カウンセリング",
+    terms: ["倫理", "整理", "章立て", "落ち着き"],
+    systemPrompt: CLAUDE_SYSTEM_PROMPT,
+    negativeInstruction: "派手な演出や断定を避け、静かな語り口を守ってください。",
+  },
+  deep: {
+    name: "分析的カウンセリング",
+    terms: ["分析", "要因", "構造化", "探求"],
+    systemPrompt: DEEP_SYSTEM_PROMPT,
+    negativeInstruction: "専門用語のみで説明せず、平易な言葉と補足を添えてください。",
   },
 };
 

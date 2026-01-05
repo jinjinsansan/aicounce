@@ -6,6 +6,7 @@ import { callLLM } from "@/lib/llm";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 import { searchRagContext } from "@/lib/rag";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
 
 export async function POST(request: NextRequest) {
   try {
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     const systemPrompt =
+      getDefaultCounselorPrompt(counselor.id) ??
       counselor.systemPrompt ??
       "You are a supportive counselor who responds in Japanese with empathy and actionable advice.";
 

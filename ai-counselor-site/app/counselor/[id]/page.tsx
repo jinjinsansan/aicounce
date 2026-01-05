@@ -8,6 +8,7 @@ import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
 import MichelleDetailPage from "@/components/MichelleDetailPage";
 import SatoDetailPage from "@/components/SatoDetailPage";
+import AdamDetailPage from "@/components/AdamDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -150,6 +151,10 @@ export default function CounselorDetailPage({
 
   if (counselorId === "sato") {
     return <SatoDetailPage />;
+  }
+
+  if (counselorId === "adam") {
+    return <AdamDetailPage />;
   }
 
   return <StandardCounselorDetail counselorId={counselorId} />;
