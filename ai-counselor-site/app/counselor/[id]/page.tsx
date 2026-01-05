@@ -9,6 +9,9 @@ import { loadCounselorById } from "@/lib/client-counselors";
 import MichelleDetailPage from "@/components/MichelleDetailPage";
 import SatoDetailPage from "@/components/SatoDetailPage";
 import AdamDetailPage from "@/components/AdamDetailPage";
+import GeminiDetailPage from "@/components/GeminiDetailPage";
+import ClaudeDetailPage from "@/components/ClaudeDetailPage";
+import DeepDetailPage from "@/components/DeepDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -155,6 +158,18 @@ export default function CounselorDetailPage({
 
   if (counselorId === "adam") {
     return <AdamDetailPage />;
+  }
+
+  if (counselorId === "gemini") {
+    return <GeminiDetailPage />;
+  }
+
+  if (counselorId === "claude") {
+    return <ClaudeDetailPage />;
+  }
+
+  if (counselorId === "deep") {
+    return <DeepDetailPage />;
   }
 
   return <StandardCounselorDetail counselorId={counselorId} />;
