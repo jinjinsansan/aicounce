@@ -23,6 +23,13 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
 
 const MAX_DEFAULT_ROUNDS = 3;
 
+function isGreetingOnly(text: string) {
+  const t = text.trim();
+  if (t.length === 0) return true;
+  const greetings = ["おはよう", "こんにちは", "こんばんは", "お疲れ", "初めまして", "はじめまして"];
+  return t.length <= 12 && greetings.some((g) => t.includes(g));
+}
+
 export default function TeamCounselingPage() {
   const [participants, setParticipants] = useState<string[]>(["michele", "sato"]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -31,6 +38,7 @@ export default function TeamCounselingPage() {
   const [round, setRound] = useState(0);
   const [maxRounds, setMaxRounds] = useState(MAX_DEFAULT_ROUNDS);
   const [stopRequested, setStopRequested] = useState(false);
+  const [autoRoundsLeft, setAutoRoundsLeft] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
   const availableParticipants: Participant[] = useMemo(
@@ -98,6 +106,7 @@ export default function TeamCounselingPage() {
         appendMessages([msg]);
       }
       setRound((r) => r + 1);
+      setAutoRoundsLeft((n) => Math.max(0, n - 1));
     } catch (e) {
       console.error(e);
     } finally {
@@ -118,15 +127,17 @@ export default function TeamCounselingPage() {
     setRound(0);
     setMaxRounds(MAX_DEFAULT_ROUNDS);
     setStopRequested(false);
+    setAutoRoundsLeft(isGreetingOnly(userMsg.content) ? 0 : MAX_DEFAULT_ROUNDS - 1);
     await runRound(userMsg.content);
   };
 
   const handleContinue = async () => {
     setStopRequested(false);
-    // 直近がユーザー発言でない場合は何もしない
-    if (messages[messages.length - 1]?.role !== "user") return;
+    const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
+    if (!lastUser) return;
     setMaxRounds((m) => m + 1);
-    await runRound(messages[messages.length - 1]?.content ?? "続けてください");
+    setAutoRoundsLeft((n) => n + 1);
+    await runRound(lastUser);
   };
 
   const handleStop = () => {
@@ -134,10 +145,11 @@ export default function TeamCounselingPage() {
     setIsRunning(false);
     setStopRequested(true);
     setMaxRounds((current) => Math.min(current, round));
+    setAutoRoundsLeft(0);
   };
 
   useEffect(() => {
-    if (round > 0 && round < maxRounds && !isRunning && !stopRequested) {
+    if (round > 0 && round < maxRounds && autoRoundsLeft > 0 && !isRunning && !stopRequested) {
       const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
       if (lastUser) {
         runRound(lastUser);
