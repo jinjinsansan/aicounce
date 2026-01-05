@@ -108,14 +108,7 @@ export interface Database {
           parent_index?: number;
           source?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "counselor_stats_counselor_id_fkey";
-            columns: ["id"];
-            referencedRelation: "counselor_stats";
-            referencedColumns: ["counselor_id"];
-          }
-        ];
+        Relationships: [];
       };
       counselor_stats: {
         Row: {
@@ -133,14 +126,7 @@ export interface Database {
           session_count?: number;
           updated_at?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: "counselor_stats_counselor_id_fkey";
-            columns: ["counselor_id"];
-            referencedRelation: "counselors";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [];
       };
       clinical_knowledge_children: {
         Row: {

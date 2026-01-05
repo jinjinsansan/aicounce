@@ -251,8 +251,29 @@ create table if not exists public.counselors (
   updated_at timestamptz default timezone('utc', now())
 );
 
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'counselor_stats'
+      and column_name = 'counselor_id'
+  ) then
+    alter table public.counselor_stats
+      drop constraint if exists counselor_stats_counselor_id_fkey;
+    begin
+      alter table public.counselor_stats
+        alter column counselor_id type text using counselor_id::text;
+    exception
+      when undefined_column then
+        null;
+    end;
+  end if;
+end$$;
+
 create table if not exists public.counselor_stats (
-  counselor_id uuid primary key references public.counselors(id) on delete cascade,
+  counselor_id text primary key,
   session_count integer not null default 0,
   updated_at timestamptz default timezone('utc', now())
 );
@@ -314,7 +335,9 @@ create index if not exists idx_rag_chunks_embedding
   using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
 
-create or replace function public.increment_counselor_session (target_counselor uuid)
+drop function if exists public.increment_counselor_session(uuid);
+
+create or replace function public.increment_counselor_session (target_counselor text)
 returns void
 language plpgsql
 security definer
