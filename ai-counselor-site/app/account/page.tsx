@@ -242,6 +242,29 @@ export default function AccountPage() {
                 </p>
               )}
             </div>
+
+            <div className="mt-6 rounded-3xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">
+              <h3 className="text-base font-semibold text-slate-900">PayPalサブスクリプションの解約</h3>
+              <p className="mt-2">
+                定期支払いはPayPalアカウント側でいつでもキャンセルできます。以下の手順をご確認ください。
+              </p>
+              <ol className="mt-3 list-decimal space-y-2 pl-5">
+                <li>PayPalにログインし、「設定 &gt; 支払い &gt; 自動支払いの管理」を開く。</li>
+                <li>「メンタルAIチーム」または「NAMIDA Support Association」を選択。</li>
+                <li>「キャンセル」ボタンを押して確認する。</li>
+              </ol>
+              <a
+                href="https://www.paypal.com/myaccount/autopay/"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+              >
+                PayPalで解約手続きを行う
+              </a>
+              <p className="mt-3 text-xs text-slate-500">
+                手順が不明な場合は <Link href="mailto:info@namisapo.com" className="underline">info@namisapo.com</Link> までご連絡ください。
+              </p>
+            </div>
           </div>
 
           <div className="space-y-6">
