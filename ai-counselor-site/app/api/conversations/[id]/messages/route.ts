@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 export async function GET(
   _request: NextRequest,
@@ -20,6 +21,23 @@ export async function GET(
   }
 
   try {
+    await assertAccess(session.user.id, "individual");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return NextResponse.json({ error: message }, { status });
+  }
+
+  try {
+    const { data: conversation, error: conversationError } = await supabase
+      .from("conversations")
+      .select("id, user_id")
+      .eq("id", id)
+      .single();
+
+    if (conversationError || !conversation || conversation.user_id !== session.user.id) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    }
+
     const { data, error } = await supabase
       .from("messages")
       .select("id, role, content, conversation_id, created_at, tokens_used")

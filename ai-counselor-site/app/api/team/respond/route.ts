@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { searchRagContext } from "@/lib/rag";
 import { MICHELLE_SYSTEM_PROMPT } from "@/lib/team/prompts/michelle";
@@ -8,6 +9,8 @@ import { GEMINI_SYSTEM_PROMPT } from "@/lib/team/prompts/gemini";
 import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
 import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
+import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 type Participant = {
   id: string;
@@ -139,6 +142,23 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
 
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies();
+    const supabase = createSupabaseRouteClient(cookieStore);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+      await assertAccess(session.user.id, "team");
+    } catch (error) {
+      const { status, message } = parseAccessError(error);
+      return NextResponse.json({ error: message }, { status });
+    }
+
     const { message, participants, history } = await req.json();
     if (!message || !Array.isArray(participants) || participants.length === 0) {
       return NextResponse.json({ error: "invalid request" }, { status: 400 });

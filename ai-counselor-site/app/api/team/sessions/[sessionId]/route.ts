@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 async function withSession(sessionId: string) {
   const cookieStore = await cookies();
@@ -13,6 +14,18 @@ async function withSession(sessionId: string) {
 
   if (!session) {
     return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  try {
+    await assertAccess(session.user.id, "team");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return {
+      error: NextResponse.json(
+        { error: message },
+        { status },
+      ),
+    };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

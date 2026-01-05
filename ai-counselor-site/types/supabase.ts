@@ -589,6 +589,12 @@ export interface Database {
           created_at: string | null;
           email: string;
           id: string;
+          last_login_at: string | null;
+          line_linked_at: string | null;
+          official_line_id: string | null;
+          paypal_payer_id: string | null;
+          receive_announcements: boolean;
+          terms_accepted_at: string | null;
           is_active: boolean | null;
           updated_at: string | null;
           username: string | null;
@@ -597,6 +603,12 @@ export interface Database {
           created_at?: string | null;
           email: string;
           id?: string;
+          last_login_at?: string | null;
+          line_linked_at?: string | null;
+          official_line_id?: string | null;
+          paypal_payer_id?: string | null;
+          receive_announcements?: boolean;
+          terms_accepted_at?: string | null;
           is_active?: boolean | null;
           updated_at?: string | null;
           username?: string | null;
@@ -605,6 +617,12 @@ export interface Database {
           created_at?: string | null;
           email?: string;
           id?: string;
+          last_login_at?: string | null;
+          line_linked_at?: string | null;
+          official_line_id?: string | null;
+          paypal_payer_id?: string | null;
+          receive_announcements?: boolean;
+          terms_accepted_at?: string | null;
           is_active?: boolean | null;
           updated_at?: string | null;
           username?: string | null;
@@ -650,6 +668,293 @@ export interface Database {
           model_name?: string;
           provider?: string;
           temperature?: number | null;
+        };
+        Relationships: [];
+      };
+      billing_plans: {
+        Row: {
+          created_at: string | null;
+          currency: string;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          paypal_plan_id: string | null;
+          price_cents: number;
+          tier: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          currency?: string;
+          description?: string | null;
+          id: string;
+          is_active?: boolean;
+          name: string;
+          paypal_plan_id?: string | null;
+          price_cents: number;
+          tier: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          paypal_plan_id?: string | null;
+          price_cents?: number;
+          tier?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null;
+          created_at: string | null;
+          current_period_end: string | null;
+          id: string;
+          metadata: Json | null;
+          paypal_order_id: string | null;
+          paypal_subscription_id: string | null;
+          plan_id: string;
+          status: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          cancel_at_period_end?: boolean | null;
+          created_at?: string | null;
+          current_period_end?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          paypal_order_id?: string | null;
+          paypal_subscription_id?: string | null;
+          plan_id: string;
+          status: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          cancel_at_period_end?: boolean | null;
+          created_at?: string | null;
+          current_period_end?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          paypal_order_id?: string | null;
+          paypal_subscription_id?: string | null;
+          plan_id?: string;
+          status?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey";
+            columns: ["plan_id"];
+            referencedRelation: "billing_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      user_trials: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          line_linked: boolean;
+          metadata: Json | null;
+          source: string;
+          trial_expires_at: string | null;
+          trial_started_at: string | null;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          line_linked?: boolean;
+          metadata?: Json | null;
+          source: string;
+          trial_expires_at?: string | null;
+          trial_started_at?: string | null;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          line_linked?: boolean;
+          metadata?: Json | null;
+          source?: string;
+          trial_expires_at?: string | null;
+          trial_started_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_trials_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      notifications: {
+        Row: {
+          body: string;
+          channel: string;
+          id: string;
+          read_at: string | null;
+          sent_at: string;
+          title: string;
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          channel?: string;
+          id?: string;
+          read_at?: string | null;
+          sent_at?: string;
+          title: string;
+          user_id: string;
+        };
+        Update: {
+          body?: string;
+          channel?: string;
+          id?: string;
+          read_at?: string | null;
+          sent_at?: string;
+          title?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      newsletter_campaigns: {
+        Row: {
+          audience: string;
+          body: string;
+          created_at: string | null;
+          created_by: string | null;
+          delivered_count: number | null;
+          id: string;
+          metadata: Json | null;
+          sent_at: string | null;
+          target_count: number | null;
+          title: string;
+        };
+        Insert: {
+          audience: string;
+          body: string;
+          created_at?: string | null;
+          created_by?: string | null;
+          delivered_count?: number | null;
+          id?: string;
+          metadata?: Json | null;
+          sent_at?: string | null;
+          target_count?: number | null;
+          title: string;
+        };
+        Update: {
+          audience?: string;
+          body?: string;
+          created_at?: string | null;
+          created_by?: string | null;
+          delivered_count?: number | null;
+          id?: string;
+          metadata?: Json | null;
+          sent_at?: string | null;
+          target_count?: number | null;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_campaigns_created_by_fkey";
+            columns: ["created_by"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      newsletter_campaign_recipients: {
+        Row: {
+          campaign_id: string;
+          delivered_at: string | null;
+          email: string;
+          id: string;
+          metadata: Json | null;
+          status: string;
+          user_id: string | null;
+        };
+        Insert: {
+          campaign_id: string;
+          delivered_at?: string | null;
+          email: string;
+          id?: string;
+          metadata?: Json | null;
+          status?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          campaign_id?: string;
+          delivered_at?: string | null;
+          email?: string;
+          id?: string;
+          metadata?: Json | null;
+          status?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_campaign_recipients_campaign_id_fkey";
+            columns: ["campaign_id"];
+            referencedRelation: "newsletter_campaigns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "newsletter_campaign_recipients_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      admin_audit_logs: {
+        Row: {
+          action: string;
+          admin_email: string;
+          created_at: string;
+          id: string;
+          metadata: Json | null;
+        };
+        Insert: {
+          action: string;
+          admin_email: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+        };
+        Update: {
+          action?: string;
+          admin_email?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
         };
         Relationships: [];
       };

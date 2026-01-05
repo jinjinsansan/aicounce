@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 export async function GET(req: Request, { params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = await params;
@@ -14,6 +15,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ sessionI
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertAccess(session.user.id, "team");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 
   // Verify session ownership
@@ -55,6 +63,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ session
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertAccess(session.user.id, "team");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 
   // Verify session ownership

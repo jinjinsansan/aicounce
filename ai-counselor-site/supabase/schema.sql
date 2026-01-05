@@ -13,10 +13,172 @@ create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
   email varchar(255) not null unique,
   username varchar(100),
+  last_login_at timestamptz,
+  terms_accepted_at timestamptz,
+  receive_announcements boolean not null default true,
+  official_line_id text,
+  line_linked_at timestamptz,
+  paypal_payer_id text,
   created_at timestamptz default timezone('utc', now()),
   updated_at timestamptz default timezone('utc', now()),
   is_active boolean default true
 );
+
+-- Billing Plans ------------------------------------------------------------
+create table if not exists public.billing_plans (
+  id text primary key,
+  name text not null,
+  description text,
+  tier text not null check (tier in ('basic','premium')),
+  price_cents integer not null,
+  currency char(3) not null default 'JPY',
+  paypal_plan_id text,
+  is_active boolean not null default true,
+  created_at timestamptz default timezone('utc', now()),
+  updated_at timestamptz default timezone('utc', now())
+);
+
+insert into public.billing_plans (id, name, description, tier, price_cents, currency, paypal_plan_id)
+values
+  ('basic', 'ベーシックプラン', '個別カウンセリングが対象', 198000, 'JPY', null),
+  ('premium', 'プレミアムプラン', '個別+チームカウンセリング', 398000, 'JPY', null)
+on conflict (id) do nothing;
+
+-- User Subscriptions -------------------------------------------------------
+create table if not exists public.user_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  plan_id text not null references public.billing_plans(id),
+  status text not null check (status in ('active','trialing','past_due','canceled')),
+  paypal_subscription_id text,
+  paypal_order_id text,
+  current_period_end timestamptz,
+  cancel_at_period_end boolean default false,
+  metadata jsonb,
+  created_at timestamptz default timezone('utc', now()),
+  updated_at timestamptz default timezone('utc', now())
+);
+
+create index if not exists idx_user_subscriptions_user
+  on public.user_subscriptions (user_id);
+
+-- Trials ------------------------------------------------------------------
+create table if not exists public.user_trials (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.users(id) on delete cascade,
+  source text not null check (source in ('line')),
+  line_linked boolean not null default false,
+  trial_started_at timestamptz,
+  trial_expires_at timestamptz,
+  metadata jsonb,
+  created_at timestamptz default timezone('utc', now()),
+  updated_at timestamptz default timezone('utc', now())
+);
+
+-- Notifications & Campaigns -----------------------------------------------
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  title text not null,
+  body text not null,
+  channel text not null default 'inbox',
+  sent_at timestamptz not null default timezone('utc', now()),
+  read_at timestamptz
+);
+
+create index if not exists idx_notifications_user
+  on public.notifications (user_id, sent_at desc);
+
+create table if not exists public.newsletter_campaigns (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text not null,
+  audience text not null,
+  created_by uuid references public.users(id),
+  sent_at timestamptz,
+  target_count integer,
+  delivered_count integer,
+  metadata jsonb,
+  created_at timestamptz default timezone('utc', now())
+);
+
+create table if not exists public.newsletter_campaign_recipients (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.newsletter_campaigns(id) on delete cascade,
+  user_id uuid references public.users(id) on delete set null,
+  email text not null,
+  delivered_at timestamptz,
+  status text not null default 'pending',
+  metadata jsonb
+);
+
+create index if not exists idx_campaign_recipients_campaign
+  on public.newsletter_campaign_recipients (campaign_id);
+
+-- Admin Audit -------------------------------------------------------------
+create table if not exists public.admin_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  admin_email text not null,
+  action text not null,
+  metadata jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+alter table public.user_subscriptions enable row level security;
+alter table public.user_trials enable row level security;
+alter table public.notifications enable row level security;
+alter table public.newsletter_campaigns enable row level security;
+alter table public.newsletter_campaign_recipients enable row level security;
+
+drop policy if exists user_subscriptions_select_own on public.user_subscriptions;
+create policy user_subscriptions_select_own
+  on public.user_subscriptions
+  for select using (auth.uid() = user_id);
+
+drop policy if exists user_subscriptions_mutate_own on public.user_subscriptions;
+create policy user_subscriptions_mutate_own
+  on public.user_subscriptions
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists user_subscriptions_service_role on public.user_subscriptions;
+create policy user_subscriptions_service_role
+  on public.user_subscriptions
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists user_trials_select_own on public.user_trials;
+create policy user_trials_select_own
+  on public.user_trials
+  for select using (auth.uid() = user_id);
+
+drop policy if exists user_trials_service_role on public.user_trials;
+create policy user_trials_service_role
+  on public.user_trials
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists notifications_select_own on public.notifications;
+create policy notifications_select_own
+  on public.notifications
+  for select using (auth.uid() = user_id);
+
+drop policy if exists notifications_update_own on public.notifications;
+create policy notifications_update_own
+  on public.notifications
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists notifications_service_role on public.notifications;
+create policy notifications_service_role
+  on public.notifications
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists newsletter_campaigns_service_role on public.newsletter_campaigns;
+create policy newsletter_campaigns_service_role
+  on public.newsletter_campaigns
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists newsletter_campaign_recipients_service_role on public.newsletter_campaign_recipients;
+create policy newsletter_campaign_recipients_service_role
+  on public.newsletter_campaign_recipients
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
 -- Newsletter Subscribers ----------------------------------------------------
 create table if not exists public.newsletter_subscribers (

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Counselor, Message } from "@/types";
 import Sidebar from "@/components/Sidebar";
@@ -20,6 +21,9 @@ import { loadCounselorById } from "@/lib/client-counselors";
 function StandardChatExperience({ counselorId }: { counselorId: string }) {
   const [counselor, setCounselor] = useState<Counselor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessState, setAccessState] = useState<{ canUseIndividual: boolean } | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
   const { messages, setMessages } = useChatStore();
   const [conversationId, setConversationId] = useState<string | null>(null);
 
@@ -37,6 +41,33 @@ function StandardChatExperience({ counselorId }: { counselorId: string }) {
       mounted = false;
     };
   }, [counselorId]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/access/state", { cache: "no-store" })
+      .then(async (response) => {
+        if (response.status === 401) {
+          if (!active) return null;
+          setRequiresLogin(true);
+          setAccessState(null);
+          return null;
+        }
+        if (!response.ok) throw new Error("access-state-failed");
+        return response.json();
+      })
+      .then((data) => {
+        if (!active || !data) return;
+        setAccessState({ canUseIndividual: Boolean(data.state?.canUseIndividual) });
+      })
+      .catch(() => {
+        if (!active) return;
+        setAccessState({ canUseIndividual: false });
+      })
+      .finally(() => active && setAccessLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const loadConversation = async () => {
@@ -99,10 +130,40 @@ function StandardChatExperience({ counselorId }: { counselorId: string }) {
     loadMessages();
   }, [conversationId, setMessages]);
 
-  if (loading) {
+  if (loading || accessLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-500">
         ロード中...
+      </div>
+    );
+  }
+
+  if (requiresLogin) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center">
+        <div className="max-w-md space-y-3">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Please Sign In</p>
+          <h1 className="text-3xl font-black text-slate-900">まずはログインしてください</h1>
+          <p className="text-slate-600">マイプランの確認やカウンセリング利用にはログインが必要です。</p>
+        </div>
+        <LinkButton href="/login" label="ログインする" />
+      </div>
+    );
+  }
+
+  if (accessState && !accessState.canUseIndividual) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center">
+        <div className="max-w-md space-y-3">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+            Access Restricted
+          </p>
+          <h1 className="text-3xl font-black text-slate-900">個別カウンセリングはベーシックプラン専用です</h1>
+          <p className="text-slate-600">
+            公式LINEの7日間無料トライアル、もしくはベーシックプランの決済で利用できます。
+          </p>
+        </div>
+        <LinkButton href="/account" label="マイページでプランを確認" />
       </div>
     );
   }
@@ -185,4 +246,15 @@ export default function ChatPage({
   }
 
   return <StandardChatExperience counselorId={counselorId} />;
+}
+
+function LinkButton({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-black"
+    >
+      {label}
+    </Link>
+  );
 }

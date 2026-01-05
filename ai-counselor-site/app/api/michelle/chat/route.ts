@@ -8,6 +8,7 @@ import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -42,6 +43,13 @@ export async function POST(request: Request) {
 
   if (sessionError || !session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertAccess(session.user.id, "individual");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 
   // Sync basic user profile into public.users when service role is available

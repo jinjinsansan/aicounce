@@ -7,6 +7,7 @@ import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 import { searchRagContext } from "@/lib/rag";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,6 +41,17 @@ export async function POST(request: NextRequest) {
     }
 
     const adminSupabase = hasServiceRole() ? getServiceSupabase() : null;
+
+    try {
+      await assertAccess(session.user.id, "individual");
+    } catch (error) {
+      const { status, message } = parseAccessError(error);
+      if (status === 402) {
+        return NextResponse.json({ error: message }, { status });
+      }
+      console.error("access check failed", error);
+      return NextResponse.json({ error: "Access denied" }, { status });
+    }
 
     let activeConversationId = conversationId ?? null;
 

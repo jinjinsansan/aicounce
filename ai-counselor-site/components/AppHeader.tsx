@@ -29,8 +29,14 @@ export default function AppHeader() {
     }
   };
 
+  const isAdmin = session?.user?.email === "goldbenchan@gmail.com";
+
   const navLinks = session
-    ? [...baseNavLinks, { href: "/admin", label: "管理" }]
+    ? [
+        ...baseNavLinks,
+        { href: "/account", label: "マイページ" },
+        ...(isAdmin ? [{ href: "/admin", label: "管理" }] : []),
+      ]
     : baseNavLinks;
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import type {
   AdminMetrics,
@@ -48,12 +49,27 @@ export default function AdminDashboardPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-slate-600">
         <p>管理ダッシュボードにアクセスするにはログインが必要です。</p>
-        <a
+        <Link
           href="/login"
           className="rounded-full border border-slate-200 px-4 py-2 text-slate-900"
         >
           ログインページへ
-        </a>
+        </Link>
+      </div>
+    );
+  }
+
+  const isAdmin = session.user.email === "goldbenchan@gmail.com";
+  if (!isAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-slate-600">
+        <p>このダッシュボードにアクセスする権限がありません。</p>
+        <Link
+          href="/"
+          className="rounded-full border border-slate-200 px-4 py-2 text-slate-900"
+        >
+          ホームに戻る
+        </Link>
       </div>
     );
   }

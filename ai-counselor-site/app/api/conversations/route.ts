@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 export async function GET(request: NextRequest) {
   const counselorId = request.nextUrl.searchParams.get("counselorId");
@@ -16,6 +17,13 @@ export async function GET(request: NextRequest) {
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertAccess(session.user.id, "individual");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 
   try {
@@ -61,6 +69,13 @@ export async function POST(request: NextRequest) {
   }
 
   const adminSupabase = hasServiceRole() ? getServiceSupabase() : null;
+
+  try {
+    await assertAccess(session.user.id, "individual");
+  } catch (error) {
+    const { status, message } = parseAccessError(error);
+    return NextResponse.json({ error: message }, { status });
+  }
 
   try {
     const { counselorId, title } = await request.json();

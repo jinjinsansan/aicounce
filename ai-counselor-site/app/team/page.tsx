@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
@@ -66,6 +67,9 @@ export default function TeamCounselingPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileSessionsOpen, setIsMobileSessionsOpen] = useState(false);
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [accessState, setAccessState] = useState<{ canUseTeam: boolean } | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -76,6 +80,33 @@ export default function TeamCounselingPage() {
     () => FALLBACK_COUNSELORS.map((c) => ({ id: c.id, name: c.name, iconUrl: c.iconUrl ?? "" })),
     [],
   );
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/access/state", { cache: "no-store" })
+      .then(async (response) => {
+        if (response.status === 401) {
+          if (!active) return null;
+          setRequiresLogin(true);
+          setAccessState(null);
+          return null;
+        }
+        if (!response.ok) throw new Error("access-state-failed");
+        return response.json();
+      })
+      .then((data) => {
+        if (!active || !data) return;
+        setAccessState({ canUseTeam: Boolean(data.state?.canUseTeam) });
+      })
+      .catch(() => {
+        if (!active) return;
+        setAccessState({ canUseTeam: false });
+      })
+      .finally(() => active && setAccessLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const showBanner = useCallback((message: string) => {
     setBannerMessage(message);
@@ -535,6 +566,56 @@ export default function TeamCounselingPage() {
       clearTimeout(bannerTimeoutRef.current);
     }
   }, []);
+
+  if (accessLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        読み込み中...
+      </div>
+    );
+  }
+
+  if (requiresLogin) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-br from-[#fff9f5] via-[#fef5f1] to-[#fef0e9] px-6 text-center">
+        <div className="max-w-xl space-y-4">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#6b4423]/60">
+            Please Sign In
+          </p>
+          <h1 className="text-3xl font-black text-[#6b4423]">チームカウンセリングを利用するにはログインが必要です</h1>
+          <p className="text-[#6b4423]/80">まずはアカウントにサインインし、プラン状態を確認してください。</p>
+        </div>
+        <Link
+          href="/login"
+          className="rounded-full bg-[#6b4423] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#6b4423]/40 transition hover:bg-[#57351b]"
+        >
+          ログインする
+        </Link>
+      </div>
+    );
+  }
+
+  if (accessState && !accessState.canUseTeam) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-br from-[#fff9f5] via-[#fef5f1] to-[#fef0e9] px-6 text-center">
+        <div className="max-w-xl space-y-4">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#6b4423]/60">
+            Premium Required
+          </p>
+          <h1 className="text-3xl font-black text-[#6b4423]">チームカウンセリングはプレミアム限定です</h1>
+          <p className="text-[#6b4423]/80">
+            公式LINEの7日無料トライアル、またはプレミアムプランの決済でご利用いただけます。マイページから切り替えてください。
+          </p>
+        </div>
+        <a
+          href="/account"
+          className="rounded-full bg-[#6b4423] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#6b4423]/40 transition hover:bg-[#57351b]"
+        >
+          マイページでプランを確認
+        </a>
+      </div>
+    );
+  }
 
   const isBootstrapping = isLoadingSession && !sessionId;
   if (isBootstrapping) {

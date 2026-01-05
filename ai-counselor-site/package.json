@@ -18,6 +18,8 @@
     "clinical:upload": "ts-node scripts/clinical-knowledge/upload-to-rag.ts"
   },
   "dependencies": {
+    "@line/bot-sdk": "^10.5.0",
+    "@paypal/paypal-server-sdk": "^2.1.0",
     "@sentry/nextjs": "^10.32.1",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/auth-helpers-react": "^0.15.0",
