@@ -5,6 +5,7 @@ import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { searchRagContext } from "@/lib/rag";
 import { MICHELLE_SYSTEM_PROMPT } from "@/lib/team/prompts/michelle";
 import { SATO_SYSTEM_PROMPT } from "@/lib/team/prompts/sato";
+import { ADAM_SYSTEM_PROMPT } from "@/lib/team/prompts/adam";
 
 type Participant = {
   id: string;
@@ -60,6 +61,10 @@ const AI_ROLES = {
     greeting: "こんにちは。臨床心理学の専門家です。科学的なアプローチで心の問題に向き合います。",
     role: "具体的な対処法と認知再構成の提案",
   },
+  adam: {
+    greeting: "こんにちは。一般的なAIカウンセラーのアダムです。中立的で実用的なアドバイスを提供します。",
+    role: "常識的で実用的なアドバイスと多角的な視点の提供",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -75,6 +80,12 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["認知の歪み", "愛着理論", "認知行動療法", "クライエント中心療法"],
     systemPrompt: SATO_SYSTEM_PROMPT,
     negativeInstruction: "あなたの専門は臨床心理学のみです。テープ式心理学については言及しないでください。",
+  },
+  adam: {
+    name: "一般的なAI",
+    terms: ["実用的", "多角的", "常識的", "バランス"],
+    systemPrompt: ADAM_SYSTEM_PROMPT,
+    negativeInstruction: "特定の心理学理論の専門用語（ガムテープ、認知の歪みなど）は使わないでください。一般的でわかりやすい言葉を使ってください。",
   },
 };
 
@@ -133,9 +144,8 @@ export async function POST(req: Request) {
     // ユーザーメッセージが挨拶のみかどうか判定
     const isGreeting = isGreetingOnly(userMessage);
 
-    // 順次生成：各AIが前のAIの発言を見られるようにする
-    for (let i = 0; i < selected.length; i++) {
-      const p = selected[i];
+    // 完全独立型：各AIが他のAIの応答を見ずに独立して応答
+    for (const p of selected) {
       const spec = AI_SPECIALIZATIONS[p.id.toLowerCase()];
       const role = AI_ROLES[p.id.toLowerCase() as keyof typeof AI_ROLES];
       const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 6) : { context: "" };
@@ -147,50 +157,21 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // 相談の場合：専門性を発揮
-      // シンプルな指示 + Few-shot example
-      const teamInstructions = i === 0
-        ? [
-            "\n---\n",
-            "## チームカウンセリング指示",
-            "",
-            `### あなたの役割: ${role?.role || p.specializationName}`,
-            spec ? spec.negativeInstruction : "",
-            "",
-            "### 良い応答の例",
-            "",
-            "ユーザー: 上司に叱られて苦しいです",
-            `${p.name}: お辛い状況ですね。${p.specializationName}では、こうした苦しみの背後に「${p.specializationTerms[0] || "心の問題"}」があると考えます。叱られたとき、どのような感情が湧いてきましたか？`,
-            "",
-            "### 注意事項",
-            "- 常にユーザーに向けて話す（他のカウンセラーに話しかけない）",
-            `- 必ず「${p.specializationName}では〇〇」と専門性を明示`,
-            "- 150〜300文字程度",
-          ].join("\n")
-        : [
-            "\n---\n",
-            "## チームカウンセリング指示",
-            "",
-            `### あなたの役割: ${role?.role || p.specializationName}`,
-            spec ? spec.negativeInstruction : "",
-            "",
-            "### 良い応答の例",
-            "",
-            "ユーザー: 上司に叱られて苦しいです",
-            "前のカウンセラー: お辛い状況ですね。感情の背後に思い込みがあると考えます。どのような感情が湧いてきましたか？",
-            `${p.name}: 前のカウンセラーの視点に加えて、${p.specializationName}の観点からお伝えします。具体的には「${p.specializationTerms[0] || "対処法"}」というアプローチがあります。上司に言われた具体的な言葉を覚えていますか？`,
-            "",
-            "### 悪い応答の例（絶対にしない）",
-            "前のカウンセラー: どのような感情が湧いてきましたか？",
-            `${p.name}: どんな感情を感じましたか？ ← 同じ質問の繰り返し`,
-            "",
-            "### 注意事項",
-            "- 常にユーザーに向けて話す",
-            "- 前のカウンセラーと同じ質問をしない",
-            "- 議論を前進させる新しい視点を提供",
-            `- 必ず「${p.specializationName}では〇〇」と専門性を明示`,
-            "- 150〜300文字程度",
-          ].join("\n");
+      // 相談の場合：各AIが独立して専門性を発揮
+      const teamInstructions = [
+        "\n---\n",
+        "## チームカウンセリング指示",
+        "",
+        `### あなたの役割: ${role?.role || p.specializationName}`,
+        spec ? spec.negativeInstruction : "",
+        "",
+        "### 応答スタイル",
+        `- ${p.specializationName}の専門家として独自の視点を提供`,
+        "- 他のカウンセラーの応答は気にしない（あなたは独立している）",
+        "- ユーザーに直接話しかける",
+        "- 150〜300文字程度",
+        "- 専門用語を適切に使用",
+      ].join("\n");
 
       // RAGコンテキストの追加
       const ragContext = context
@@ -200,17 +181,11 @@ export async function POST(req: Request) {
       // 完全なシステムプロンプト
       const system = p.systemPrompt + teamInstructions + ragContext;
 
-      // 既存の履歴 + このラウンドで既に生成された他AIの発言
-      const chatHistory = [
-        ...previousMessages.slice(-6).map((m) => ({ 
-          role: m.role, 
-          content: m.author ? `${m.author}カウンセラー: ${m.content}` : m.content 
-        })),
-        ...responses.map((r) => ({ 
-          role: "assistant" as const, 
-          content: `${r.author}カウンセラー: ${r.content}` 
-        })),
-      ];
+      // ユーザーとの会話履歴のみ（他のAIの応答は含めない）
+      const chatHistory = previousMessages.slice(-6).map((m) => ({ 
+        role: m.role, 
+        content: m.content 
+      }));
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -219,14 +194,13 @@ export async function POST(req: Request) {
           ...chatHistory,
           { role: "user", content: userMessage },
         ],
-        max_tokens: 1200,
+        max_tokens: 800,
         temperature: 0.7,
       });
 
       const content = completion.choices[0].message.content ?? "";
       const sanitized = sanitizeContent(content, p.name);
 
-      // 生成後すぐに履歴に追加（次のAIがこの発言を見られるようにする）
       responses.push({ author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl });
     }
 
