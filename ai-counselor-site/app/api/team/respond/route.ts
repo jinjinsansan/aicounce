@@ -3,15 +3,26 @@ import OpenAI from "openai";
 import { env } from "process";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { searchRagContext } from "@/lib/rag";
+import { MICHELLE_SYSTEM_PROMPT } from "@/lib/team/prompts/michelle";
+import { SATO_SYSTEM_PROMPT } from "@/lib/team/prompts/sato";
 
 type Participant = {
   id: string;
   name: string;
   iconUrl: string;
   ragEnabled: boolean;
-  style: string;
+  systemPrompt: string;
+  specializationName: string;
+  specializationTerms: string[];
   specialty?: string;
   description?: string;
+};
+
+type Specialization = {
+  name: string;
+  terms: string[];
+  systemPrompt: string;
+  negativeInstruction: string;
 };
 
 function sanitizeContent(raw: string, author?: string) {
@@ -28,20 +39,20 @@ function sanitizeContent(raw: string, author?: string) {
   return text;
 }
 
-const PARTICIPANT_PROMPTS: Record<string, string> = {
-  michele: [
-    "あなたはミシェル。テープ式心理学の専門家。",
-    "まず感情を受け止め、共感を短い言葉で示す。",
-    "問いかけで感情のテープを解きほぐし、ユーザー自身の気づきを促す。",
-    "専門用語は避け、やさしい日本語で。",
-    "過度な一般論は避け、ユーザーの文脈に具体的に寄り添う。",
-  ].join("\n"),
-  sato: [
-    "あなたはドクター・サトウ。臨床心理学ベースで、科学的かつ安全な助言を優先。",
-    "リスク配慮（自己否定や危機兆候）に注意し、必要なら専門機関推奨を明示。",
-    "短く構造化（箇条書き可）して、具体的な対処ステップを提示。",
-    "断定を避けつつ実行可能な提案にする。",
-  ].join("\n"),
+// 各AIの専門分野を明確に定義
+const AI_SPECIALIZATIONS: Record<string, Specialization> = {
+  michele: {
+    name: "テープ式心理学",
+    terms: ["ガムテープ", "5大ネガティブ感情", "ピールダウン", "心の思い込み"],
+    systemPrompt: MICHELLE_SYSTEM_PROMPT,
+    negativeInstruction: "あなたの専門はテープ式心理学のみです。臨床心理学については言及しないでください。",
+  },
+  sato: {
+    name: "臨床心理学",
+    terms: ["認知の歪み", "愛着理論", "認知行動療法", "クライエント中心療法"],
+    systemPrompt: SATO_SYSTEM_PROMPT,
+    negativeInstruction: "あなたの専門は臨床心理学のみです。テープ式心理学については言及しないでください。",
+  },
 };
 
 const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
@@ -57,13 +68,21 @@ export async function POST(req: Request) {
       .slice(0, 5)
       .map((id: string) => {
         const c = FALLBACK_COUNSELORS.find((v) => v.id === id || v.id === id.toLowerCase());
+        const spec = AI_SPECIALIZATIONS[id.toLowerCase()] ?? {
+          name: "心理カウンセリング",
+          terms: [],
+          systemPrompt: "あなたは専門的なAIカウンセラーです。",
+          negativeInstruction: "",
+        };
         return (
           c && {
             id: c.id,
             name: c.name,
             iconUrl: c.iconUrl ?? "",
             ragEnabled: Boolean(c.ragEnabled),
-            style: PARTICIPANT_PROMPTS[c.id] ?? "あなたは専門的なAIカウンセラーです。",
+            systemPrompt: spec.systemPrompt,
+            specializationName: spec.name,
+            specializationTerms: spec.terms,
             specialty: c.specialty,
             description: c.description,
           }
@@ -88,23 +107,49 @@ export async function POST(req: Request) {
 
     const responses: { author: string; authorId: string; content: string; iconUrl: string }[] = [];
 
-    for (const p of selected) {
+    // 順次生成：各AIが前のAIの発言を見られるようにする
+    for (let i = 0; i < selected.length; i++) {
+      const p = selected[i];
+      const spec = AI_SPECIALIZATIONS[p.id.toLowerCase()];
       const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 6) : { context: "" };
-      const system = [
-        "あなたは複数AIが議論するチームカウンセリングの一員です。",
-        "ゴールはユーザーの悩みを解決に近づけること。",
-        "他のAIの発言を参考にしてもよいが、必ずユーザーの悩みに寄り添い、安全で具体的な提案を返すこと。",
-        "役割: " + p.name + (p.specialty ? `（${p.specialty}）` : ""),
-        p.description ? `自己紹介: ${p.description}` : "",
-        "回答は200〜320文字程度で簡潔に。",
-        "本文に自分の名前や役割を書かない。挨拶や自己紹介の繰り返しは避け、ユーザーの相談内容に直接応答する。",
-        p.style,
-        context ? "参考情報（RAG検索結果）:\n" + context : "",
+
+      // チーム用の専門分野別指示（明確に分離）
+      const teamInstructions = [
+        "\n---\n",
+        "## チームカウンセリング特別指示",
+        "",
+        "### あなたの専門分野（厳守）",
+        spec ? spec.negativeInstruction : "",
+        `必ず「${p.specializationName}では〇〇」という表現を使ってください。`,
+        p.specializationTerms.length > 0
+          ? `あなたの専門用語: ${p.specializationTerms.join("、")}`
+          : "",
+        "",
+        "### 他のカウンセラーとの協力",
+        i === 0
+          ? "あなたが最初の回答者です。あなたの専門性を明確に示してください。"
+          : "他のカウンセラーが既に発言しています。彼らの意見を尊重しつつ、あなたの専門分野から独自の視点を加えてください。",
+        i > 0 ? "例：「○○さんのおっしゃる通り〜」「○○さんの意見に加えて〜」など" : "",
+        "",
+        "### 回答スタイル",
+        "- 回答は200〜500文字程度で、本質を伝える",
+        "- 本文に自分の名前は書かない（既に表示されています）",
+        "- 挨拶の繰り返しは最小限に",
       ].join("\n");
 
-      const chatHistory = previousMessages
-        .slice(-6)
-        .map((m) => ({ role: m.role, content: `${m.author ? `[${m.author}] ` : ""}${m.content}` }));
+      // RAGコンテキストの追加
+      const ragContext = context
+        ? `\n\n## 参考情報（RAG検索結果）\n以下の専門知識を活用して回答してください：\n${context}`
+        : "";
+
+      // 完全なシステムプロンプト
+      const system = p.systemPrompt + teamInstructions + ragContext;
+
+      // 既存の履歴 + このラウンドで既に生成された他AIの発言
+      const chatHistory = [
+        ...previousMessages.slice(-6).map((m) => ({ role: m.role, content: `${m.author ? `[${m.author}] ` : ""}${m.content}` })),
+        ...responses.map((r) => ({ role: "assistant" as const, content: `[${r.author}] ${r.content}` })),
+      ];
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -113,12 +158,15 @@ export async function POST(req: Request) {
           ...chatHistory,
           { role: "user", content: userMessage },
         ],
-        max_tokens: 320,
+        max_tokens: 1200,
         temperature: 0.7,
       });
 
       const content = completion.choices[0].message.content ?? "";
-      responses.push({ author: p.name, authorId: p.id, content: sanitizeContent(content, p.name), iconUrl: p.iconUrl });
+      const sanitized = sanitizeContent(content, p.name);
+
+      // 生成後すぐに履歴に追加（次のAIがこの発言を見られるようにする）
+      responses.push({ author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl });
     }
 
     return NextResponse.json({ responses });
