@@ -36,16 +36,9 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
           )}
         </div>
         <div>
-          <div className="mb-1 flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              {counselor.specialty}
-            </p>
-            {isComingSoon && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-700">
-                準備中
-              </span>
-            )}
-          </div>
+          <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+            {counselor.specialty}
+          </p>
           <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{counselor.name}</h3>
         </div>
       </div>
