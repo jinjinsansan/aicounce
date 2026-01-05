@@ -40,6 +40,28 @@ function sanitizeContent(raw: string, author?: string) {
   return text;
 }
 
+// ユーザーメッセージが挨拶のみかどうか判定
+function isGreetingOnly(message: string): boolean {
+  const greetings = [
+    'こんにちは', 'こんばんは', 'おはよう', 'はじめまして',
+    'よろしく', 'hello', 'hi', 'hey'
+  ];
+  const normalized = message.toLowerCase().trim().replace(/[、。！？!?\s]/g, '');
+  return greetings.some(g => normalized === g || normalized === g + 'ございます');
+}
+
+// 各AIの役割を明確に定義
+const AI_ROLES = {
+  michele: {
+    greeting: "こんにちは。テープ式心理学の専門家です。心の「ガムテープ（思い込み）」を見つけるお手伝いをします。",
+    role: "感情の受容と「ガムテープ（心の思い込み）」の特定",
+  },
+  sato: {
+    greeting: "こんにちは。臨床心理学の専門家です。科学的なアプローチで心の問題に向き合います。",
+    role: "具体的な対処法と認知再構成の提案",
+  },
+};
+
 // 各AIの専門分野を明確に定義
 const AI_SPECIALIZATIONS: Record<string, Specialization> = {
   michele: {
@@ -108,79 +130,67 @@ export async function POST(req: Request) {
 
     const responses: { author: string; authorId: string; content: string; iconUrl: string }[] = [];
 
+    // ユーザーメッセージが挨拶のみかどうか判定
+    const isGreeting = isGreetingOnly(userMessage);
+
     // 順次生成：各AIが前のAIの発言を見られるようにする
     for (let i = 0; i < selected.length; i++) {
       const p = selected[i];
       const spec = AI_SPECIALIZATIONS[p.id.toLowerCase()];
+      const role = AI_ROLES[p.id.toLowerCase() as keyof typeof AI_ROLES];
       const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 6) : { context: "" };
 
-      // チーム用の専門分野別指示（明確に分離）
-      const teamInstructions = [
-        "\n---\n",
-        "## チームカウンセリング特別指示（厳守）",
-        "",
-        "### 【超重要】あなたは常にユーザー（相談者）に向けて話してください",
-        "- あなたの応答は必ずユーザー（相談者）に向けたものです",
-        "- 他のカウンセラー（ミシェル、サトウなど）に話しかけてはいけません",
-        "- 他のカウンセラーの発言を参照する場合も、必ずユーザーに向けて説明してください",
-        "- 例: 「ミシェルさんのおっしゃった〇〇について、私からも補足させてください」",
-        "",
-        "### 【最重要】あなたの専門分野",
-        spec ? spec.negativeInstruction : "",
-        `**回答の最初の文で必ず「${p.specializationName}では〇〇」という表現を使ってください。**`,
-        p.specializationTerms.length > 0
-          ? `専門用語を積極的に使用: ${p.specializationTerms.join("、")}`
-          : "",
-        "",
-        "### 【必須】他のカウンセラーへの言及",
-        i === 0
-          ? [
-              "あなたが最初の回答者です。",
-              `**必ず「${p.specializationName}の観点からお答えします」と明示してください。**`,
-            ].join("\n")
-          : [
-              "**他のカウンセラーの発言に必ず言及してください（ただしユーザーに向けて話す）。**",
-              "例文（必ずユーザーに向けて）:",
-              `- 「○○カウンセラーが指摘されたように、${p.specializationName}の視点からお伝えすると〜」`,
-              `- 「○○カウンセラーの意見に加えて、私から${p.specializationName}では〜とお伝えしたいです」`,
-              `- 「○○カウンセラーがおっしゃった点について、${p.specializationName}では〜と考えます」`,
-              "",
-              "**注意: 他のカウンセラーに話しかけるのではなく、必ずユーザー（相談者）に向けて話してください。**",
-            ].join("\n"),
-        "",
-        "### 【禁止】繰り返しの回避",
-        i > 0
-          ? [
-              "**絶対に前のカウンセラーと同じ質問を繰り返さないでください。**",
-              "禁止例:",
-              "- 前のカウンセラーが「どのような感情ですか？」と聞いた → 同じことを聞かない",
-              "- 前のカウンセラーが「どんな思い込みがありますか？」と聞いた → 同じことを聞かない",
-              "",
-              "**必須: 前のカウンセラーの質問や洞察を受けて、議論を前進させる新しい視点を提供してください。**",
-              "良い例:",
-              "- 前のカウンセラーが感情について聞いた → あなたは具体的な対処法を提案する",
-              "- 前のカウンセラーが原因を探った → あなたは解決策の方向性を示す",
-            ].join("\n")
-          : "",
-        "",
-        "### 回答フォーマット（厳守）",
-        i === 0
-          ? [
-              "1行目: ユーザーへの簡潔な共感",
-              `2行目: 必ず「${p.specializationName}では〇〇」で始める専門的な洞察`,
-              "3行目: ユーザーへの具体的な問いかけや提案",
-            ].join("\n")
-          : [
-              "1行目: 前のカウンセラーの発言をユーザーに向けて言及（「○○カウンセラーが指摘されたように〜」）",
-              `2行目: 必ず「${p.specializationName}では〇〇」でユーザーに新しい視点を提供`,
-              "3行目: ユーザーへの具体的な提案や問いかけ",
-            ].join("\n"),
-        "",
-        "### その他",
-        "- 回答は150〜400文字",
-        "- 本文に自分の名前は書かない",
-        "- 過度な挨拶は不要",
-      ].join("\n");
+      // 挨拶のみの場合：シンプルな自己紹介
+      if (isGreeting) {
+        const greetingResponse = role?.greeting || "こんにちは。";
+        responses.push({ author: p.name, authorId: p.id, content: greetingResponse, iconUrl: p.iconUrl });
+        continue;
+      }
+
+      // 相談の場合：専門性を発揮
+      // シンプルな指示 + Few-shot example
+      const teamInstructions = i === 0
+        ? [
+            "\n---\n",
+            "## チームカウンセリング指示",
+            "",
+            `### あなたの役割: ${role?.role || p.specializationName}`,
+            spec ? spec.negativeInstruction : "",
+            "",
+            "### 良い応答の例",
+            "",
+            "ユーザー: 上司に叱られて苦しいです",
+            `${p.name}: お辛い状況ですね。${p.specializationName}では、こうした苦しみの背後に「${p.specializationTerms[0] || "心の問題"}」があると考えます。叱られたとき、どのような感情が湧いてきましたか？`,
+            "",
+            "### 注意事項",
+            "- 常にユーザーに向けて話す（他のカウンセラーに話しかけない）",
+            `- 必ず「${p.specializationName}では〇〇」と専門性を明示`,
+            "- 150〜300文字程度",
+          ].join("\n")
+        : [
+            "\n---\n",
+            "## チームカウンセリング指示",
+            "",
+            `### あなたの役割: ${role?.role || p.specializationName}`,
+            spec ? spec.negativeInstruction : "",
+            "",
+            "### 良い応答の例",
+            "",
+            "ユーザー: 上司に叱られて苦しいです",
+            "前のカウンセラー: お辛い状況ですね。感情の背後に思い込みがあると考えます。どのような感情が湧いてきましたか？",
+            `${p.name}: 前のカウンセラーの視点に加えて、${p.specializationName}の観点からお伝えします。具体的には「${p.specializationTerms[0] || "対処法"}」というアプローチがあります。上司に言われた具体的な言葉を覚えていますか？`,
+            "",
+            "### 悪い応答の例（絶対にしない）",
+            "前のカウンセラー: どのような感情が湧いてきましたか？",
+            `${p.name}: どんな感情を感じましたか？ ← 同じ質問の繰り返し`,
+            "",
+            "### 注意事項",
+            "- 常にユーザーに向けて話す",
+            "- 前のカウンセラーと同じ質問をしない",
+            "- 議論を前進させる新しい視点を提供",
+            `- 必ず「${p.specializationName}では〇〇」と専門性を明示`,
+            "- 150〜300文字程度",
+          ].join("\n");
 
       // RAGコンテキストの追加
       const ragContext = context
