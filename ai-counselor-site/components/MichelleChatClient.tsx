@@ -715,6 +715,7 @@ export function MichelleChatClient() {
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
+          variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
           className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
@@ -780,14 +781,15 @@ export function MichelleChatClient() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <Button
-              onClick={() => {
-                handleNewChat();
-                setIsSidebarOpen(false);
-              }}
-              disabled={isLoading.sending}
-              className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
-            >
+        <Button
+          variant="ghost"
+          onClick={() => {
+            handleNewChat();
+            setIsSidebarOpen(false);
+          }}
+          disabled={isLoading.sending}
+          className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
+        >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f472b6]">チャット</p>

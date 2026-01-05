@@ -635,6 +635,7 @@ export function ClinicalChatClient() {
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
+          variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
           className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#1d4ed8] font-semibold shadow-sm transition hover:bg-[#f4f8ff]"
@@ -701,6 +702,7 @@ export function ClinicalChatClient() {
               </Button>
             </div>
             <Button
+              variant="ghost"
               onClick={() => {
                 handleNewChat();
                 setIsSidebarOpen(false);

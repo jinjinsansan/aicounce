@@ -17,7 +17,7 @@ export default function HeroSection() {
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {["批判も評価もしない完全匿名の対話","待ち時間0秒、いつでも即レス","月額1,980円で10人の専門AIが伴走"].map((text) => (
             <div key={text} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-700">
               {text}
@@ -40,7 +40,7 @@ export default function HeroSection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-3 gap-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+        <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 sm:grid-cols-3">
           {[{ label: "専門AI", value: "10名" }, { label: "待ち時間", value: "0秒" }, { label: "月額", value: "¥1,980" }].map((item) => (
             <div key={item.label} className="space-y-1 text-center">
               <p className="text-2xl font-bold text-slate-900">{item.value}</p>
