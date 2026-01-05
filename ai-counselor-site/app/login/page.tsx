@@ -33,6 +33,7 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const handleSignIn = async () => {
@@ -54,23 +55,52 @@ function LoginContent() {
   const handleSignUp = async () => {
     setIsSubmitting(true);
     setMessage(null);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/login`
-            : undefined,
-      },
-    });
-    if (error) {
-      setMessage(error.message);
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessage(payload.error ?? "サインアップに失敗しました");
+      } else {
+        setMessage("確認メールを送信しました。メールのリンクから登録を完了してください。");
+      }
+    } catch (error) {
+      console.error("signup request failed", error);
+      setMessage("サインアップに失敗しました");
+    } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setMessage("パスワード再設定にはメールアドレスが必要です");
       return;
     }
-    setMessage("確認メールを送信しました。メールのリンクから再度ログインしてください。");
-    setIsSubmitting(false);
+    setIsResetting(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/auth/password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessage(payload.error ?? "パスワード再設定に失敗しました");
+      } else {
+        setMessage("パスワード再設定メールを送信しました");
+      }
+    } catch (error) {
+      console.error("password reset request failed", error);
+      setMessage("パスワード再設定に失敗しました");
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   if (loading) {
@@ -130,6 +160,14 @@ function LoginContent() {
             className="rounded-2xl border border-slate-200 px-4 py-2 font-semibold text-slate-800"
           >
             新規登録
+          </button>
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={isResetting}
+            className="text-sm font-semibold text-slate-500 underline-offset-4 hover:text-slate-700 disabled:opacity-70"
+          >
+            {isResetting ? "送信中..." : "パスワードをお忘れですか？"}
           </button>
         </div>
       </div>

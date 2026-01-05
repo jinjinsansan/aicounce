@@ -269,6 +269,33 @@ export interface Database {
           }
         ];
       };
+      newsletter_subscribers: {
+        Row: {
+          confirmed_at: string | null;
+          created_at: string | null;
+          email: string;
+          id: string;
+          metadata: Json | null;
+          source: string | null;
+        };
+        Insert: {
+          confirmed_at?: string | null;
+          created_at?: string | null;
+          email: string;
+          id?: string;
+          metadata?: Json | null;
+          source?: string | null;
+        };
+        Update: {
+          confirmed_at?: string | null;
+          created_at?: string | null;
+          email?: string;
+          id?: string;
+          metadata?: Json | null;
+          source?: string | null;
+        };
+        Relationships: [];
+      };
       rag_chunks: {
         Row: {
           chunk_index: number | null;

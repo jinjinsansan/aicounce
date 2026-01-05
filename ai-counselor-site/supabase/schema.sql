@@ -18,6 +18,23 @@ create table if not exists public.users (
   is_active boolean default true
 );
 
+-- Newsletter Subscribers ----------------------------------------------------
+create table if not exists public.newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email varchar(255) not null unique,
+  created_at timestamptz default timezone('utc', now()),
+  confirmed_at timestamptz,
+  metadata jsonb,
+  source varchar(100)
+);
+
+alter table public.newsletter_subscribers enable row level security;
+
+drop policy if exists newsletter_subscribers_service_role on public.newsletter_subscribers;
+create policy newsletter_subscribers_service_role
+  on public.newsletter_subscribers
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
 -- Counselors -----------------------------------------------------------------
 create table if not exists public.counselors (
   id uuid primary key default gen_random_uuid(),

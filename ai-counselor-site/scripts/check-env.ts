@@ -7,6 +7,7 @@ const requiredEnvVars = [
   "MICHELLE_ASSISTANT_ID",
   "CLINICAL_ASSISTANT_ID",
   "USE_SINR_RAG",
+  "RESEND_API_KEY",
   "NEXT_PUBLIC_SENTRY_DSN",
 ];
 
@@ -18,6 +19,7 @@ const optionalEnvVars = [
   "SENTRY_DSN",
   "MICHELLE_PHASE_MODEL",
   "CLINICAL_PHASE_MODEL",
+  "RESEND_FROM_EMAIL",
 ];
 
 function checkEnv() {
