@@ -89,7 +89,11 @@ export default function HomePage() {
                 <CounselorCard
                   key={counselor.id}
                   counselor={counselor}
-                  onSelect={(id) => router.push(`/counselor/${id}`)}
+                  onSelect={
+                    counselor.comingSoon
+                      ? undefined
+                      : (id) => router.push(`/counselor/${id}`)
+                  }
                 />
               ))}
             </div>

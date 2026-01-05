@@ -35,4 +35,21 @@ describe("CounselorCard", () => {
 
     expect(onSelect).toHaveBeenCalledWith("michele");
   });
+
+  it("disables action button when counselor is coming soon", () => {
+    const comingSoonCounselor: Counselor = {
+      ...mockCounselor,
+      id: "nazare",
+      name: "ナザレ",
+      comingSoon: true,
+    };
+
+    const onSelect = jest.fn();
+    render(<CounselorCard counselor={comingSoonCounselor} onSelect={onSelect} />);
+
+    const button = screen.getByRole("button", { name: "準備中" });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });

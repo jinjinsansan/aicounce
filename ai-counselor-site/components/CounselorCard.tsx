@@ -12,9 +12,10 @@ interface CounselorCardProps {
 
 export default function CounselorCard({ counselor, onSelect }: CounselorCardProps) {
   const [isPending, startTransition] = useTransition();
+  const isComingSoon = Boolean(counselor.comingSoon);
 
   const handleSelect = () => {
-    if (!onSelect) return;
+    if (!onSelect || isComingSoon) return;
     startTransition(() => onSelect(counselor.id));
   };
 
@@ -35,9 +36,16 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
           )}
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-            {counselor.specialty}
-          </p>
+          <div className="mb-1 flex items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              {counselor.specialty}
+            </p>
+            {isComingSoon && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-700">
+                準備中
+              </span>
+            )}
+          </div>
           <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{counselor.name}</h3>
         </div>
       </div>
@@ -68,10 +76,10 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
         <button
           type="button"
           onClick={handleSelect}
-          disabled={isPending || !onSelect}
+          disabled={isPending || !onSelect || isComingSoon}
           className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
-          {isPending ? "..." : "相談する"}
+          {isComingSoon ? "準備中" : isPending ? "..." : "相談する"}
         </button>
       </div>
     </div>

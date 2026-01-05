@@ -17,6 +17,7 @@ export interface Counselor {
   sessionCount?: number;
   tags?: string[];
   highlight?: string;
+  comingSoon?: boolean;
 }
 
 export interface FeatureHighlight {
