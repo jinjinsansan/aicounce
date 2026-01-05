@@ -20,14 +20,15 @@ export default function Footer() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">リンク</p>
               <Link href="/" className="block hover:text-slate-900">ホーム</Link>
               <Link href="/#counselors" className="block hover:text-slate-900">カウンセラー一覧</Link>
-              <Link href="/#about" className="block hover:text-slate-900">事務所について</Link>
+              <Link href="/team" className="block hover:text-slate-900">チームカウンセリング</Link>
+              <Link href="/account" className="block hover:text-slate-900">マイページ</Link>
               <Link href="/login" className="block hover:text-slate-900">ログイン / 登録</Link>
             </div>
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">法的事項</p>
-              <Link href="#" className="block hover:text-slate-900">利用規約</Link>
-              <Link href="#" className="block hover:text-slate-900">プライバシーポリシー</Link>
-              <Link href="#" className="block hover:text-slate-900">特定商取引法に基づく表記</Link>
+              <Link href="/legal/terms" className="block hover:text-slate-900">利用規約</Link>
+              <Link href="/legal/privacy" className="block hover:text-slate-900">プライバシーポリシー</Link>
+              <Link href="/legal/tokusho" className="block hover:text-slate-900">特定商取引法に基づく表記</Link>
             </div>
           </div>
         </div>

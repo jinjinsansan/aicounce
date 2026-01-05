@@ -7,8 +7,13 @@ import { useChatStore } from "@/store/chatStore";
 
 const baseNavLinks = [
   { href: "/", label: "ホーム" },
-  { href: "/counselor/michele", label: "カウンセラー" },
+  { href: "/#counselors", label: "カウンセラー一覧" },
   { href: "/team", label: "チームカウンセリング" },
+  { href: "/account", label: "マイページ" },
+  { href: "/login", label: "ログイン / 登録" },
+  { href: "/legal/terms", label: "利用規約" },
+  { href: "/legal/privacy", label: "プライバシーポリシー" },
+  { href: "/legal/tokusho", label: "特定商取引法" },
 ];
 export default function AppHeader() {
   const pathname = usePathname();
@@ -31,13 +36,23 @@ export default function AppHeader() {
 
   const isAdmin = session?.user?.email === "goldbenchan@gmail.com";
 
-  const navLinks = session
-    ? [
-        ...baseNavLinks,
-        { href: "/account", label: "マイページ" },
-        ...(isAdmin ? [{ href: "/admin", label: "管理" }] : []),
-      ]
-    : baseNavLinks;
+  const navLinks = [
+    ...baseNavLinks.filter((link) => {
+      if (session && link.href === "/login") {
+        return false;
+      }
+      return true;
+    }),
+    ...(isAdmin ? [{ href: "/admin", label: "管理" }] : []),
+  ];
+
+  const isLinkActive = (href: string) => {
+    const baseHref = href.split("#")[0] || "/";
+    if (baseHref === "/") {
+      return pathname === "/";
+    }
+    return pathname === baseHref || pathname?.startsWith(`${baseHref}/`);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/85 backdrop-blur-md">
@@ -48,19 +63,15 @@ export default function AppHeader() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
-          {navLinks.map((link) => {
-            const isActive =
-              pathname === link.href || pathname?.startsWith(`${link.href}/`);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={isActive ? "text-slate-900" : "hover:text-slate-900 transition-colors"}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={isLinkActive(link.href) ? "text-slate-900" : "hover:text-slate-900 transition-colors"}
+            >
+              {link.label}
+            </Link>
+          ))}
           {loading ? null : session ? (
             <button
               type="button"
@@ -100,22 +111,18 @@ export default function AppHeader() {
       {isMobileMenuOpen && (
         <div className="absolute top-16 left-0 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md md:hidden shadow-lg animate-in slide-in-from-top-2">
           <nav className="flex flex-col p-4 space-y-4">
-            {navLinks.map((link) => {
-              const isActive =
-                pathname === link.href || pathname?.startsWith(`${link.href}/`);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block rounded-lg px-4 py-3 text-base font-medium transition-colors ${
-                    isActive ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`block rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                  isLinkActive(link.href) ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
             <div className="pt-4 border-t border-slate-100">
               {loading ? null : session ? (
                 <button
