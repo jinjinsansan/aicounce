@@ -106,7 +106,7 @@ export default function TeamCounselingPage() {
         appendMessages([msg]);
       }
       setRound((r) => r + 1);
-      setAutoRoundsLeft((n) => Math.max(0, n - 1));
+      setAutoRoundsLeft((n) => (n > 0 ? n - 1 : 0));
     } catch (e) {
       console.error(e);
     } finally {
@@ -136,7 +136,7 @@ export default function TeamCounselingPage() {
     const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content;
     if (!lastUser) return;
     setMaxRounds((m) => m + 1);
-    setAutoRoundsLeft((n) => n + 1);
+    setAutoRoundsLeft((n) => Math.max(n, 1));
     await runRound(lastUser);
   };
 
