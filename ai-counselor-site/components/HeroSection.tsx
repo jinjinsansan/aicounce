@@ -10,7 +10,6 @@ export default function HeroSection() {
         muted
         playsInline
         preload="auto"
-        poster="/images/hero/team_lineup.png"
         aria-hidden="true"
       >
         <source src="/pixta_102837788_NTSC_D1.mp4" type="video/mp4" />
