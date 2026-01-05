@@ -43,6 +43,7 @@ export default function TeamCounselingPage() {
   const [autoRoundsLeft, setAutoRoundsLeft] = useState(0);
   const [debateMode, setDebateMode] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const availableParticipants: Participant[] = useMemo(
@@ -241,7 +242,15 @@ export default function TeamCounselingPage() {
   };
 
   const handleNewChat = async () => {
-    if (isRunning) return;
+    if (isRunning || isCreatingSession) return;
+
+    // Validate at least one participant is selected
+    if (participants.length === 0) {
+      alert("少なくとも1人のAIを選択してください");
+      return;
+    }
+
+    setIsCreatingSession(true);
 
     try {
       // Create a new session
@@ -256,6 +265,7 @@ export default function TeamCounselingPage() {
 
       if (!res.ok) {
         console.error("Failed to create new session");
+        alert("新規チャットの作成に失敗しました。もう一度お試しください。");
         return;
       }
 
@@ -268,6 +278,9 @@ export default function TeamCounselingPage() {
       setAutoRoundsLeft(0);
     } catch (error) {
       console.error("Failed to create new chat", error);
+      alert("新規チャットの作成に失敗しました。ネットワーク接続を確認してください。");
+    } finally {
+      setIsCreatingSession(false);
     }
   };
 
@@ -311,10 +324,10 @@ export default function TeamCounselingPage() {
               size="sm"
               variant="outline"
               onClick={handleNewChat}
-              disabled={isRunning}
+              disabled={isRunning || isCreatingSession}
               className="border-[#f5d0c5]/50 text-xs text-[#6b4423] hover:bg-[#fff9f5]"
             >
-              新規チャット
+              {isCreatingSession ? "作成中..." : "新規チャット"}
             </Button>
           </div>
           <div className="space-y-2">
@@ -457,10 +470,10 @@ export default function TeamCounselingPage() {
               size="sm"
               variant="outline"
               onClick={handleNewChat}
-              disabled={isRunning}
+              disabled={isRunning || isCreatingSession}
               className="border-[#f5d0c5]/50 text-xs text-[#6b4423] hover:bg-[#fff9f5]"
             >
-              新規
+              {isCreatingSession ? "..." : "新規"}
             </Button>
           </div>
         </header>
