@@ -1,9 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
-import { CheckSquare, Square, Loader2, Send, User } from "lucide-react";
+import {
+  CheckSquare,
+  Square,
+  Loader2,
+  Send,
+  User,
+  Menu,
+  Plus,
+  Share2,
+  Trash2,
+  X,
+} from "lucide-react";
 
 type Participant = { id: string; name: string; iconUrl: string };
 type ChatMessage = {
@@ -13,6 +24,13 @@ type ChatMessage = {
   authorId?: string;
   content: string;
   iconUrl?: string;
+};
+
+type TeamSession = {
+  id: string;
+  title: string | null;
+  participants: string[] | null;
+  updated_at: string | null;
 };
 
 const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
@@ -25,267 +43,501 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
 
+const ACTIVE_SESSION_STORAGE_KEY = "team-counseling-active-session-id";
+const DEFAULT_PARTICIPANTS = ["michele", "sato"] as const;
+
+function formatTimestamp(value?: string | null) {
+  if (!value) return "記録なし";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "記録なし";
+  return date.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
 export default function TeamCounselingPage() {
+  const [sessions, setSessions] = useState<TeamSession[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [participants, setParticipants] = useState<string[]>(["michele", "sato"]);
+  const [participants, setParticipants] = useState<string[]>([...DEFAULT_PARTICIPANTS]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMobileSessionsOpen, setIsMobileSessionsOpen] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const availableParticipants: Participant[] = useMemo(
     () => FALLBACK_COUNSELORS.map((c) => ({ id: c.id, name: c.name, iconUrl: c.iconUrl ?? "" })),
     [],
   );
 
-  // Initialize session and load history
-  useEffect(() => {
-    const initSession = async () => {
+  const showBanner = useCallback((message: string) => {
+    setBannerMessage(message);
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+    }
+    bannerTimeoutRef.current = setTimeout(() => setBannerMessage(null), 2200);
+  }, []);
+
+  const persistActiveSessionId = useCallback((id: string | null) => {
+    if (typeof window === "undefined") return;
+    if (id) {
+      window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, id);
+    } else {
+      window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+    }
+  }, []);
+
+  const loadMessagesForSession = useCallback(
+    async (targetSessionId: string) => {
+      setIsLoadingSession(true);
       try {
-        // Try to load the most recent session first
-        const sessionsRes = await fetch("/api/team/sessions");
-        let currentSessionId: string | null = null;
-
-        if (sessionsRes.ok) {
-          const sessionsData = await sessionsRes.json();
-          if (sessionsData.sessions && sessionsData.sessions.length > 0) {
-            // Use the most recent session
-            currentSessionId = sessionsData.sessions[0].id;
-            setSessionId(currentSessionId);
-
-            // Load messages from existing session
-            const messagesRes = await fetch(`/api/team/sessions/${currentSessionId}/messages`);
-            if (messagesRes.ok) {
-              const messagesData = await messagesRes.json();
-              if (messagesData.messages && messagesData.messages.length > 0) {
-                setMessages(
-                  messagesData.messages.map((m: {
-                    id: string;
-                    role: "user" | "assistant";
-                    content: string;
-                    author?: string;
-                    author_id?: string;
-                    icon_url?: string;
-                  }) => ({
-                    id: m.id,
-                    role: m.role,
-                    content: m.content,
-                    author: m.author,
-                    authorId: m.author_id,
-                    iconUrl: m.icon_url,
-                  }))
-                );
-              }
-            }
-          }
+        const res = await fetch(`/api/team/sessions/${targetSessionId}/messages`);
+        if (!res.ok) {
+          throw new Error("failed to load messages");
         }
-
-        // Create a new session only if none exist
-        if (!currentSessionId) {
-          const res = await fetch("/api/team/sessions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: "チームカウンセリング",
-              participants: ["michele", "sato"],
-            }),
-          });
-
-          if (!res.ok) {
-            console.error("Failed to create session");
-            return;
-          }
-
-          const data = await res.json();
-          setSessionId(data.session.id);
-        }
+        const data = await res.json();
+        const mapped: ChatMessage[] = (data.messages ?? []).map((m: {
+          id: string;
+          role: "user" | "assistant";
+          content: string;
+          author?: string;
+          author_id?: string;
+          icon_url?: string;
+        }) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          author: m.author ?? undefined,
+          authorId: m.author_id ?? undefined,
+          iconUrl: m.icon_url ?? undefined,
+        }));
+        setMessages(mapped);
       } catch (error) {
-        console.error("Failed to initialize session", error);
+        console.error("Failed to load team messages", error);
+        setMessages([]);
+        showBanner("メッセージの読み込みに失敗しました");
       } finally {
         setIsLoadingSession(false);
       }
-    };
+    },
+    [showBanner],
+  );
 
-    initSession();
-  }, []);
-
-  // Save messages to database
-  const saveMessages = async (newMessages: ChatMessage[]) => {
-    if (!sessionId || newMessages.length === 0) return;
-
+  const refreshSessions = useCallback(async () => {
+    setIsLoadingSessions(true);
     try {
-      await fetch(`/api/team/sessions/${sessionId}/messages`, {
+      const res = await fetch("/api/team/sessions");
+      if (res.status === 401) {
+        showBanner("ログインが必要です");
+        setSessions([]);
+        return [];
+      }
+      if (!res.ok) {
+        throw new Error("failed to load sessions");
+      }
+      const data = await res.json();
+      const normalized: TeamSession[] = (data.sessions ?? []).map((session: TeamSession) => ({
+        id: session.id,
+        title: session.title ?? "チームカウンセリング",
+        participants: Array.isArray(session.participants) ? session.participants : [],
+        updated_at: session.updated_at ?? null,
+      }));
+      setSessions(normalized);
+      return normalized;
+    } catch (error) {
+      console.error("Failed to fetch team sessions", error);
+      showBanner("履歴の取得に失敗しました");
+      setSessions([]);
+      return [];
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, [showBanner]);
+
+  const createSession = useCallback(
+    async (participantList: string[], options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
+      if (!silent) {
+        setIsCreatingSession(true);
+      }
+
+      try {
+        const res = await fetch("/api/team/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: "チームカウンセリング",
+            participants: participantList,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("failed to create session");
+        }
+
+        const data = await res.json();
+        const session: TeamSession = {
+          id: data.session.id,
+          title: data.session.title ?? "チームカウンセリング",
+          participants: Array.isArray(data.session.participants) ? data.session.participants : participantList,
+          updated_at: data.session.updated_at ?? new Date().toISOString(),
+        };
+        setSessions((prev) => [session, ...prev]);
+        return session;
+      } catch (error) {
+        console.error("Failed to create team session", error);
+        if (!silent) {
+          showBanner("新規チャットの作成に失敗しました");
+        }
+        return null;
+      } finally {
+        if (!silent) {
+          setIsCreatingSession(false);
+        }
+      }
+    },
+    [showBanner],
+  );
+
+  const saveMessages = useCallback(async (targetSessionId: string, newMessages: ChatMessage[]) => {
+    if (!targetSessionId || newMessages.length === 0) return;
+    try {
+      await fetch(`/api/team/sessions/${targetSessionId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: newMessages.map((m) => ({
             role: m.role,
             content: m.content,
-            author: m.author,
-            author_id: m.authorId,
-            icon_url: m.iconUrl,
+            author: m.author ?? null,
+            author_id: m.authorId ?? null,
+            icon_url: m.iconUrl ?? null,
           })),
         }),
       });
     } catch (error) {
-      console.error("Failed to save messages", error);
+      console.error("Failed to save team messages", error);
     }
-  };
+  }, []);
 
-  const toggleParticipant = (id: string) => {
-    setParticipants((prev) => {
-      if (prev.includes(id)) return prev.filter((p) => p !== id);
-      if (prev.length >= 5) return prev; // max 5
-      return [...prev, id];
-    });
-  };
+  const appendMessages = useCallback(
+    async (newMsgs: ChatMessage[], targetSessionId?: string) => {
+      setMessages((prev) => [...prev, ...newMsgs]);
+      const resolvedId = targetSessionId ?? sessionId;
+      if (!resolvedId || newMsgs.length === 0) return;
 
-  const appendMessages = async (newMsgs: ChatMessage[]) => {
-    setMessages((prev) => [...prev, ...newMsgs]);
-    await saveMessages(newMsgs);
-  };
-
-  const runRound = async (userMessage?: string) => {
-    if (participants.length === 0) return;
-    const payload = {
-      message: userMessage ?? "",
-      participants,
-      history: messages.slice(-12).map((m) => ({ role: m.role, content: m.content, author: m.author })),
-    } satisfies {
-      message: string;
-      participants: string[];
-      history: { role: "user" | "assistant"; content: string; author?: string }[];
-    };
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setIsRunning(true);
-    try {
-      const res = await fetch("/api/team/respond", {
-        method: "POST",
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+      await saveMessages(resolvedId, newMsgs);
+      setSessions((prev) => {
+        const index = prev.findIndex((s) => s.id === resolvedId);
+        if (index === -1) return prev;
+        const updated = { ...prev[index], updated_at: new Date().toISOString() };
+        const remaining = prev.filter((s) => s.id !== resolvedId);
+        return [updated, ...remaining];
       });
-      if (!res.ok) throw new Error("failed");
-      const data: { responses?: { author: string; authorId: string; content: string; iconUrl: string }[] } =
-        await res.json();
-      // 順番に表示（見やすさ優先）
-      const newMessages: ChatMessage[] = [];
-      for (let idx = 0; idx < (data.responses || []).length; idx++) {
-        const r = (data.responses || [])[idx];
-        const msg: ChatMessage = {
+    },
+    [saveMessages, sessionId],
+  );
+
+  const persistSessionParticipants = useCallback(
+    async (selected: string[]) => {
+      if (!sessionId) return;
+      try {
+        const res = await fetch(`/api/team/sessions/${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ participants: selected }),
+        });
+        if (!res.ok) {
+          throw new Error("failed to persist participants");
+        }
+        const data = await res.json();
+        if (data.session) {
+          setSessions((prev) => {
+            const others = prev.filter((s) => s.id !== data.session.id);
+            return [data.session, ...others];
+          });
+        } else {
+          setSessions((prev) =>
+            prev.map((session) =>
+              session.id === sessionId ? { ...session, participants: selected } : session,
+            ),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to persist participants", error);
+        showBanner("参加AIの保存に失敗しました");
+      }
+    },
+    [sessionId, showBanner],
+  );
+
+  const runRound = useCallback(
+    async (userMessage: string, activeSessionId: string, historySource: ChatMessage[]) => {
+      if (participants.length === 0) return;
+
+      const payload = {
+        message: userMessage,
+        participants,
+        history: historySource.slice(-12).map((m) => ({ role: m.role, content: m.content, author: m.author })),
+      } satisfies {
+        message: string;
+        participants: string[];
+        history: { role: "user" | "assistant"; content: string; author?: string }[];
+      };
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setIsRunning(true);
+      try {
+        const res = await fetch("/api/team/respond", {
+          method: "POST",
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error("team respond failed");
+        }
+        const data: { responses?: { author: string; authorId: string; content: string; iconUrl: string }[] } =
+          await res.json();
+        const newMessages: ChatMessage[] = (data.responses ?? []).map((response, idx) => ({
           id: `assistant-${Date.now()}-${idx}`,
           role: "assistant",
-          author: r.author,
-          authorId: r.authorId,
-          content: r.content,
-          iconUrl: r.iconUrl,
-        };
-        newMessages.push(msg);
+          author: response.author,
+          authorId: response.authorId,
+          content: response.content,
+          iconUrl: response.iconUrl,
+        }));
+        await appendMessages(newMessages, activeSessionId);
+      } catch (error) {
+        console.error("team respond error", error);
+        showBanner("AIからの応答に失敗しました");
+      } finally {
+        setIsRunning(false);
+        abortRef.current = null;
       }
-      await appendMessages(newMessages);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsRunning(false);
-      abortRef.current = null;
-    }
-  };
+    },
+    [appendMessages, participants, showBanner],
+  );
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoadingSession || isRunning) return;
+  const handleSend = useCallback(async () => {
+    const trimmed = input.trim();
+    if (!trimmed || isLoadingSession || isRunning) return;
+
+    let activeSessionId = sessionId;
+    if (!activeSessionId) {
+      const created = await createSession(
+        participants.length > 0 ? participants : [...DEFAULT_PARTICIPANTS],
+        { silent: true },
+      );
+      if (!created) return;
+      activeSessionId = created.id;
+      setSessionId(created.id);
+      persistActiveSessionId(created.id);
+      setParticipants(created.participants?.length ? created.participants : [...DEFAULT_PARTICIPANTS]);
+    }
+
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: input.trim(),
+      content: trimmed,
     };
-    await appendMessages([userMsg]);
+    const historySeed = [...messages, userMsg];
+
+    await appendMessages([userMsg], activeSessionId);
     setInput("");
-    
-    // モバイルでの送信後のキーボード処理
+
     if (isMobile && textareaRef.current) {
       textareaRef.current.blur();
     }
-    
-    await runRound(userMsg.content);
-  };
 
-  const handleNewChat = async () => {
+    await runRound(trimmed, activeSessionId, historySeed);
+  }, [appendMessages, createSession, input, isLoadingSession, isMobile, isRunning, messages, participants, persistActiveSessionId, runRound, sessionId]);
+
+  const handleNewChat = useCallback(async () => {
     if (isRunning || isCreatingSession) return;
-
-    // Validate at least one participant is selected
     if (participants.length === 0) {
-      alert("少なくとも1人のAIを選択してください");
+      showBanner("少なくとも1人のAIを選択してください");
       return;
     }
 
-    setIsCreatingSession(true);
+    const newSession = await createSession(participants);
+    if (!newSession) return;
 
-    try {
-      // Create a new session
-      const res = await fetch("/api/team/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: "チームカウンセリング",
-          participants: participants,
-        }),
-      });
+    setSessionId(newSession.id);
+    persistActiveSessionId(newSession.id);
+    setParticipants(newSession.participants?.length ? newSession.participants : participants);
+    setMessages([]);
+    setIsMobileSessionsOpen(false);
+    showBanner("新しいチャットを開始しました");
+  }, [createSession, isCreatingSession, isRunning, participants, persistActiveSessionId, showBanner]);
 
-      if (!res.ok) {
-        console.error("Failed to create new session");
-        alert("新規チャットの作成に失敗しました。もう一度お試しください。");
+  const handleSessionSelect = useCallback(
+    async (session: TeamSession) => {
+      if (session.id === sessionId) {
+        setIsMobileSessionsOpen(false);
         return;
       }
-
-      const data = await res.json();
-      setSessionId(data.session.id);
+      setSessionId(session.id);
+      persistActiveSessionId(session.id);
+      setParticipants(session.participants && session.participants.length > 0 ? session.participants : [...DEFAULT_PARTICIPANTS]);
       setMessages([]);
+      await loadMessagesForSession(session.id);
+      setIsMobileSessionsOpen(false);
+    },
+    [loadMessagesForSession, persistActiveSessionId, sessionId],
+  );
+
+  const handleDeleteSession = useCallback(
+    async (targetId: string) => {
+      if (!confirm("このチャット履歴を削除しますか？")) return;
+      try {
+        const res = await fetch(`/api/team/sessions/${targetId}`, { method: "DELETE" });
+        if (!res.ok) {
+          throw new Error("failed to delete session");
+        }
+
+        const remaining = sessions.filter((s) => s.id !== targetId);
+        setSessions(remaining);
+
+        if (sessionId === targetId) {
+          if (remaining.length > 0) {
+            const next = remaining[0];
+            setSessionId(next.id);
+            persistActiveSessionId(next.id);
+            setParticipants(next.participants && next.participants.length > 0 ? next.participants : [...DEFAULT_PARTICIPANTS]);
+            await loadMessagesForSession(next.id);
+          } else {
+            setSessionId(null);
+            persistActiveSessionId(null);
+            setMessages([]);
+            const created = await createSession([...DEFAULT_PARTICIPANTS], { silent: true });
+            if (created) {
+              setSessionId(created.id);
+              persistActiveSessionId(created.id);
+              setParticipants(created.participants?.length ? created.participants : [...DEFAULT_PARTICIPANTS]);
+              await loadMessagesForSession(created.id);
+            }
+          }
+        }
+        showBanner("チャットを削除しました");
+      } catch (error) {
+        console.error("Failed to delete team session", error);
+        showBanner("チャットの削除に失敗しました");
+      }
+    },
+    [createSession, loadMessagesForSession, persistActiveSessionId, sessionId, sessions, showBanner],
+  );
+
+  const handleShareConversation = useCallback(async () => {
+    if (messages.length === 0) {
+      showBanner("コピーできる会話がありません");
+      return;
+    }
+
+    try {
+      const text = messages
+        .map((m) => `${m.role === "user" ? "あなた" : m.author ?? "AI"}: ${m.content}`)
+        .join("\n\n");
+      await navigator.clipboard.writeText(text);
+      showBanner("✓ 会話をコピーしました");
     } catch (error) {
-      console.error("Failed to create new chat", error);
-      alert("新規チャットの作成に失敗しました。ネットワーク接続を確認してください。");
-    } finally {
-      setIsCreatingSession(false);
+      console.error("Failed to copy team chat", error);
+      showBanner("コピーに失敗しました");
     }
-  };
+  }, [messages, showBanner]);
 
-  // モバイル検出とキーボード対応
+  const toggleParticipant = useCallback(
+    (id: string) => {
+      setParticipants((prev) => {
+        let next: string[];
+        if (prev.includes(id)) {
+          next = prev.filter((p) => p !== id);
+        } else {
+          if (prev.length >= 5) return prev;
+          next = [...prev, id];
+        }
+
+        if (sessionId) {
+          setSessions((prevSessions) =>
+            prevSessions.map((session) =>
+              session.id === sessionId ? { ...session, participants: next } : session,
+            ),
+          );
+          void persistSessionParticipants(next);
+        }
+
+        return next;
+      });
+    },
+    [persistSessionParticipants, sessionId],
+  );
+
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    
-    // 初回マウント時、モバイルでテキストエリアをぼかす
-    if (window.innerWidth < 768 && textareaRef.current) {
-      textareaRef.current.blur();
-    }
-    
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    const bootstrap = async () => {
+      setIsLoadingSession(true);
+      const list = await refreshSessions();
 
-  // メッセージが追加されたら最下部にスクロール
+      let nextSession: TeamSession | null = null;
+      if (typeof window !== "undefined") {
+        const storedId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+        nextSession = (list ?? []).find((session) => session.id === storedId) ?? null;
+      }
+
+      if (!nextSession && list.length > 0) {
+        nextSession = list[0];
+      }
+
+      if (!nextSession) {
+        const created = await createSession([...DEFAULT_PARTICIPANTS], { silent: true });
+        nextSession = created;
+      }
+
+      if (nextSession) {
+        setSessionId(nextSession.id);
+        persistActiveSessionId(nextSession.id);
+        setParticipants(nextSession.participants && nextSession.participants.length > 0 ? nextSession.participants : [...DEFAULT_PARTICIPANTS]);
+        setMessages([]);
+        await loadMessagesForSession(nextSession.id);
+      } else {
+        setIsLoadingSession(false);
+      }
+    };
+
+    bootstrap();
+
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [createSession, loadMessagesForSession, persistActiveSessionId, refreshSessions]);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Cleanup: abort ongoing requests on unmount
   useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (isLoadingSession) {
+  useEffect(() => () => {
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+    }
+  }, []);
+
+  const isBootstrapping = isLoadingSession && !sessionId;
+  if (isBootstrapping) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#fff9f5] via-[#fef5f1] to-[#fef0e9]">
         <div className="flex flex-col items-center gap-3">
@@ -298,58 +550,132 @@ export default function TeamCounselingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fff9f5] via-[#fef5f1] to-[#fef0e9]">
-      {/* Desktop Layout */}
       <div className="mx-auto hidden max-w-6xl gap-6 px-4 py-6 md:flex lg:py-10">
-        {/* Sidebar */}
-        <aside className="w-full max-w-xs rounded-2xl border border-[#f5d0c5]/30 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#8b5a3c]">参加AI（最大5名）</h2>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleNewChat}
-              disabled={isRunning || isCreatingSession}
-              className="border-[#f5d0c5]/50 text-xs text-[#6b4423] hover:bg-[#fff9f5]"
-            >
-              {isCreatingSession ? "作成中..." : "新規チャット"}
-            </Button>
+        <aside className="w-full max-w-sm space-y-4 rounded-2xl border border-[#f5d0c5]/30 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+          <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[#6b4423]">チャット履歴</p>
+              <span className="text-xs text-[#c08d75]">{sessions.length} 件</span>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Button
+                onClick={handleNewChat}
+                disabled={isRunning || isCreatingSession}
+                className="flex-1 gap-1 bg-[#d97757] text-white hover:bg-[#c96647]"
+              >
+                <Plus className="h-4 w-4" />
+                新規
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleShareConversation}
+                disabled={messages.length === 0}
+                className="flex-1 gap-1 border-[#f5d0c5]/60 text-[#6b4423] hover:bg-[#fff4ef]"
+              >
+                <Share2 className="h-4 w-4" />
+                コピー
+              </Button>
+            </div>
           </div>
-          <div className="space-y-2">
-            {availableParticipants.map((p) => {
-              const checked = participants.includes(p.id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => toggleParticipant(p.id)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/30 bg-white/60 px-3 py-2 text-left transition-all hover:bg-[#fff9f5] hover:shadow-sm"
-                >
-                  {checked ? (
-                    <CheckSquare className="h-4 w-4 text-[#d97757]" />
-                  ) : (
-                    <Square className="h-4 w-4 text-[#c9a394]" />
-                  )}
-                  <span className="text-sm text-[#6b4423]">{p.name}</span>
-                </button>
-              );
-            })}
+
+          <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
+            {isLoadingSessions && sessions.length === 0
+              ? Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={`session-skeleton-${idx}`} className="h-16 animate-pulse rounded-2xl border border-[#f5d0c5]/30 bg-white/60" />
+                ))
+              : sessions.map((session) => {
+                  const isActive = session.id === sessionId;
+                  return (
+                    <button
+                      key={session.id}
+                      type="button"
+                      onClick={() => handleSessionSelect(session)}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                        isActive
+                          ? "border-transparent bg-gradient-to-r from-[#d97757] to-[#f59e78] text-white"
+                          : "border-[#f5d0c5]/40 bg-white text-[#6b4423] hover:bg-[#fff4ef]"
+                      }`}
+                    >
+                      <div>
+                        <p className="font-semibold">{session.title ?? "チームセッション"}</p>
+                        <p className={`text-xs ${isActive ? "text-white/80" : "text-[#c08d75]"}`}>
+                          {formatTimestamp(session.updated_at)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleDeleteSession(session.id);
+                        }}
+                        className={`rounded-full p-1 transition ${isActive ? "text-white/80 hover:bg-white/20" : "text-[#c08d75] hover:bg-[#fff4ef]"}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </button>
+                  );
+                })}
+            {sessions.length === 0 && !isLoadingSessions && (
+              <p className="rounded-2xl border border-dashed border-[#f5d0c5]/60 bg-white/70 px-4 py-6 text-center text-xs text-[#8b5a3c]">
+                履歴がありません。新しいチャットを開始してください。
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold text-[#6b4423]">参加AI（最大5名）</p>
+              <span className="text-xs text-[#c08d75]">{participants.length} 名選択中</span>
+            </div>
+            <div className="space-y-2">
+              {availableParticipants.map((p) => {
+                const checked = participants.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => toggleParticipant(p.id)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/40 bg-white px-3 py-2 text-left hover:bg-[#fff4ef]"
+                  >
+                    {checked ? (
+                      <CheckSquare className="h-4 w-4 text-[#d97757]" />
+                    ) : (
+                      <Square className="h-4 w-4 text-[#c9a394]" />
+                    )}
+                    <span className="text-sm text-[#6b4423]">{p.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </aside>
 
-        {/* Main Chat */}
         <div className="flex min-h-[75vh] flex-1 flex-col rounded-2xl border border-[#f5d0c5]/30 bg-white/80 shadow-md backdrop-blur-sm">
           <header className="flex items-center justify-between border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3">
-            <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+            </div>
             {participants.length > 0 && (
-              <span className="text-xs text-[#8b5a3c]">{participants.length}人のAIが参加中</span>
+              <span className="text-xs text-[#8b5a3c]">{participants.length} 人のAIが参加中</span>
             )}
           </header>
 
+          {bannerMessage && (
+            <div className="mx-4 mt-3 rounded-2xl border border-[#f5d0c5]/40 bg-white px-4 py-2 text-center text-sm text-[#6b4423] shadow-sm">
+              {bannerMessage}
+            </div>
+          )}
+
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-            {messages.length === 0 && (
+            {isLoadingSession && sessionId ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-[#8b5a3c]">
+                <Loader2 className="h-4 w-4 animate-spin" /> 履歴を読み込んでいます...
+              </div>
+            ) : messages.length === 0 ? (
               <p className="text-center text-sm text-[#8b5a3c]">
                 悩みや相談を投稿すると、選択したAIがそれぞれの専門性を活かして応答します。
               </p>
-            )}
+            ) : null}
+
             {messages.map((m) => {
               if (m.role === "user") {
                 return (
@@ -364,7 +690,7 @@ export default function TeamCounselingPage() {
                   </div>
                 );
               }
-              
+
               const color = COLOR_MAP[m.authorId ?? ""] ?? {
                 bubble: "bg-white",
                 text: "text-[#6b4423]",
@@ -382,14 +708,13 @@ export default function TeamCounselingPage() {
                         <img src={m.iconUrl} alt={m.author ?? "AI"} className="h-full w-full object-contain" />
                       </div>
                     )}
-                    <span className={`text-xs font-semibold ${color.text}`}>
-                      {m.author ?? "AI"}
-                    </span>
+                    <span className={`text-xs font-semibold ${color.text}`}>{m.author ?? "AI"}</span>
                   </div>
                   <p className={`whitespace-pre-wrap text-sm leading-relaxed ${color.text}`}>{m.content}</p>
                 </div>
               );
             })}
+
             {isRunning && (
               <div className="flex items-center gap-2 text-sm text-[#8b5a3c]">
                 <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
@@ -398,7 +723,10 @@ export default function TeamCounselingPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3" style={{ paddingBottom: isMobile ? "calc(1rem + env(safe-area-inset-bottom))" : "0.75rem" }}>
+          <div
+            className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3"
+            style={{ paddingBottom: isMobile ? "calc(1rem + env(safe-area-inset-bottom))" : "0.75rem" }}
+          >
             <div className="flex gap-2">
               <textarea
                 ref={textareaRef}
@@ -410,15 +738,13 @@ export default function TeamCounselingPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleSend();
+                    void handleSend();
                   }
                 }}
                 onFocus={() => {
                   if (isMobile) {
                     setTimeout(() => {
-                      if (messagesEndRef.current) {
-                        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-                      }
+                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
                     }, 300);
                   }
                 }}
@@ -429,7 +755,7 @@ export default function TeamCounselingPage() {
               <Button
                 onClick={handleSend}
                 disabled={!input.trim() || isRunning || isLoadingSession}
-                className="min-w-[60px] h-[44px] bg-[#d97757] hover:bg-[#c96647] flex items-center justify-center"
+                className="flex min-w-[60px] items-center justify-center rounded-xl bg-[#d97757] text-white hover:bg-[#c96647]"
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -438,12 +764,15 @@ export default function TeamCounselingPage() {
         </div>
       </div>
 
-      {/* Mobile Layout */}
       <div className="flex min-h-screen flex-col md:hidden">
-        {/* Mobile Header */}
         <header className="border-b border-[#f5d0c5]/30 bg-white/80 px-4 py-3 backdrop-blur-sm">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileSessionsOpen(true)}>
+                <Menu className="h-5 w-5 text-[#6b4423]" />
+              </Button>
+              <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+            </div>
             <Button
               size="sm"
               variant="outline"
@@ -456,7 +785,12 @@ export default function TeamCounselingPage() {
           </div>
         </header>
 
-        {/* Mobile Participants (Collapsible) */}
+        {bannerMessage && (
+          <div className="mx-4 mt-3 rounded-2xl border border-[#f5d0c5]/40 bg-white px-4 py-2 text-center text-sm text-[#6b4423] shadow-sm">
+            {bannerMessage}
+          </div>
+        )}
+
         <details className="border-b border-[#f5d0c5]/30 bg-white/80 backdrop-blur-sm">
           <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[#8b5a3c]">
             参加AI（最大5名）- タップして選択
@@ -482,16 +816,18 @@ export default function TeamCounselingPage() {
           </div>
         </details>
 
-
-
-        {/* Mobile Chat Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-            {messages.length === 0 && (
+            {isLoadingSession && sessionId ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-[#8b5a3c]">
+                <Loader2 className="h-4 w-4 animate-spin" /> 履歴を読み込んでいます...
+              </div>
+            ) : messages.length === 0 ? (
               <p className="text-center text-sm text-[#8b5a3c]">
                 悩みや相談を投稿すると、選択したAIがそれぞれの専門性を活かして応答します。
               </p>
-            )}
+            ) : null}
+
             {messages.map((m) => {
               if (m.role === "user") {
                 return (
@@ -506,7 +842,7 @@ export default function TeamCounselingPage() {
                   </div>
                 );
               }
-              
+
               const color = COLOR_MAP[m.authorId ?? ""] ?? {
                 bubble: "bg-white",
                 text: "text-[#6b4423]",
@@ -524,14 +860,13 @@ export default function TeamCounselingPage() {
                         <img src={m.iconUrl} alt={m.author ?? "AI"} className="h-full w-full object-contain" />
                       </div>
                     )}
-                    <span className={`text-xs font-semibold ${color.text}`}>
-                      {m.author ?? "AI"}
-                    </span>
+                    <span className={`text-xs font-semibold ${color.text}`}>{m.author ?? "AI"}</span>
                   </div>
                   <p className={`whitespace-pre-wrap text-sm leading-relaxed ${color.text}`}>{m.content}</p>
                 </div>
               );
             })}
+
             {isRunning && (
               <div className="flex items-center gap-2 text-sm text-[#8b5a3c]">
                 <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
@@ -540,7 +875,6 @@ export default function TeamCounselingPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Mobile Input (Fixed) */}
           <div className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3" style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}>
             <div className="flex gap-2">
               <textarea
@@ -553,14 +887,12 @@ export default function TeamCounselingPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleSend();
+                    void handleSend();
                   }
                 }}
                 onFocus={() => {
                   setTimeout(() => {
-                    if (messagesEndRef.current) {
-                      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-                    }
+                    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
                   }, 300);
                 }}
                 autoComplete="off"
@@ -570,7 +902,7 @@ export default function TeamCounselingPage() {
               <Button
                 onClick={handleSend}
                 disabled={!input.trim() || isRunning || isLoadingSession}
-                className="min-w-[60px] h-[44px] bg-[#d97757] hover:bg-[#c96647] flex items-center justify-center"
+                className="flex min-w-[60px] items-center justify-center rounded-xl bg-[#d97757] text-white hover:bg-[#c96647]"
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -578,6 +910,78 @@ export default function TeamCounselingPage() {
           </div>
         </div>
       </div>
+
+      {isMobileSessionsOpen && (
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm" onClick={() => setIsMobileSessionsOpen(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 max-h-[75vh] rounded-t-[32px] border border-white/40 bg-white p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm font-semibold text-[#6b4423]">チャット履歴</p>
+              <button
+                type="button"
+                onClick={() => setIsMobileSessionsOpen(false)}
+                className="rounded-full border border-[#f5d0c5]/50 p-1"
+              >
+                <X className="h-4 w-4 text-[#6b4423]" />
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleNewChat}
+                disabled={isRunning || isCreatingSession}
+                className="flex-1 gap-1 bg-[#d97757] text-white hover:bg-[#c96647]"
+              >
+                <Plus className="h-4 w-4" /> 新規
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleShareConversation}
+                disabled={messages.length === 0}
+                className="flex-1 gap-1 border-[#f5d0c5]/50 text-[#6b4423] hover:bg-[#fff4ef]"
+              >
+                <Share2 className="h-4 w-4" /> コピー
+              </Button>
+            </div>
+            <div className="mt-4 max-h-[50vh] space-y-3 overflow-y-auto pr-1">
+              {sessions.map((session) => {
+                const isActive = session.id === sessionId;
+                return (
+                  <button
+                    key={session.id}
+                    type="button"
+                    onClick={() => handleSessionSelect(session)}
+                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                      isActive ? "border-transparent bg-[#d97757] text-white" : "border-[#f5d0c5]/40 bg-white text-[#6b4423]"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-semibold">{session.title ?? "チームセッション"}</p>
+                      <p className={`text-xs ${isActive ? "text-white/80" : "text-[#c08d75]"}`}>{formatTimestamp(session.updated_at)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleDeleteSession(session.id);
+                      }}
+                      className={`rounded-full p-1 ${isActive ? "text-white/80" : "text-[#c08d75]"}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </button>
+                );
+              })}
+              {sessions.length === 0 && (
+                <p className="rounded-2xl border border-dashed border-[#f5d0c5]/60 bg-white/70 px-4 py-6 text-center text-xs text-[#8b5a3c]">
+                  履歴がありません。新しいチャットを開始してください。
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
