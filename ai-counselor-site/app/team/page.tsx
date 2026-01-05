@@ -550,122 +550,154 @@ export default function TeamCounselingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fff9f5] via-[#fef5f1] to-[#fef0e9]">
-      <div className="mx-auto hidden max-w-6xl gap-6 px-4 py-6 md:flex lg:py-10">
-        <aside className="w-full max-w-sm space-y-4 rounded-2xl border border-[#f5d0c5]/30 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-          <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-[#6b4423]">チャット履歴</p>
-              <span className="text-xs text-[#c08d75]">{sessions.length} 件</span>
+      <div className="mx-auto hidden w-full max-w-7xl px-6 py-10 md:grid md:grid-cols-[320px_1fr] md:gap-6">
+        <aside className="hidden md:block">
+          <div className="sticky top-6 flex h-[calc(100vh-4rem)] flex-col space-y-4 rounded-3xl border border-[#f5d0c5]/30 bg-white/80 p-5 shadow-xl backdrop-blur-lg">
+            <div className="rounded-2xl border border-[#f5d0c5]/40 bg-gradient-to-br from-[#fff9f5] via-[#fff1ec] to-[#ffe9df] p-4 text-[#6b4423]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d97757]">Team Counseling</p>
+              <h2 className="mt-2 text-lg font-bold">多視点AIのセッション</h2>
+              <p className="mt-1 text-sm text-[#a16446]">個別チャットと同じ横幅・固定サイドバーで履歴と参加AIを管理できます。</p>
             </div>
-            <div className="mt-3 flex gap-2">
-              <Button
-                onClick={handleNewChat}
-                disabled={isRunning || isCreatingSession}
-                className="flex-1 gap-1 bg-[#d97757] text-white hover:bg-[#c96647]"
-              >
-                <Plus className="h-4 w-4" />
-                新規
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleShareConversation}
-                disabled={messages.length === 0}
-                className="flex-1 gap-1 border-[#f5d0c5]/60 text-[#6b4423] hover:bg-[#fff4ef]"
-              >
-                <Share2 className="h-4 w-4" />
-                コピー
-              </Button>
-            </div>
-          </div>
-
-          <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
-            {isLoadingSessions && sessions.length === 0
-              ? Array.from({ length: 3 }).map((_, idx) => (
-                  <div key={`session-skeleton-${idx}`} className="h-16 animate-pulse rounded-2xl border border-[#f5d0c5]/30 bg-white/60" />
-                ))
-              : sessions.map((session) => {
-                  const isActive = session.id === sessionId;
-                  return (
-                    <button
-                      key={session.id}
-                      type="button"
-                      onClick={() => handleSessionSelect(session)}
-                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                        isActive
-                          ? "border-transparent bg-gradient-to-r from-[#d97757] to-[#f59e78] text-white"
-                          : "border-[#f5d0c5]/40 bg-white text-[#6b4423] hover:bg-[#fff4ef]"
-                      }`}
-                    >
-                      <div>
-                        <p className="font-semibold">{session.title ?? "チームセッション"}</p>
-                        <p className={`text-xs ${isActive ? "text-white/80" : "text-[#c08d75]"}`}>
-                          {formatTimestamp(session.updated_at)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void handleDeleteSession(session.id);
-                        }}
-                        className={`rounded-full p-1 transition ${isActive ? "text-white/80 hover:bg-white/20" : "text-[#c08d75] hover:bg-[#fff4ef]"}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </button>
-                  );
-                })}
-            {sessions.length === 0 && !isLoadingSessions && (
-              <p className="rounded-2xl border border-dashed border-[#f5d0c5]/60 bg-white/70 px-4 py-6 text-center text-xs text-[#8b5a3c]">
-                履歴がありません。新しいチャットを開始してください。
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[#6b4423]">参加AI（最大5名）</p>
-              <span className="text-xs text-[#c08d75]">{participants.length} 名選択中</span>
-            </div>
-            <div className="space-y-2">
-              {availableParticipants.map((p) => {
-                const checked = participants.includes(p.id);
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => toggleParticipant(p.id)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/40 bg-white px-3 py-2 text-left hover:bg-[#fff4ef]"
+            <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1">
+              <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-[#6b4423]">チャット履歴</p>
+                  <span className="text-xs text-[#c08d75]">{sessions.length} 件</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    onClick={handleNewChat}
+                    disabled={isRunning || isCreatingSession}
+                    className="flex-1 gap-1 bg-[#d97757] text-white hover:bg-[#c96647]"
                   >
-                    {checked ? (
-                      <CheckSquare className="h-4 w-4 text-[#d97757]" />
-                    ) : (
-                      <Square className="h-4 w-4 text-[#c9a394]" />
-                    )}
-                    <span className="text-sm text-[#6b4423]">{p.name}</span>
-                  </button>
-                );
-              })}
+                    <Plus className="h-4 w-4" />
+                    新規
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShareConversation}
+                    disabled={messages.length === 0}
+                    className="flex-1 gap-1 border-[#f5d0c5]/60 text-[#6b4423] hover:bg-[#fff4ef]"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    コピー
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {isLoadingSessions && sessions.length === 0
+                  ? Array.from({ length: 3 }).map((_, idx) => (
+                      <div key={`session-skeleton-${idx}`} className="h-16 animate-pulse rounded-2xl border border-[#f5d0c5]/30 bg-white/60" />
+                    ))
+                  : sessions.map((session) => {
+                      const isActive = session.id === sessionId;
+                      return (
+                        <button
+                          key={session.id}
+                          type="button"
+                          onClick={() => handleSessionSelect(session)}
+                          className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                            isActive
+                              ? "border-transparent bg-gradient-to-r from-[#d97757] to-[#f59e78] text-white"
+                              : "border-[#f5d0c5]/40 bg-white text-[#6b4423] hover:bg-[#fff4ef]"
+                          }`}
+                        >
+                          <div>
+                            <p className="font-semibold">{session.title ?? "チームセッション"}</p>
+                            <p className={`text-xs ${isActive ? "text-white/80" : "text-[#c08d75]"}`}>
+                              {formatTimestamp(session.updated_at)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDeleteSession(session.id);
+                            }}
+                            className={`rounded-full p-1 transition ${isActive ? "text-white/80 hover:bg-white/20" : "text-[#c08d75] hover:bg-[#fff4ef]"}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </button>
+                      );
+                    })}
+                {sessions.length === 0 && !isLoadingSessions && (
+                  <p className="rounded-2xl border border-dashed border-[#f5d0c5]/60 bg-white/70 px-4 py-6 text-center text-xs text-[#8b5a3c]">
+                    履歴がありません。新しいチャットを開始してください。
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-[#6b4423]">参加AI（最大5名）</p>
+                  <span className="text-xs text-[#c08d75]">{participants.length} 名選択中</span>
+                </div>
+                <div className="space-y-2">
+                  {availableParticipants.map((p) => {
+                    const checked = participants.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => toggleParticipant(p.id)}
+                        className="flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/40 bg-white px-3 py-2 text-left hover:bg-[#fff4ef]"
+                      >
+                        {checked ? (
+                          <CheckSquare className="h-4 w-4 text-[#d97757]" />
+                        ) : (
+                          <Square className="h-4 w-4 text-[#c9a394]" />
+                        )}
+                        <span className="text-sm text-[#6b4423]">{p.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </aside>
 
-        <div className="flex min-h-[75vh] flex-1 flex-col rounded-2xl border border-[#f5d0c5]/30 bg-white/80 shadow-md backdrop-blur-sm">
-          <header className="flex items-center justify-between border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#6b4423]">チームカウンセリング</span>
+        <section className="flex h-[calc(100vh-4rem)] flex-col rounded-3xl border border-[#f5d0c5]/30 bg-white/85 shadow-xl backdrop-blur-lg">
+          <header className="flex flex-col gap-3 border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d97757]">Live Session</p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-2xl font-bold text-[#6b4423]">チームカウンセリング</h1>
+                {participants.length > 0 && (
+                  <span className="rounded-full bg-[#fff4ef] px-3 py-1 text-xs font-semibold text-[#a16446]">
+                    {participants.length} 人のAIが参加中
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-[#a16446]">個別チャットと同じワイドレイアウトで、AIチームの会話を一望できます。</p>
             </div>
-            {participants.length > 0 && (
-              <span className="text-xs text-[#8b5a3c]">{participants.length} 人のAIが参加中</span>
-            )}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleShareConversation}
+                variant="outline"
+                disabled={messages.length === 0}
+                className="gap-1 border-[#f5d0c5]/60 text-[#6b4423] hover:bg-[#fff4ef]"
+              >
+                <Share2 className="h-4 w-4" /> コピー
+              </Button>
+              <Button
+                onClick={handleNewChat}
+                disabled={isRunning || isCreatingSession}
+                className="gap-1 bg-[#d97757] text-white hover:bg-[#c96647]"
+              >
+                <Plus className="h-4 w-4" /> 新規
+              </Button>
+            </div>
           </header>
 
           {bannerMessage && (
-            <div className="mx-4 mt-3 rounded-2xl border border-[#f5d0c5]/40 bg-white px-4 py-2 text-center text-sm text-[#6b4423] shadow-sm">
+            <div className="mx-6 mt-4 rounded-2xl border border-[#f5d0c5]/40 bg-white px-4 py-2 text-center text-sm text-[#6b4423] shadow-sm">
               {bannerMessage}
             </div>
           )}
 
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <div className="flex-1 min-h-0 space-y-3 overflow-y-auto px-6 py-6">
             {isLoadingSession && sessionId ? (
               <div className="flex items-center justify-center gap-2 text-sm text-[#8b5a3c]">
                 <Loader2 className="h-4 w-4 animate-spin" /> 履歴を読み込んでいます...
@@ -724,8 +756,8 @@ export default function TeamCounselingPage() {
           </div>
 
           <div
-            className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-4 py-3"
-            style={{ paddingBottom: isMobile ? "calc(1rem + env(safe-area-inset-bottom))" : "0.75rem" }}
+            className="border-t border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-6 py-4"
+            style={{ paddingBottom: isMobile ? "calc(1rem + env(safe-area-inset-bottom))" : "1rem" }}
           >
             <div className="flex gap-2">
               <textarea
@@ -761,7 +793,7 @@ export default function TeamCounselingPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       <div className="flex min-h-screen flex-col md:hidden">
