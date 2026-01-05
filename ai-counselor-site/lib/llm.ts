@@ -1,21 +1,38 @@
 const PLACEHOLDER =
   "LLM APIキーが設定されていないため、デモ応答を返します。設定後に再度お試しください。";
 
-function buildPrompt(
-  systemPrompt: string,
-  userMessage: string,
-  ragContext?: string,
-) {
-  if (ragContext) {
-    return `${systemPrompt}\n\n[参考コンテキスト]\n${ragContext}\n\n[相談内容]\n${userMessage}`;
-  }
-  return `${systemPrompt}\n\n[相談内容]\n${userMessage}`;
-}
-
 type LLMResponse = {
   content: string;
   tokensUsed?: number;
 };
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+type CallOptions = {
+  systemPrompt: string;
+  messages: ChatMessage[];
+  ragContext?: string;
+  model?: string;
+};
+
+function injectRagContext(messages: ChatMessage[], ragContext?: string) {
+  if (!ragContext) return messages;
+  const cloned = messages.map((message) => ({ ...message }));
+  for (let i = cloned.length - 1; i >= 0; i -= 1) {
+    if (cloned[i].role === "user") {
+      cloned[i] = {
+        ...cloned[i],
+        content: `${ragContext}\n\n${cloned[i].content}`,
+      };
+      return cloned;
+    }
+  }
+  cloned.push({ role: "user", content: ragContext });
+  return cloned;
+}
 
 async function safeJson(response: Response) {
   try {
@@ -26,15 +43,20 @@ async function safeJson(response: Response) {
   }
 }
 
-export async function callOpenAI(
-  systemPrompt: string,
-  userMessage: string,
-  ragContext?: string,
+export async function callOpenAI({
+  systemPrompt,
+  messages,
+  ragContext,
   model = "gpt-4o-mini",
-): Promise<LLMResponse> {
+}: CallOptions): Promise<LLMResponse> {
   if (!process.env.OPENAI_API_KEY) {
     return { content: PLACEHOLDER };
   }
+
+  const preparedMessages = injectRagContext(messages, ragContext).map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -47,7 +69,7 @@ export async function callOpenAI(
       temperature: 0.7,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: ragContext ? `${ragContext}\n\n${userMessage}` : userMessage },
+        ...preparedMessages,
       ],
     }),
   });
@@ -66,15 +88,25 @@ export async function callOpenAI(
   };
 }
 
-export async function callClaude(
-  systemPrompt: string,
-  userMessage: string,
-  ragContext?: string,
+export async function callClaude({
+  systemPrompt,
+  messages,
+  ragContext,
   model = "claude-3-sonnet-20240229",
-): Promise<LLMResponse> {
+}: CallOptions): Promise<LLMResponse> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return { content: PLACEHOLDER };
   }
+
+  const preparedMessages = injectRagContext(messages, ragContext).map((message) => ({
+    role: message.role,
+    content: [
+      {
+        type: "text",
+        text: message.content,
+      },
+    ],
+  }));
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -87,12 +119,7 @@ export async function callClaude(
       model,
       max_tokens: 1024,
       system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: ragContext ? `${ragContext}\n\n${userMessage}` : userMessage,
-        },
-      ],
+      messages: preparedMessages,
     }),
   });
 
@@ -111,15 +138,24 @@ export async function callClaude(
   };
 }
 
-export async function callGemini(
-  systemPrompt: string,
-  userMessage: string,
-  ragContext?: string,
+export async function callGemini({
+  systemPrompt,
+  messages,
+  ragContext,
   model = "gemini-1.5-pro",
-): Promise<LLMResponse> {
+}: CallOptions): Promise<LLMResponse> {
   if (!process.env.GOOGLE_API_KEY) {
     return { content: PLACEHOLDER };
   }
+
+  const preparedMessages = injectRagContext(messages, ragContext).map((message) => ({
+    role: message.role === "assistant" ? "model" : "user",
+    parts: [
+      {
+        text: message.content,
+      },
+    ],
+  }));
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_API_KEY}`,
@@ -127,16 +163,11 @@ export async function callGemini(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: buildPrompt(systemPrompt, userMessage, ragContext),
-              },
-            ],
-          },
-        ],
+        systemInstruction: {
+          role: "system",
+          parts: [{ text: systemPrompt }],
+        },
+        contents: preparedMessages,
       }),
     },
   );
@@ -152,15 +183,20 @@ export async function callGemini(
   return { content: content || PLACEHOLDER };
 }
 
-export async function callDeepseek(
-  systemPrompt: string,
-  userMessage: string,
-  ragContext?: string,
+export async function callDeepseek({
+  systemPrompt,
+  messages,
+  ragContext,
   model = "deepseek-chat",
-): Promise<LLMResponse> {
+}: CallOptions): Promise<LLMResponse> {
   if (!process.env.DEEPSEEK_API_KEY) {
     return { content: PLACEHOLDER };
   }
+
+  const preparedMessages = injectRagContext(messages, ragContext).map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
 
   const response = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
@@ -172,7 +208,7 @@ export async function callDeepseek(
       model,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: ragContext ? `${ragContext}\n\n${userMessage}` : userMessage },
+        ...preparedMessages,
       ],
     }),
   });
@@ -191,6 +227,33 @@ export async function callDeepseek(
   };
 }
 
+export async function callLLMWithHistory(
+  provider: string,
+  modelName: string,
+  systemPrompt: string,
+  messages: ChatMessage[],
+  ragContext?: string,
+): Promise<LLMResponse> {
+  const options: CallOptions = {
+    systemPrompt,
+    messages,
+    ragContext,
+    model: modelName,
+  };
+
+  switch (provider) {
+    case "gemini":
+      return callGemini(options);
+    case "claude":
+      return callClaude(options);
+    case "deepseek":
+      return callDeepseek(options);
+    case "openai":
+    default:
+      return callOpenAI(options);
+  }
+}
+
 export async function callLLM(
   provider: string,
   modelName: string,
@@ -198,17 +261,7 @@ export async function callLLM(
   userMessage: string,
   ragContext?: string,
 ): Promise<LLMResponse> {
-  switch (provider) {
-    case "gemini":
-      return callGemini(systemPrompt, userMessage, ragContext, modelName);
-    case "claude":
-      return callClaude(systemPrompt, userMessage, ragContext, modelName);
-    case "deepseek":
-      return callDeepseek(systemPrompt, userMessage, ragContext, modelName);
-    case "openai":
-    default:
-      return callOpenAI(systemPrompt, userMessage, ragContext, modelName);
-  }
+  return callLLMWithHistory(provider, modelName, systemPrompt, [{ role: "user", content: userMessage }], ragContext);
 }
 
 export type { LLMResponse };

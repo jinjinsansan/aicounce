@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-import { env } from "process";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { searchRagContext } from "@/lib/rag";
 import { MICHELLE_SYSTEM_PROMPT } from "@/lib/team/prompts/michelle";
@@ -9,6 +7,7 @@ import { ADAM_SYSTEM_PROMPT } from "@/lib/team/prompts/adam";
 import { GEMINI_SYSTEM_PROMPT } from "@/lib/team/prompts/gemini";
 import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
 import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
+import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 
 type Participant = {
   id: string;
@@ -18,6 +17,8 @@ type Participant = {
   systemPrompt: string;
   specializationName: string;
   specializationTerms: string[];
+  provider: "openai" | "gemini" | "claude" | "deepseek";
+  model: string;
   specialty?: string;
   description?: string;
 };
@@ -27,6 +28,8 @@ type Specialization = {
   terms: string[];
   systemPrompt: string;
   negativeInstruction: string;
+  provider: "openai" | "gemini" | "claude" | "deepseek";
+  model: string;
 };
 
 function sanitizeContent(raw: string, author?: string) {
@@ -89,40 +92,50 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["ガムテープ", "5大ネガティブ感情", "ピールダウン", "心の思い込み"],
     systemPrompt: MICHELLE_SYSTEM_PROMPT,
     negativeInstruction: "あなたの専門はテープ式心理学のみです。臨床心理学については言及しないでください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
   },
   sato: {
     name: "臨床心理学",
     terms: ["認知の歪み", "愛着理論", "認知行動療法", "クライエント中心療法"],
     systemPrompt: SATO_SYSTEM_PROMPT,
     negativeInstruction: "あなたの専門は臨床心理学のみです。テープ式心理学については言及しないでください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
   },
   adam: {
     name: "一般的なAI",
     terms: ["実用的", "多角的", "常識的", "バランス"],
     systemPrompt: ADAM_SYSTEM_PROMPT,
     negativeInstruction: "特定の心理学理論の専門用語（ガムテープ、認知の歪みなど）は使わないでください。一般的でわかりやすい言葉を使ってください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
   },
   gemini: {
     name: "双視点カウンセリング",
     terms: ["二面性", "多角的", "比較", "柔軟"],
     systemPrompt: GEMINI_SYSTEM_PROMPT,
     negativeInstruction: "専門的な診断名や過度な専門用語は避け、視点の違いを丁寧に説明してください。",
+    provider: "gemini",
+    model: "gemini-1.5-pro",
   },
   claude: {
     name: "倫理的カウンセリング",
     terms: ["倫理", "整理", "章立て", "落ち着き"],
     systemPrompt: CLAUDE_SYSTEM_PROMPT,
     negativeInstruction: "派手な演出や断定を避け、静かな語り口を守ってください。",
+    provider: "claude",
+    model: "claude-3-sonnet-20240229",
   },
   deep: {
     name: "分析的カウンセリング",
     terms: ["分析", "要因", "構造化", "探求"],
     systemPrompt: DEEP_SYSTEM_PROMPT,
     negativeInstruction: "専門用語のみで説明せず、平易な言葉と補足を添えてください。",
+    provider: "deepseek",
+    model: "deepseek-chat",
   },
 };
-
-const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
@@ -140,6 +153,8 @@ export async function POST(req: Request) {
           terms: [],
           systemPrompt: "あなたは専門的なAIカウンセラーです。",
           negativeInstruction: "",
+          provider: "openai",
+          model: "gpt-4o-mini",
         };
         return (
           c && {
@@ -150,6 +165,8 @@ export async function POST(req: Request) {
             systemPrompt: spec.systemPrompt,
             specializationName: spec.name,
             specializationTerms: spec.terms,
+            provider: spec.provider,
+            model: spec.model,
             specialty: c.specialty,
             description: c.description,
           }
@@ -213,26 +230,21 @@ export async function POST(req: Request) {
 
       // 完全なシステムプロンプト
       const system = p.systemPrompt + teamInstructions + ragContext;
-
-      // ユーザーとの会話履歴のみ（他のAIの応答は含めない）
-      const chatHistory = previousMessages.slice(-6).map((m) => ({ 
-        role: m.role, 
-        content: m.content 
+      const historyMessages: ChatMessage[] = previousMessages.slice(-6).map((m) => ({
+        role: m.role,
+        content: m.content,
       }));
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: system },
-          ...chatHistory,
-          { role: "user", content: userMessage },
-        ],
-        max_tokens: 600,
-        temperature: 0.7,
-      });
+      historyMessages.push({ role: "user", content: userMessage });
 
-      const content = completion.choices[0].message.content ?? "";
-      const sanitized = sanitizeContent(content, p.name);
+      const { content } = await callLLMWithHistory(
+        p.provider,
+        p.model,
+        system,
+        historyMessages,
+      );
+
+      const sanitized = sanitizeContent(content ?? "", p.name);
 
       responses.push({ author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl });
     }
