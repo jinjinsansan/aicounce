@@ -23,7 +23,7 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
       .select("*, plan:billing_plans(tier)")
       .eq("user_id", userId)
       .in("status", ["active", "trialing"])
-      .order("current_period_end", { ascending: false, nulls_last: false })
+      .order("current_period_end", { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle(),
     supabase
