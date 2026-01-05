@@ -30,6 +30,7 @@ function sanitizeContent(raw: string, author?: string) {
   if (!author) return text;
   const patterns = [
     new RegExp(`^\\[?${author}\\]?[:：]?\\s*`),
+    new RegExp(`^${author}カウンセラー[:：]?\\s*`, 'i'),
     new RegExp(`^${author}[:：]?\\s*`),
   ];
   for (const p of patterns) {
@@ -118,6 +119,12 @@ export async function POST(req: Request) {
         "\n---\n",
         "## チームカウンセリング特別指示（厳守）",
         "",
+        "### 【超重要】あなたは常にユーザー（相談者）に向けて話してください",
+        "- あなたの応答は必ずユーザー（相談者）に向けたものです",
+        "- 他のカウンセラー（ミシェル、サトウなど）に話しかけてはいけません",
+        "- 他のカウンセラーの発言を参照する場合も、必ずユーザーに向けて説明してください",
+        "- 例: 「ミシェルさんのおっしゃった〇〇について、私からも補足させてください」",
+        "",
         "### 【最重要】あなたの専門分野",
         spec ? spec.negativeInstruction : "",
         `**回答の最初の文で必ず「${p.specializationName}では〇〇」という表現を使ってください。**`,
@@ -132,13 +139,13 @@ export async function POST(req: Request) {
               `**必ず「${p.specializationName}の観点からお答えします」と明示してください。**`,
             ].join("\n")
           : [
-              "**他のカウンセラーの発言に必ず言及してください。**",
-              "例文:",
-              `- 「○○さんのおっしゃる通りですね。${p.specializationName}では〜」`,
-              `- 「○○さんの意見に加えて、${p.specializationName}の視点から〜」`,
-              `- 「○○さんありがとうございます。${p.specializationName}では〜」`,
+              "**他のカウンセラーの発言に必ず言及してください（ただしユーザーに向けて話す）。**",
+              "例文（必ずユーザーに向けて）:",
+              `- 「○○カウンセラーが指摘されたように、${p.specializationName}の視点からお伝えすると〜」`,
+              `- 「○○カウンセラーの意見に加えて、私から${p.specializationName}では〜とお伝えしたいです」`,
+              `- 「○○カウンセラーがおっしゃった点について、${p.specializationName}では〜と考えます」`,
               "",
-              "**前のカウンセラーの具体的な内容に触れながら、あなたの専門分野から新しい視点を加えてください。**",
+              "**注意: 他のカウンセラーに話しかけるのではなく、必ずユーザー（相談者）に向けて話してください。**",
             ].join("\n"),
         "",
         "### 【禁止】繰り返しの回避",
@@ -159,14 +166,14 @@ export async function POST(req: Request) {
         "### 回答フォーマット（厳守）",
         i === 0
           ? [
-              "1行目: 簡潔な共感",
+              "1行目: ユーザーへの簡潔な共感",
               `2行目: 必ず「${p.specializationName}では〇〇」で始める専門的な洞察`,
-              "3行目: 具体的な問いかけや提案",
+              "3行目: ユーザーへの具体的な問いかけや提案",
             ].join("\n")
           : [
-              "1行目: 前のカウンセラーへの言及（「○○さんの〜」で始める）",
-              `2行目: 必ず「${p.specializationName}では〇〇」で新しい視点を追加`,
-              "3行目: 具体的な提案や問いかけ",
+              "1行目: 前のカウンセラーの発言をユーザーに向けて言及（「○○カウンセラーが指摘されたように〜」）",
+              `2行目: 必ず「${p.specializationName}では〇〇」でユーザーに新しい視点を提供`,
+              "3行目: ユーザーへの具体的な提案や問いかけ",
             ].join("\n"),
         "",
         "### その他",
@@ -185,8 +192,14 @@ export async function POST(req: Request) {
 
       // 既存の履歴 + このラウンドで既に生成された他AIの発言
       const chatHistory = [
-        ...previousMessages.slice(-6).map((m) => ({ role: m.role, content: `${m.author ? `[${m.author}] ` : ""}${m.content}` })),
-        ...responses.map((r) => ({ role: "assistant" as const, content: `[${r.author}] ${r.content}` })),
+        ...previousMessages.slice(-6).map((m) => ({ 
+          role: m.role, 
+          content: m.author ? `${m.author}カウンセラー: ${m.content}` : m.content 
+        })),
+        ...responses.map((r) => ({ 
+          role: "assistant" as const, 
+          content: `${r.author}カウンセラー: ${r.content}` 
+        })),
       ];
 
       const completion = await openai.chat.completions.create({
