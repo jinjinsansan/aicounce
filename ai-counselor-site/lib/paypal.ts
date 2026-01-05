@@ -1,5 +1,7 @@
+const paypalEnv = process.env.PAYPAL_ENV?.toLowerCase() === "live" ? "live" : "sandbox";
+
 const PAYPAL_API_BASE =
-  process.env.PAYPAL_ENV === "live"
+  paypalEnv === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 
