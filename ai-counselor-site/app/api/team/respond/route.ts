@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { env } from "process";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
+import { searchRagContext } from "@/lib/rag";
 
 type Participant = {
   id: string;
   name: string;
   iconUrl: string;
+  ragEnabled: boolean;
   style: string;
 };
 
@@ -34,7 +36,8 @@ export async function POST(req: Request) {
           c && {
             id: c.id,
             name: c.name,
-            iconUrl: c.iconUrl,
+            iconUrl: c.iconUrl ?? "",
+            ragEnabled: Boolean(c.ragEnabled),
             style: PARTICIPANT_PROMPTS[c.id] ?? "あなたは専門的なAIカウンセラーです。",
           }
         );
@@ -59,12 +62,14 @@ export async function POST(req: Request) {
     const responses: { author: string; authorId: string; content: string; iconUrl: string }[] = [];
 
     for (const p of selected) {
+      const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 5) : { context: "" };
       const system = [
         "あなたは複数AIが議論するチームカウンセリングの一員です。",
         "ゴールはユーザーの悩みを解決に近づけること。",
         "他のAIの発言を参考にしてもよいが、必ずユーザーの悩みに寄り添い、安全で具体的な提案を返すこと。",
         "回答は200〜400文字程度で簡潔に。",
         p.style,
+        context ? "参考情報（RAG検索結果）:\n" + context : "",
       ].join("\n");
 
       const chatHistory = previousMessages
