@@ -197,7 +197,7 @@ export default function AccountPage() {
               </p>
               <div className="mt-4 flex flex-col gap-3">
                 <a
-                  href="https://line.me/R/ti/p/@mentalai"
+                  href="https://line.me/R/ti/p/@701wsyqr"
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-full bg-emerald-500 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-500/30"
