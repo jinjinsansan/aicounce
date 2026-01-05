@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type {
   AdminMetrics,
   CounselorInsight,
@@ -10,11 +10,84 @@ import type {
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 
 type FetchState = "idle" | "error";
+const ADMIN_EMAIL = "goldbenchan@gmail.com";
+
+type CampaignRecord = {
+  id: string;
+  code: string;
+  description: string | null;
+  duration_days: number;
+  usage_limit: number | null;
+  usage_count: number;
+  valid_from: string | null;
+  valid_to: string | null;
+  is_active: boolean;
+  created_at: string | null;
+};
 
 export default function AdminDashboardPage() {
   const { session, loading } = useSupabase();
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [fetchState, setFetchState] = useState<FetchState>("idle");
+  const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
+  const [campaignLoading, setCampaignLoading] = useState(false);
+  const [campaignError, setCampaignError] = useState<string | null>(null);
+
+  const loadCampaigns = useCallback(async () => {
+    setCampaignLoading(true);
+    setCampaignError(null);
+    try {
+      const response = await fetch("/api/admin/campaigns", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("failed");
+      }
+      const data = await response.json();
+      setCampaigns(data.campaigns ?? []);
+    } catch (error) {
+      console.error("campaign fetch failed", error);
+      setCampaignError("キャンペーン情報を取得できませんでした");
+    } finally {
+      setCampaignLoading(false);
+    }
+  }, []);
+
+  const handleCreateCampaign = useCallback(
+    async (payload: {
+      code: string;
+      durationDays: number;
+      description?: string;
+      usageLimit?: number;
+      validFrom?: string;
+      validTo?: string;
+      isActive: boolean;
+    }) => {
+      setCampaignLoading(true);
+      setCampaignError(null);
+      try {
+        const response = await fetch("/api/admin/campaigns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          const message = data.error ?? "キャンペーンの作成に失敗しました";
+          setCampaignError(message);
+          return { success: false, error: message };
+        }
+        setCampaigns((prev) => [data.campaign, ...prev]);
+        return { success: true };
+      } catch (error) {
+        console.error("campaign create failed", error);
+        const message = "キャンペーンの作成に失敗しました";
+        setCampaignError(message);
+        return { success: false, error: message };
+      } finally {
+        setCampaignLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!session) {
@@ -36,6 +109,11 @@ export default function AdminDashboardPage() {
         setFetchState("error");
       });
   }, [session]);
+
+  useEffect(() => {
+    if (!session || session.user.email !== ADMIN_EMAIL) return;
+    loadCampaigns();
+  }, [session, loadCampaigns]);
 
   if (loading) {
     return (
@@ -59,7 +137,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const isAdmin = session.user.email === "goldbenchan@gmail.com";
+  const isAdmin = session.user.email === ADMIN_EMAIL;
   if (!isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-slate-600">
@@ -85,6 +163,12 @@ export default function AdminDashboardPage() {
       <SummaryGrid metrics={metrics?.summary} loading={!metrics && fetchState !== "error"} />
       <UsagePanel usage={metrics?.usage ?? []} loading={!metrics && fetchState !== "error"} />
       <CounselorTable counselors={metrics?.counselors ?? []} loading={!metrics && fetchState !== "error"} />
+      <CampaignManager
+        campaigns={campaigns}
+        loading={campaignLoading}
+        error={campaignError}
+        onCreate={handleCreateCampaign}
+      />
     </div>
   );
 }
@@ -262,6 +346,194 @@ function CounselorTable({
             ))}
           </tbody>
         </table>
+      </div>
+    </section>
+  );
+}
+
+type CampaignManagerProps = {
+  campaigns: CampaignRecord[];
+  loading: boolean;
+  error: string | null;
+  onCreate: (payload: {
+    code: string;
+    durationDays: number;
+    description?: string;
+    usageLimit?: number;
+    validFrom?: string;
+    validTo?: string;
+    isActive: boolean;
+  }) => Promise<{ success: boolean; error?: string }>;
+};
+
+function CampaignManager({ campaigns, loading, error, onCreate }: CampaignManagerProps) {
+  const [code, setCode] = useState("");
+  const [durationDays, setDurationDays] = useState(30);
+  const [description, setDescription] = useState("");
+  const [usageLimit, setUsageLimit] = useState("");
+  const [validFrom, setValidFrom] = useState("");
+  const [validTo, setValidTo] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!code.trim()) {
+      setStatus({ type: "error", message: "コードを入力してください" });
+      return;
+    }
+    setStatus(null);
+    const payload = {
+      code,
+      durationDays,
+      description: description.trim() ? description.trim() : undefined,
+      usageLimit: usageLimit ? Number(usageLimit) : undefined,
+      validFrom: validFrom ? new Date(validFrom).toISOString() : undefined,
+      validTo: validTo ? new Date(validTo).toISOString() : undefined,
+      isActive,
+    };
+    const result = await onCreate(payload);
+    if (result.success) {
+      setCode("");
+      setDescription("");
+      setUsageLimit("");
+      setValidFrom("");
+      setValidTo("");
+      setDurationDays(30);
+      setIsActive(true);
+      setStatus({ type: "success", message: "キャンペーンを作成しました" });
+    } else {
+      setStatus({ type: "error", message: result.error ?? "作成に失敗しました" });
+    }
+  };
+
+  return (
+    <section className="space-y-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rose-500">キャンペーン管理</p>
+        <h2 className="text-2xl font-bold text-slate-900">キャンペーンコードの発行</h2>
+        <p className="text-sm text-slate-500">
+          コードと無料期間を設定して保存すると、マイページでユーザーが利用できるようになります。
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="grid gap-4 rounded-2xl bg-slate-50 p-4 md:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">コード</label>
+          <input
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            placeholder="例: ハルノキャンペーン"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">無料期間(日)</label>
+          <input
+            type="number"
+            min={1}
+            max={365}
+            value={durationDays}
+            onChange={(event) => setDurationDays(Number(event.target.value))}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">説明 (任意)</label>
+          <input
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">利用上限 (任意)</label>
+          <input
+            type="number"
+            min={1}
+            value={usageLimit}
+            onChange={(event) => setUsageLimit(event.target.value)}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">開始日 (任意)</label>
+          <input
+            type="datetime-local"
+            value={validFrom}
+            onChange={(event) => setValidFrom(event.target.value)}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">終了日 (任意)</label>
+          <input
+            type="datetime-local"
+            value={validTo}
+            onChange={(event) => setValidTo(event.target.value)}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-semibold text-slate-700">有効化</label>
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(event) => setIsActive(event.target.checked)}
+            className="h-5 w-5"
+          />
+        </div>
+        <div className="flex items-end">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-60"
+          >
+            {loading ? "保存中..." : "キャンペーンを作成"}
+          </button>
+        </div>
+        {status && (
+          <div className={`text-sm ${status.type === "success" ? "text-emerald-600" : "text-red-500"}`}>
+            {status.message}
+          </div>
+        )}
+        {error && <div className="text-sm text-red-500">{error}</div>}
+      </form>
+
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-slate-900">発行済みキャンペーン</h3>
+        {loading ? (
+          <p className="text-sm text-slate-500">読み込み中...</p>
+        ) : campaigns.length === 0 ? (
+          <p className="text-sm text-slate-500">まだキャンペーンコードはありません。</p>
+        ) : (
+          <div className="space-y-3">
+            {campaigns.map((campaign) => (
+              <div key={campaign.id} className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-base font-bold text-slate-900">{campaign.code}</p>
+                    <p className="text-xs text-slate-500">
+                      期間: {campaign.duration_days}日 / 利用 {campaign.usage_count}
+                      {campaign.usage_limit ? ` / 上限 ${campaign.usage_limit}` : ""}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${campaign.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}
+                  >
+                    {campaign.is_active ? "有効" : "停止中"}
+                  </span>
+                </div>
+                {campaign.description && (
+                  <p className="mt-2 text-sm text-slate-600">{campaign.description}</p>
+                )}
+                <p className="mt-1 text-xs text-slate-400">
+                  {campaign.valid_from ? `開始: ${new Date(campaign.valid_from).toLocaleString("ja-JP")}` : "開始: 指定なし"} / {campaign.valid_to ? `終了: ${new Date(campaign.valid_to).toLocaleString("ja-JP")}` : "終了: 指定なし"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

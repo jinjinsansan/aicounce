@@ -21,6 +21,13 @@ type OverviewResponse = {
     trial_expires_at: string | null;
     trial_started_at: string | null;
   } | null;
+  campaign: {
+    expires_at: string;
+    campaign: {
+      code: string;
+      description?: string | null;
+    } | null;
+  } | null;
   notifications: {
     id: string;
     title: string;
@@ -52,6 +59,9 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [trialState, setTrialState] = useState<"idle" | "loading" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [campaignInput, setCampaignInput] = useState("");
+  const [campaignStatus, setCampaignStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [campaignLoading, setCampaignLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -109,6 +119,51 @@ export default function AccountPage() {
     } catch {
       setError("LINE連携に失敗しました");
       setTrialState("idle");
+    }
+  };
+
+  const handleRedeemCampaign = async () => {
+    if (!campaignInput.trim()) {
+      setCampaignStatus({ type: "error", message: "コードを入力してください" });
+      return;
+    }
+    setCampaignLoading(true);
+    setCampaignStatus(null);
+    try {
+      const response = await fetch("/api/account/redeem-campaign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: campaignInput }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setCampaignStatus({ type: "error", message: data.error ?? "適用に失敗しました" });
+        return;
+      }
+      setCampaignInput("");
+      setCampaignStatus({ type: "success", message: "キャンペーンを適用しました" });
+      setOverview((prev) =>
+        prev
+          ? {
+              ...prev,
+              campaign: {
+                expires_at: data.expiresAt,
+                campaign: { code: data.code, description: null },
+              },
+              access: {
+                ...prev.access,
+                campaignAccess: { code: data.code, expiresAt: data.expiresAt },
+                canUseIndividual: true,
+                canUseTeam: true,
+              },
+            }
+          : prev,
+      );
+    } catch (err) {
+      console.error(err);
+      setCampaignStatus({ type: "error", message: "キャンペーン適用に失敗しました" });
+    } finally {
+      setCampaignLoading(false);
     }
   };
 
@@ -219,6 +274,45 @@ export default function AccountPage() {
             </div>
 
             <div className="rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-900">キャンペーンコード</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                管理者から案内されたコードを入力すると、指定期間のプレミアムアクセスが付与されます。
+              </p>
+              {overview.access.campaignAccess && (
+                <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <p className="font-semibold">
+                    適用中: {overview.access.campaignAccess.code}
+                  </p>
+                  <p>終了日: {formatDateTime(overview.access.campaignAccess.expiresAt)}</p>
+                </div>
+              )}
+              <div className="mt-4 flex flex-col gap-3">
+                <input
+                  type="text"
+                  value={campaignInput}
+                  onChange={(event) => setCampaignInput(event.target.value)}
+                  placeholder="カタカナコード"
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleRedeemCampaign}
+                  disabled={campaignLoading}
+                  className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-60"
+                >
+                  {campaignLoading ? "適用中..." : "キャンペーンを適用"}
+                </button>
+                {campaignStatus && (
+                  <p
+                    className={`text-sm ${campaignStatus.type === "success" ? "text-emerald-600" : "text-red-500"}`}
+                  >
+                    {campaignStatus.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm">
               <h2 className="text-xl font-bold text-slate-900">通知ボックス</h2>
               <div className="mt-4 space-y-3">
                 {overview.notifications.length === 0 && (
@@ -256,6 +350,13 @@ export default function AccountPage() {
       </div>
     </div>
   );
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString("ja-JP");
 }
 
 function PlanCard({

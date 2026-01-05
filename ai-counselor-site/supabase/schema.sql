@@ -75,6 +75,32 @@ create table if not exists public.user_trials (
   updated_at timestamptz default timezone('utc', now())
 );
 
+create table if not exists public.campaign_codes (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  description text,
+  duration_days integer not null check (duration_days > 0),
+  usage_limit integer,
+  usage_count integer not null default 0,
+  valid_from timestamptz,
+  valid_to timestamptz,
+  is_active boolean not null default true,
+  created_at timestamptz default timezone('utc', now()),
+  updated_at timestamptz default timezone('utc', now())
+);
+
+create table if not exists public.campaign_redemptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  campaign_code_id uuid not null references public.campaign_codes(id) on delete cascade,
+  redeemed_at timestamptz not null default timezone('utc', now()),
+  expires_at timestamptz not null,
+  unique(user_id, campaign_code_id)
+);
+
+create index if not exists idx_campaign_redemptions_user on public.campaign_redemptions(user_id);
+create index if not exists idx_campaign_redemptions_expires on public.campaign_redemptions(expires_at);
+
 -- Notifications & Campaigns -----------------------------------------------
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -129,6 +155,8 @@ alter table public.user_trials enable row level security;
 alter table public.notifications enable row level security;
 alter table public.newsletter_campaigns enable row level security;
 alter table public.newsletter_campaign_recipients enable row level security;
+alter table public.campaign_codes enable row level security;
+alter table public.campaign_redemptions enable row level security;
 
 drop policy if exists user_subscriptions_select_own on public.user_subscriptions;
 create policy user_subscriptions_select_own
@@ -178,6 +206,16 @@ create policy newsletter_campaigns_service_role
 drop policy if exists newsletter_campaign_recipients_service_role on public.newsletter_campaign_recipients;
 create policy newsletter_campaign_recipients_service_role
   on public.newsletter_campaign_recipients
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists campaign_codes_service_role on public.campaign_codes;
+create policy campaign_codes_service_role
+  on public.campaign_codes
+  for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+drop policy if exists campaign_redemptions_service_role on public.campaign_redemptions;
+create policy campaign_redemptions_service_role
+  on public.campaign_redemptions
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
 -- Newsletter Subscribers ----------------------------------------------------

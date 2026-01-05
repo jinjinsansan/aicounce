@@ -34,6 +34,7 @@ export async function GET() {
       { data: subscription },
       { data: trial },
       { data: notifications },
+      { data: campaignRedemption },
     ] = await Promise.all([
       adminSupabase
         .from("user_subscriptions")
@@ -53,6 +54,14 @@ export async function GET() {
         .eq("user_id", session.user.id)
         .order("sent_at", { ascending: false })
         .limit(10),
+      adminSupabase
+        .from("campaign_redemptions")
+        .select("expires_at, campaign:campaign_codes(code, description)")
+        .eq("user_id", session.user.id)
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     const access = await resolveAccessState(session.user.id);
@@ -65,6 +74,7 @@ export async function GET() {
       },
       subscription: subscription ?? null,
       trial: trial ?? null,
+      campaign: campaignRedemption ?? null,
       notifications: notifications ?? [],
       access,
     });

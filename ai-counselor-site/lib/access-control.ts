@@ -8,6 +8,10 @@ export type AccessState = {
   onTrial: boolean;
   trialExpiresAt?: string;
   lineLinked: boolean;
+  campaignAccess?: {
+    code: string;
+    expiresAt: string;
+  } | null;
   canUseIndividual: boolean;
   canUseTeam: boolean;
 };
@@ -17,7 +21,9 @@ const BASIC_PLANS: PlanTier[] = ["basic", "premium"];
 export async function resolveAccessState(userId: string): Promise<AccessState> {
   const supabase = getServiceSupabase();
 
-  const [{ data: subscription }, { data: trial }, { data: user }] = await Promise.all([
+  const nowIso = new Date().toISOString();
+
+  const [{ data: subscription }, { data: trial }, { data: user }, { data: campaign }] = await Promise.all([
     supabase
       .from("user_subscriptions")
       .select("*, plan:billing_plans(tier)")
@@ -36,6 +42,14 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
       .select("line_linked_at")
       .eq("id", userId)
       .maybeSingle(),
+    supabase
+      .from("campaign_redemptions")
+      .select("expires_at, campaign:campaign_codes(code)")
+      .eq("user_id", userId)
+      .gt("expires_at", nowIso)
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const planTier = (subscription?.plan?.tier as PlanTier | null) ?? "none";
@@ -51,13 +65,24 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
     trialExpiresAt && new Date(trialExpiresAt).getTime() > Date.now(),
   );
   const lineLinked = Boolean(trial?.line_linked ?? user?.line_linked_at);
+  const campaignData = campaign as
+    | {
+        expires_at: string | null;
+        campaign?: { code?: string | null } | null;
+      }
+    | null;
+
+  const campaignExpiresAt = campaignData?.expires_at ?? undefined;
+  const hasCampaignAccess = Boolean(
+    campaignExpiresAt && new Date(campaignExpiresAt).getTime() > Date.now(),
+  );
 
   const canUseIndividual = hasActiveSubscription
     ? BASIC_PLANS.includes(planTier)
-    : onTrial;
+    : onTrial || hasCampaignAccess;
   const canUseTeam = hasActiveSubscription
     ? planTier === "premium"
-    : onTrial;
+    : onTrial || hasCampaignAccess;
 
   return {
     plan: hasActiveSubscription ? planTier : "none",
@@ -65,6 +90,13 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
     onTrial,
     trialExpiresAt,
     lineLinked,
+    campaignAccess:
+      hasCampaignAccess && campaignExpiresAt
+        ? {
+            code: campaignData?.campaign?.code ?? "",
+            expiresAt: campaignExpiresAt,
+          }
+        : null,
     canUseIndividual,
     canUseTeam,
   };
@@ -81,7 +113,7 @@ export async function assertAccess(
     const planNeeded = requirement === "individual" ? "basic" : "premium";
     throw Object.assign(new Error("payment_required"), {
       status: 402,
-      detail: `Please subscribe to the ${planNeeded} plan or link LINE for trial`,
+      detail: `Please subscribe to the ${planNeeded} plan or use an active trial / campaign code`,
     });
   }
 }

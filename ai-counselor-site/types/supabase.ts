@@ -928,6 +928,164 @@ export interface Database {
           },
           {
             foreignKeyName: "newsletter_campaign_recipients_user_id_fkey";
+      campaign_codes: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          duration_days: number;
+          id: string;
+      campaign_codes: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          duration_days: number;
+          id: string;
+          is_active: boolean;
+          code: string;
+          updated_at: string | null;
+          usage_count: number;
+          usage_limit: number | null;
+          valid_from: string | null;
+          valid_to: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string | null;
+          duration_days: number;
+          id?: string;
+          is_active?: boolean;
+          code: string;
+          updated_at?: string | null;
+          usage_count?: number;
+          usage_limit?: number | null;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string | null;
+          duration_days?: number;
+          id?: string;
+          is_active?: boolean;
+          code?: string;
+          updated_at?: string | null;
+          usage_count?: number;
+          usage_limit?: number | null;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
+        Relationships: [];
+      };
+      campaign_redemptions: {
+        Row: {
+          campaign_code_id: string;
+          expires_at: string;
+          id: string;
+          redeemed_at: string;
+          user_id: string;
+        };
+        Insert: {
+          campaign_code_id: string;
+          expires_at: string;
+          id?: string;
+          redeemed_at?: string;
+          user_id: string;
+        };
+        Update: {
+          campaign_code_id?: string;
+          expires_at?: string;
+          id?: string;
+          redeemed_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaign_redemptions_campaign_code_id_fkey";
+            columns: ["campaign_code_id"];
+            referencedRelation: "campaign_codes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "campaign_redemptions_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+          is_active: boolean;
+          code: string;
+          updated_at: string | null;
+          usage_count: number;
+          usage_limit: number | null;
+          valid_from: string | null;
+          valid_to: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string | null;
+          duration_days: number;
+          id?: string;
+          is_active?: boolean;
+          code: string;
+          updated_at?: string | null;
+          usage_count?: number;
+          usage_limit?: number | null;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string | null;
+          duration_days?: number;
+          id?: string;
+          is_active?: boolean;
+          code?: string;
+          updated_at?: string | null;
+          usage_count?: number;
+          usage_limit?: number | null;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
+        Relationships: [];
+      };
+      campaign_redemptions: {
+        Row: {
+          campaign_code_id: string;
+          expires_at: string;
+          id: string;
+          redeemed_at: string;
+          user_id: string;
+        };
+        Insert: {
+          campaign_code_id: string;
+          expires_at: string;
+          id?: string;
+          redeemed_at?: string;
+          user_id: string;
+        };
+        Update: {
+          campaign_code_id?: string;
+          expires_at?: string;
+          id?: string;
+          redeemed_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaign_redemptions_campaign_code_id_fkey";
+            columns: ["campaign_code_id"];
+            referencedRelation: "campaign_codes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "campaign_redemptions_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
             columns: ["user_id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
