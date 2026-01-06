@@ -607,13 +607,13 @@ export function SiddharthaChatClient() {
   const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
   const showMessagesSkeleton = isLoading.messages && activeSessionId && messages.length === 0;
   const sessionSkeletonNodes = Array.from({ length: 4 }).map((_, idx) => (
-    <div key={`session-skeleton-${idx}`} className="mb-2 h-12 animate-pulse rounded-2xl bg-[#ffeaf3]" />
+    <div key={`session-skeleton-${idx}`} className="mb-2 h-12 animate-pulse rounded-2xl bg-[#fef3c7]" />
   ));
   const messageSkeletonNodes = (
     <div className="mx-auto max-w-3xl space-y-4" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
       {Array.from({ length: 3 }).map((_, idx) => (
         <div key={`message-skeleton-${idx}`} className="flex gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#ffd4e3]/60" />
+          <div className="h-10 w-10 rounded-full bg-[#fde68a]/60" />
           <div className="h-20 flex-1 rounded-2xl bg-white/70 shadow-inner animate-pulse" />
         </div>
       ))}
@@ -687,7 +687,7 @@ export function SiddharthaChatClient() {
                 <button
                   type="button"
                   onClick={(event) => handleDeleteSession(session.id, event)}
-                  className="rounded-full p-1 text-[#e091b3] opacity-0 transition group-hover:opacity-100 hover:bg-white"
+                  className="rounded-full p-1 text-[#f59e0b] opacity-0 transition group-hover:opacity-100 hover:bg-white"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -759,7 +759,7 @@ export function SiddharthaChatClient() {
                     <button
                       type="button"
                       onClick={(event) => handleDeleteSession(session.id, event)}
-                      className="rounded-full p-1 text-[#e091b3] transition hover:bg-white"
+                      className="rounded-full p-1 text-[#f59e0b] transition hover:bg-white"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -775,7 +775,7 @@ export function SiddharthaChatClient() {
       )}
 
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
-        <header className="flex items-center justify-between border-b border-[#ffd7e8] px-4 py-3 text-sm text-[#b1637d]">
+        <header className="flex items-center justify-between border-b border-[#fde68a] px-4 py-3 text-sm text-[#92400e]">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -795,7 +795,7 @@ export function SiddharthaChatClient() {
           )}
         </header>
 
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff4f7] to-[#ffeef5]" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fffbf0] to-[#fef8e7]" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="px-4 pt-4">
             {showMessagesSkeleton ? (
               messageSkeletonNodes
@@ -850,9 +850,9 @@ export function SiddharthaChatClient() {
                         {message.pending && (
                           <div className="flex items-center gap-2">
                             <div className="flex gap-1">
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f472b6] [animation-delay:-0.3s]" />
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f472b6] [animation-delay:-0.15s]" />
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f472b6]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f59e0b] [animation-delay:-0.3s]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f59e0b] [animation-delay:-0.15s]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#f59e0b]" />
                             </div>
                             <p className="text-xs text-[#c07b8f]">{thinkingMessages[currentThinkingIndex]}</p>
                           </div>
@@ -876,14 +876,14 @@ export function SiddharthaChatClient() {
 
         <div
           ref={composerRef}
-          className="sticky bottom-0 left-0 right-0 border-t border-[#ffd7e8] bg-white/95 px-4 pt-2 z-50"
+          className="sticky bottom-0 left-0 right-0 border-t border-[#fde68a] bg-white/95 px-4 pt-2 z-50"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)",
           }}
         >
           <div className="mx-auto max-w-3xl">
             {error && <p className="mb-2 text-xs font-medium text-[#92400e]">{error}</p>}
-            <div className="flex items-end gap-3 rounded-3xl border border-[#ffd7e8] bg-white/90 px-4 py-3 shadow-sm">
+            <div className="flex items-end gap-3 rounded-3xl border border-[#fde68a] bg-white/90 px-4 py-3 shadow-sm">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -909,7 +909,7 @@ export function SiddharthaChatClient() {
                 type="button"
                 onClick={() => handleSendMessage()}
                 disabled={isLoading.sending || !input.trim() || hasPendingResponse}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#f472b6] to-[#fb7185] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#f59e0b] to-[#d97706] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
