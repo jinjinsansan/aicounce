@@ -9,7 +9,7 @@ import { CHRIST_SYSTEM_PROMPT } from "../../lib/prompts/christCounselorPrompt.ts
 
 config({ path: path.resolve(process.cwd(), ".env.local"), override: true });
 
-const COUNSELOR_ID = "0dbc79b2-b901-4afb-af65-060783aae165";
+const COUNSELOR_ID = "nazare";
 const SOURCE_DIR = path.resolve(
   process.cwd(),
   "data/christ-rag/christ_chunks_final/parent",
@@ -215,11 +215,11 @@ function parseMarkdown(filePath: string): ParsedDocument {
 async function upsertCounselor() {
   const payload = {
     id: COUNSELOR_ID,
-    name: "キリスト様",
+    name: "ナザレ",
     specialty: "聖書カウンセラー",
     description:
-      "聖書の御言葉をもとに、愛と慈しみで心を包み込み、確かな希望へと導きます。",
-    icon_url: "/images/counselors/christ.svg",
+      "キリスト教聖典に基づき、悩める方に静かな光と寄り添いを届けます。RAG検索を活用した対話コンテンツで一人ひとりに合わせた導きを行います。",
+    icon_url: "/images/counselors/nazare.png",
     system_prompt: CHRIST_SYSTEM_PROMPT,
     model_type: "openai",
     model_name: "gpt-4o-mini",

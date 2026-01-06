@@ -35,16 +35,12 @@ export async function GET(request: NextRequest) {
       .order("updated_at", { ascending: false });
 
     if (counselorId) {
-      query = query.eq("counselor_id", counselorId).limit(1);
-      const { data, error } = await query.single();
-      if (error) {
-        console.error("Failed to fetch conversation", error);
-        return NextResponse.json({ conversation: null });
-      }
-      return NextResponse.json({ conversation: data });
+      query = query.eq("counselor_id", counselorId).limit(20);
+    } else {
+      query = query.limit(20);
     }
 
-    const { data, error } = await query.limit(20);
+    const { data, error } = await query;
 
     if (error) {
       console.error("Failed to fetch conversations", error);
