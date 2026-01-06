@@ -1,6 +1,9 @@
 const PLACEHOLDER =
   "LLM APIキーが設定されていないため、デモ応答を返します。設定後に再度お試しください。";
 
+const DEFAULT_CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-haiku-20240307";
+const FALLBACK_CLAUDE_MODEL = process.env.CLAUDE_FALLBACK_MODEL ?? "claude-3-haiku-20240307";
+
 type LLMResponse = {
   content: string;
   tokensUsed?: number;
@@ -92,7 +95,7 @@ export async function callClaude({
   systemPrompt,
   messages,
   ragContext,
-  model = "claude-3-sonnet-20240229",
+  model = DEFAULT_CLAUDE_MODEL,
 }: CallOptions): Promise<LLMResponse> {
   console.log("[LLM] ANTHROPIC_API_KEY defined?", !!process.env.ANTHROPIC_API_KEY);
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -109,38 +112,58 @@ export async function callClaude({
       },
     ],
   }));
+  let currentModel = model;
+  let attemptedFallback = false;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: preparedMessages,
-    }),
-  });
+  while (true) {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: currentModel,
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: preparedMessages,
+      }),
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(`[LLM] Claude API error (${response.status})`, text);
-    return { content: PLACEHOLDER };
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(
+        `[LLM] Claude API error (${response.status}) model=${currentModel}`,
+        text,
+      );
+      const shouldFallback =
+        !attemptedFallback &&
+        response.status === 404 &&
+        FALLBACK_CLAUDE_MODEL &&
+        currentModel !== FALLBACK_CLAUDE_MODEL;
+
+      if (shouldFallback) {
+        attemptedFallback = true;
+        console.warn(`[LLM] Claude falling back to ${FALLBACK_CLAUDE_MODEL}`);
+        currentModel = FALLBACK_CLAUDE_MODEL;
+        continue;
+      }
+
+      return { content: PLACEHOLDER };
+    }
+
+    const data = await safeJson(response);
+    const content = data?.content?.[0]?.text;
+    if (!content) {
+      console.error("[LLM] Claude response missing content", data);
+    }
+    return {
+      content: content || PLACEHOLDER,
+      tokensUsed:
+        (data?.usage?.input_tokens ?? 0) + (data?.usage?.output_tokens ?? 0),
+    };
   }
-
-  const data = await safeJson(response);
-  const content = data?.content?.[0]?.text;
-  if (!content) {
-    console.error("[LLM] Claude response missing content", data);
-  }
-  return {
-    content: content || PLACEHOLDER,
-    tokensUsed:
-      (data?.usage?.input_tokens ?? 0) + (data?.usage?.output_tokens ?? 0),
-  };
 }
 
 export async function callGemini({

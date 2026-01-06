@@ -128,7 +128,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: CLAUDE_SYSTEM_PROMPT,
     negativeInstruction: "派手な演出や断定を避け、静かな語り口を守ってください。",
     provider: "claude",
-    model: "claude-3-sonnet-20240229",
+    model: process.env.NEXT_PUBLIC_CLAUDE_MODEL ?? "claude-3-haiku-20240307",
   },
   deep: {
     name: "分析的カウンセリング",

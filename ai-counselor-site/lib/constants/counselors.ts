@@ -163,7 +163,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     description: "思慮深く倫理的。丁寧な対話を通じて、深い思考の整理を助けます。",
     iconUrl: "/images/counselors/claude.png",
     modelType: "claude",
-    modelName: "claude-3-sonnet-20240229",
+    modelName: "claude-3-haiku-20240307",
     ragEnabled: false,
     systemPrompt: COUNSELOR_SYSTEM_PROMPTS.claude,
     tags: ["倫理的", "丁寧", "思慮"],
