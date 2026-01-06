@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ sessionI
   }
 
   try {
-    await assertAccess(session.user.id, "team");
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });
@@ -66,7 +66,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ session
   }
 
   try {
-    await assertAccess(session.user.id, "team");
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });

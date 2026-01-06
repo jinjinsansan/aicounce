@@ -15,7 +15,7 @@ export async function GET() {
   }
 
   try {
-    const state = await resolveAccessState(session.user.id);
+    const state = await resolveAccessState(session.user.id, session.user.email ?? null);
     return NextResponse.json({ state });
   } catch (error) {
     console.error("access state error", error);

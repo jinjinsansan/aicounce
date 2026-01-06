@@ -64,7 +64,7 @@ export async function GET() {
         .maybeSingle(),
     ]);
 
-    const access = await resolveAccessState(session.user.id);
+    const access = await resolveAccessState(session.user.id, session.user.email ?? null);
 
     return NextResponse.json({
       profile: {

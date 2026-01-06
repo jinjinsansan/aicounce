@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await assertAccess(session.user.id, "individual");
+    await assertAccess(session.user.id, "individual", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });

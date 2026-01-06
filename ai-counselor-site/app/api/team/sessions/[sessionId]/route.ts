@@ -17,7 +17,7 @@ async function withSession(sessionId: string) {
   }
 
   try {
-    await assertAccess(session.user.id, "team");
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return {

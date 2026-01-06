@@ -19,7 +19,7 @@ export type AccessState = {
 const BASIC_PLANS: PlanTier[] = ["basic", "premium"];
 const ADMIN_EMAILS = new Set(["goldbenchan@gmail.com"]);
 
-export async function resolveAccessState(userId: string): Promise<AccessState> {
+export async function resolveAccessState(userId: string, sessionEmail?: string | null): Promise<AccessState> {
   const supabase = getServiceSupabase();
 
   const nowIso = new Date().toISOString();
@@ -61,8 +61,10 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
     subscription && subscription.status === "active" && (!periodEnd || periodEnd.getTime() > Date.now()),
   );
 
-  const userEmail = user?.email?.toLowerCase() ?? null;
-  const isAdmin = Boolean(userEmail && ADMIN_EMAILS.has(userEmail));
+  const dbEmail = user?.email ? user.email.toLowerCase() : null;
+  const normalizedSessionEmail = sessionEmail ? sessionEmail.toLowerCase() : null;
+  const effectiveEmail = dbEmail ?? normalizedSessionEmail;
+  const isAdmin = Boolean(effectiveEmail && ADMIN_EMAILS.has(effectiveEmail));
 
   const trialExpiresAt = trial?.trial_expires_at ?? undefined;
   const onTrial = Boolean(
@@ -113,8 +115,9 @@ export async function resolveAccessState(userId: string): Promise<AccessState> {
 export async function assertAccess(
   userId: string,
   requirement: "individual" | "team",
+  sessionEmail?: string | null,
 ) {
-  const state = await resolveAccessState(userId);
+  const state = await resolveAccessState(userId, sessionEmail);
   const allowed =
     requirement === "individual" ? state.canUseIndividual : state.canUseTeam;
   if (!allowed) {

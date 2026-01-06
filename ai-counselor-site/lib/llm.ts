@@ -94,6 +94,7 @@ export async function callClaude({
   ragContext,
   model = "claude-3-sonnet-20240229",
 }: CallOptions): Promise<LLMResponse> {
+  console.log("[LLM] ANTHROPIC_API_KEY defined?", !!process.env.ANTHROPIC_API_KEY);
   if (!process.env.ANTHROPIC_API_KEY) {
     return { content: PLACEHOLDER };
   }
@@ -144,6 +145,7 @@ export async function callGemini({
   ragContext,
   model = "gemini-1.5-pro",
 }: CallOptions): Promise<LLMResponse> {
+  console.log("[LLM] GOOGLE_API_KEY defined?", !!process.env.GOOGLE_API_KEY);
   if (!process.env.GOOGLE_API_KEY) {
     return { content: PLACEHOLDER };
   }
@@ -189,6 +191,7 @@ export async function callDeepseek({
   ragContext,
   model = "deepseek-chat",
 }: CallOptions): Promise<LLMResponse> {
+  console.log("[LLM] DEEPSEEK_API_KEY defined?", !!process.env.DEEPSEEK_API_KEY);
   if (!process.env.DEEPSEEK_API_KEY) {
     return { content: PLACEHOLDER };
   }

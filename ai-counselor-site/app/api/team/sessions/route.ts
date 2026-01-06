@@ -17,7 +17,7 @@ export async function GET() {
   }
 
   try {
-    await assertAccess(session.user.id, "team");
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    await assertAccess(session.user.id, "team");
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });

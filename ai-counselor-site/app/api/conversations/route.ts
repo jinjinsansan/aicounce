@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await assertAccess(session.user.id, "individual");
+    await assertAccess(session.user.id, "individual", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   const adminSupabase = hasServiceRole() ? getServiceSupabase() : null;
 
   try {
-    await assertAccess(session.user.id, "individual");
+    await assertAccess(session.user.id, "individual", session.user.email ?? null);
   } catch (error) {
     const { status, message } = parseAccessError(error);
     return NextResponse.json({ error: message }, { status });
