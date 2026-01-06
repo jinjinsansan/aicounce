@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 import { debugLog } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 
-type GuidedAction = "back" | "deeper" | "next";
-type GuidedPhase = "explore" | "deepen" | "release";
-
 type SessionSummary = {
   id: string;
   title: string | null;
@@ -24,15 +21,6 @@ type MessageItem = {
   content: string;
   created_at: string;
   pending?: boolean;
-};
-
-type MessagesResponse = {
-  session: Pick<SessionSummary, "id" | "title" | "category">;
-  messages: MessageItem[];
-};
-
-type SessionsResponse = {
-  sessions: SessionSummary[];
 };
 
 const ACTIVE_SESSION_STORAGE_KEY = "siddhartha-buddhism-active-session-id";
@@ -52,28 +40,6 @@ const thinkingMessages = [
 ];
 
 const THINKING_MESSAGE_INTERVAL_MS = 1400;
-
-const GUIDED_ACTION_PRESETS: Record<GuidedAction, { prompt: string; success: string }> = {
-  back: {
-    prompt: "今の教えをもう一度、別の視点から説いてください。より深く理解したいです。",
-    success: "✓ 教えを振り返ります",
-  },
-  deeper: {
-    prompt:
-      "この苦しみの根源をさらに掘り下げたいです。執着や煩悩の本質まで一緒に観察してください。",
-    success: "✓ 苦の根源を探ります",
-  },
-  next: {
-    prompt: "この教えを受け止めました。次の実践や日常で活かせる智慧を教えてください。",
-    success: "✓ 実践の道へ進みます",
-  },
-};
-
-const GUIDED_PHASE_LABELS: Record<GuidedPhase, string> = {
-  explore: "苦の観察",
-  deepen: "根源の理解",
-  release: "解放と実践",
-};
 
 export function SiddharthaChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
