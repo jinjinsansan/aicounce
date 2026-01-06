@@ -594,7 +594,7 @@ export function AdamChatClient() {
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#faf5ff] via-[#f3e8ff] to-[#e9d5ff] text-[#5b21b6]"
+      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#f0fdfa] via-[#ccfbf1] to-[#d1fae5] text-[#0f766e]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -619,11 +619,11 @@ export function AdamChatClient() {
           variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#7c3aed] font-semibold shadow-sm transition hover:bg-[#faf5ff]"
+          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#0f766e] font-semibold shadow-sm transition hover:bg-[#f0fdfa]"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#8b5cf6]">チャット</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#14b8a6]">チャット</p>
         <div className="flex-1 overflow-y-auto">
           {showSessionSkeleton ? (
             <div>{sessionSkeletonNodes}</div>
@@ -659,7 +659,7 @@ export function AdamChatClient() {
                 <button
                   type="button"
                   onClick={(event) => handleDeleteSession(session.id, event)}
-                  className="rounded-full p-1 text-[#a78bfa] opacity-0 transition group-hover:opacity-100 hover:bg-white"
+                  className="rounded-full p-1 text-[#14b8a6] opacity-0 transition group-hover:opacity-100 hover:bg-white"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -689,11 +689,11 @@ export function AdamChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#7c3aed] font-semibold shadow-sm transition hover:bg-[#faf5ff]"
+              className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#0f766e] font-semibold shadow-sm transition hover:bg-[#f0fdfa]"
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#8b5cf6]">チャット</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#14b8a6]">チャット</p>
             <div className="flex-1 overflow-y-auto">
               {showSessionSkeleton ? (
                 <div>{sessionSkeletonNodes}</div>
@@ -731,7 +731,7 @@ export function AdamChatClient() {
                     <button
                       type="button"
                       onClick={(event) => handleDeleteSession(session.id, event)}
-                      className="rounded-full p-1 text-[#a78bfa] transition hover:bg-white"
+                      className="rounded-full p-1 text-[#14b8a6] transition hover:bg-white"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -790,7 +790,7 @@ export function AdamChatClient() {
                       key={prompt}
                       onClick={() => handleSendMessage(prompt)}
                       disabled={isLoading.sending}
-                      className="rounded-xl border border-[#ddd6fe] bg-white px-6 py-4 text-center text-sm text-[#5b21b6] shadow-sm transition-all hover:bg-[#faf5ff] hover:shadow-md disabled:opacity-50"
+                      className="rounded-xl border border-[#99f6e4] bg-white px-6 py-4 text-center text-sm text-[#0f766e] shadow-sm transition-all hover:bg-[#f0fdfa] hover:shadow-md disabled:opacity-50"
                     >
                       {prompt}
                     </button>
@@ -871,14 +871,14 @@ export function AdamChatClient() {
                 autoCorrect="off"
                 autoCapitalize="off"
                 disabled={isLoading.sending}
-                className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#5b21b6] placeholder:text-[#c4b5fd] focus:outline-none disabled:opacity-60 md:text-sm"
+                className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#0f766e] placeholder:text-[#99f6e4] focus:outline-none disabled:opacity-60 md:text-sm"
                 rows={1}
               />
               <button
                 type="button"
                 onClick={() => handleSendMessage()}
                 disabled={isLoading.sending || !input.trim() || hasPendingResponse}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#8b5cf6] to-[#a78bfa] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#14b8a6] to-[#5eead4] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
