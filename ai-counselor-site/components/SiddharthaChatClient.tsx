@@ -446,11 +446,17 @@ export function SiddharthaChatClient() {
         throw new Error(serverMessage);
       }
 
-      const data = (await res.json()) as { sessionId: string; message: string };
-      const aiContent = data.message;
+      const data = (await res.json()) as {
+        conversationId?: string;
+        content?: string;
+        counselorId?: string;
+        tokensUsed?: number;
+      };
+      const aiContent = data.content ?? "";
 
-      if (data.sessionId && !activeSessionId) {
-        setActiveSessionId(data.sessionId);
+      const resolvedConversationId = data.conversationId ?? activeSessionId ?? null;
+      if (!activeSessionId && resolvedConversationId) {
+        setActiveSessionId(resolvedConversationId);
         loadSessions();
       }
 
@@ -458,8 +464,8 @@ export function SiddharthaChatClient() {
         prev.map((msg) => (msg.id === tempAiId ? { ...msg, content: aiContent, pending: false } : msg)),
       );
 
-      if (!activeSessionId && data.sessionId) {
-        setActiveSessionId(data.sessionId);
+      if (!activeSessionId && resolvedConversationId) {
+        setActiveSessionId(resolvedConversationId);
       }
     } catch (err) {
       hasError = true;
