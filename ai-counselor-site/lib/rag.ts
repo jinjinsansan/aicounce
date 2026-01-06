@@ -1,10 +1,6 @@
 import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
 async function createEmbedding(text: string) {
   if (!process.env.OPENAI_API_KEY) {
     return null;
@@ -50,11 +46,6 @@ export async function searchRagContext(
   matchCount = 5,
 ) {
   if (!hasSupabaseConfig() || !process.env.OPENAI_API_KEY) {
-    return { context: "", sources: [] };
-  }
-
-  if (!isUuid(counselorId)) {
-    console.warn(`[RAG] Skipping lookup for non-UUID counselor id: ${counselorId}`);
     return { context: "", sources: [] };
   }
 
