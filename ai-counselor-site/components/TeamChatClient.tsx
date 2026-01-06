@@ -452,7 +452,18 @@ export function TeamChatClient() {
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
 
       if (wasActive) {
-        handleNewChat();
+        // Don't call handleNewChat() to avoid session restoration
+        // Just clear the current session
+        setActiveSessionId(null);
+        setMessages([]);
+        setHasLoadedMessages(true);
+        
+        try {
+          window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+        } catch (error) {
+          console.error("[Delete] Failed to clear localStorage:", error);
+        }
+        
         if (isMobile) {
           setIsSidebarOpen(false);
         }
