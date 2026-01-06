@@ -874,12 +874,12 @@ export function SiddharthaChatClient() {
               <div className="flex h-full flex-col items-center justify-center gap-8">
                 <div className="flex flex-col items-center gap-4">
                 <div className="relative h-32 w-32 overflow-hidden rounded-2xl bg-white shadow-lg">
-                  <Image src="/images/counselors/michelle.png" alt="Michelle" fill className="object-contain" sizes="128px" />
+                  <Image src="/images/counselors/siddhartha.png" alt="Siddhartha" fill className="object-contain" sizes="128px" />
                   </div>
                   <div className="text-center">
-                    <h2 className="text-2xl font-bold text-[#92400e]">こんにちは、ミシェルです</h2>
-                    <p className="mt-2 text-sm text-[#b1637d]">心のモヤモヤ、誰にも言えない悩み、なんでも話してください。</p>
-                    <p className="mt-1 text-sm text-[#b1637d]">私はあなたの親となって、一緒に答えを探します。</p>
+                    <h2 className="text-2xl font-bold text-[#92400e]">合掌、シッダールタです</h2>
+                    <p className="mt-2 text-sm text-[#b1637d]">心の苦しみ、迷い、すべてをありのままに。</p>
+                    <p className="mt-1 text-sm text-[#b1637d]">仏の智慧と慈悲で、共に平安の道を歩みましょう。</p>
                   </div>
                 </div>
 
@@ -904,7 +904,7 @@ export function SiddharthaChatClient() {
                     >
                       {message.role === "assistant" && (
                         <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-white shadow">
-                          <Image src="/images/counselors/michelle.png" alt="Michelle" fill className="object-contain" sizes="48px" />
+                          <Image src="/images/counselors/siddhartha.png" alt="Siddhartha" fill className="object-contain" sizes="48px" />
                         </div>
                       )}
                       <div
@@ -1010,7 +1010,7 @@ export function SiddharthaChatClient() {
                     }, 300);
                   }
                 }}
-                placeholder="ミシェルに話しかける..."
+                placeholder="シッダールタに話しかける..."
                 enterKeyHint="send"
                 autoComplete="off"
                 autoCorrect="off"
@@ -1028,7 +1028,7 @@ export function SiddharthaChatClient() {
                 {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-2 text-center text-xs text-[#c07b8f]">ミシェルAIは誤った情報を生成する場合があります。</p>
+            <p className="mt-2 text-center text-xs text-[#c07b8f]">シッダールタAIは誤った情報を生成する場合があります。</p>
           </div>
         </div>
       </main>
