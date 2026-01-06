@@ -23,8 +23,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Siddhartha AI is currently disabled" }, { status: 503 });
   }
 
-  if (!siddharthaEnv.openAiApiKey || !siddharthaEnv.assistantId) {
-    return NextResponse.json({ error: "OpenAI環境変数が不足しています" }, { status: 500 });
+  if (!siddharthaEnv.openAiApiKey) {
+    console.error("[Siddhartha Chat] OPENAI_API_KEY is missing");
+    return NextResponse.json({ error: "OpenAI APIキーが設定されていません" }, { status: 500 });
+  }
+
+  if (!siddharthaEnv.assistantId) {
+    console.error("[Siddhartha Chat] SIDDHARTHA_ASSISTANT_ID is missing");
+    return NextResponse.json({ error: "Assistant IDが設定されていません。Vercel環境変数にSIDDHARTHA_ASSISTANT_IDを追加してください。" }, { status: 500 });
   }
 
   const body = await request.json().catch(() => null);
