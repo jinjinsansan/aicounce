@@ -585,7 +585,7 @@ export function GeminiChatClient() {
     <div className="mx-auto max-w-3xl space-y-4" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
       {Array.from({ length: 3 }).map((_, idx) => (
         <div key={`message-skeleton-${idx}`} className="flex gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#e9d5ff]/60" />
+          <div className="h-10 w-10 rounded-full bg-[#fae8ff]/60" />
           <div className="h-20 flex-1 rounded-2xl bg-white/70 shadow-inner animate-pulse" />
         </div>
       ))}
@@ -612,7 +612,7 @@ export function GeminiChatClient() {
         </div>
       )}
       <aside
-        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#e9d5ff] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
+        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#fae8ff] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
@@ -647,7 +647,7 @@ export function GeminiChatClient() {
                   "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                   session.id === activeSessionId
                     ? "border-[#d8b4fe] bg-[#f5f3ff] text-[#7e22ce]"
-                    : "border-transparent bg-transparent text-[#a855f7] hover:border-[#e9d5ff] hover:bg-[#fdf4ff]",
+                    : "border-transparent bg-transparent text-[#a855f7] hover:border-[#fae8ff] hover:bg-[#fdf4ff]",
                 )}
               >
                 <div className="flex min-w-0 items-center gap-2">
@@ -675,7 +675,7 @@ export function GeminiChatClient() {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#e9d5ff] bg-white/95 px-4 py-6 shadow-xl">
+          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#fae8ff] bg-white/95 px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-semibold text-[#9333ea]">履歴</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
@@ -719,7 +719,7 @@ export function GeminiChatClient() {
                       "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                       session.id === activeSessionId
                         ? "border-[#d8b4fe] bg-[#f5f3ff] text-[#7e22ce]"
-                        : "border-transparent bg-transparent text-[#a855f7] hover:border-[#e9d5ff] hover:bg-[#fdf4ff]",
+                        : "border-transparent bg-transparent text-[#a855f7] hover:border-[#fae8ff] hover:bg-[#fdf4ff]",
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -752,7 +752,7 @@ export function GeminiChatClient() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full border border-[#e9d5ff] bg-white text-[#a855f7] hover:bg-[#fdf4ff] md:hidden"
+              className="rounded-full border border-[#fae8ff] bg-white text-[#a855f7] hover:bg-[#fdf4ff] md:hidden"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu className="h-5 w-5" />
@@ -790,7 +790,7 @@ export function GeminiChatClient() {
                       key={prompt}
                       onClick={() => handleSendMessage(prompt)}
                       disabled={isLoading.sending}
-                      className="rounded-xl border border-[#e9d5ff] bg-white px-6 py-4 text-center text-sm text-[#7e22ce] shadow-sm transition-all hover:bg-[#fdf4ff] hover:shadow-md disabled:opacity-50"
+                      className="rounded-xl border border-[#fae8ff] bg-white px-6 py-4 text-center text-sm text-[#7e22ce] shadow-sm transition-all hover:bg-[#fdf4ff] hover:shadow-md disabled:opacity-50"
                     >
                       {prompt}
                     </button>
@@ -812,7 +812,7 @@ export function GeminiChatClient() {
                           "max-w-[80%] rounded-2xl px-5 py-3 shadow-sm",
                           message.role === "user"
                             ? "bg-[#c084fc] text-white"
-                            : "bg-white border border-[#e9d5ff] text-[#7e22ce]",
+                            : "bg-white border border-[#fae8ff] text-[#7e22ce]",
                         )}
                       >
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">
