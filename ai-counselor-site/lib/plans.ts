@@ -16,14 +16,14 @@ export const PLAN_DEFINITIONS: Record<PlanSlug, PlanDefinition> = {
     id: "basic",
     label: "ベーシックプラン",
     description: "個別カウンセリング使い放題",
-    priceYen: 1980,
+    priceYen: 500,
     paypalPlanId: PAYPAL_BASIC_PLAN_ID || undefined,
   },
   premium: {
     id: "premium",
     label: "プレミアムプラン",
     description: "個別+チームカウンセリング",
-    priceYen: 3980,
+    priceYen: 1500,
     paypalPlanId: PAYPAL_PREMIUM_PLAN_ID || undefined,
   },
 };

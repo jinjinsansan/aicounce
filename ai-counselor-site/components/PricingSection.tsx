@@ -19,7 +19,7 @@ export default function PricingSection() {
     },
     {
       name: "ベーシック",
-      price: "¥1,980",
+      price: "¥500",
       period: "/月",
       description: "毎日使える安心プラン",
       features: [
@@ -36,7 +36,7 @@ export default function PricingSection() {
     },
     {
       name: "プレミアム",
-      price: "¥3,980",
+      price: "¥1,500",
       period: "/月",
       description: "より深い対話を求める方へ",
       features: [
