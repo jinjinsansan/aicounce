@@ -8,12 +8,12 @@ import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import MichelleChatClient from "@/components/MichelleChatClient";
 import ClinicalChatClient from "@/components/ClinicalChatClient";
+import NazareChatClient from "@/components/NazareChatClient";
 import {
   AdamChatClient,
   GeminiChatClient,
   ClaudeChatClient,
   DeepChatClient,
-  NazareChatClient,
 } from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
