@@ -10,11 +10,9 @@ import MichelleChatClient from "@/components/MichelleChatClient";
 import ClinicalChatClient from "@/components/ClinicalChatClient";
 import NazareChatClient from "@/components/NazareChatClient";
 import AdamChatClient from "@/components/AdamChatClient";
-import {
-  GeminiChatClient,
-  ClaudeChatClient,
-  DeepChatClient,
-} from "@/components/GeneralCounselorChatClient";
+import GeminiChatClient from "@/components/GeminiChatClient";
+import ClaudeChatClient from "@/components/ClaudeChatClient";
+import DeepChatClient from "@/components/DeepChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
