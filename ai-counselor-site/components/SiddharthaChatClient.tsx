@@ -111,14 +111,19 @@ export function SiddharthaChatClient() {
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
     try {
-      const res = await fetch("/api/siddhartha/sessions");
+      const res = await fetch("/api/conversations?counselorId=siddhartha");
       if (res.status === 401) {
         setNeedsAuth(true);
         return;
       }
       if (!res.ok) throw new Error("Failed to load sessions");
-      const data = (await res.json()) as SessionsResponse;
-      setSessions(data.sessions ?? []);
+      const data = await res.json();
+      const allConversations = data.conversations || [];
+      setSessions(allConversations.map((c: any) => ({
+        id: c.id,
+        title: c.title || "新しいチャット",
+        updated_at: c.updated_at,
+      })));
     } catch (err) {
       console.error(err);
     } finally {
@@ -132,7 +137,7 @@ export function SiddharthaChatClient() {
       debugLog("[loadMessages] Starting to load messages for session:", sessionId);
       setIsLoading((prev) => ({ ...prev, messages: true }));
       try {
-        const res = await fetch(`/api/siddhartha/sessions/${sessionId}/messages`);
+        const res = await fetch(`/api/conversations/${sessionId}/messages`);
         debugLog("[loadMessages] Response status:", res.status);
 
         if (res.status === 401) {
@@ -149,16 +154,21 @@ export function SiddharthaChatClient() {
         }
         if (!res.ok) throw new Error("Failed to load messages");
 
-        const data = (await res.json()) as MessagesResponse;
+        const data = await res.json();
+        const messagesData = data.messages || [];
         debugLog("[loadMessages] Received data:", {
-          sessionId: data.session?.id,
-          messagesCount: data.messages?.length ?? 0,
-          firstMessage: data.messages?.[0]?.content?.substring(0, 50),
+          messagesCount: messagesData.length,
+          firstMessage: messagesData[0]?.content?.substring(0, 50),
         });
 
-        setMessages(data.messages ?? []);
+        setMessages(messagesData.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          created_at: msg.created_at,
+        })));
         setHasLoadedMessages(true);
-        debugLog("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
+        debugLog("[loadMessages] Messages state updated with", messagesData.length, "messages");
       } catch (err) {
         console.error("[loadMessages] Error loading messages:", err);
       } finally {
@@ -445,13 +455,14 @@ export function SiddharthaChatClient() {
     let hasError = false;
 
     try {
-      const res = await fetch("/api/siddhartha/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: activeSessionId ?? undefined,
+          counselorId: "siddhartha",
+          conversationId: activeSessionId ?? undefined,
           message: textToSend,
-          category: !activeSessionId ? "life" : undefined,
+          useRag: true,
         }),
       });
 
@@ -514,7 +525,7 @@ export function SiddharthaChatClient() {
     const wasActive = activeSessionId === sessionId;
 
     try {
-      const res = await fetch(`/api/siddhartha/sessions/${sessionId}`, { method: "DELETE" });
+      const res = await fetch(`/api/conversations/${sessionId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete session");
 
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
