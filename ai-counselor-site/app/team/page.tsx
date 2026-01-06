@@ -70,8 +70,10 @@ export default function TeamCounselingPage() {
   const [accessState, setAccessState] = useState<{ canUseTeam: boolean } | null>(null);
   const [accessLoading, setAccessLoading] = useState(true);
   const [requiresLogin, setRequiresLogin] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
 
   const abortRef = useRef<AbortController | null>(null);
+  const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const desktopTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const mobileTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -333,6 +335,12 @@ export default function TeamCounselingPage() {
       const controller = new AbortController();
       abortRef.current = controller;
       setIsRunning(true);
+      setLoadingSeconds(0);
+      
+      // Start counting seconds
+      loadingIntervalRef.current = setInterval(() => {
+        setLoadingSeconds((prev) => prev + 1);
+      }, 1000);
       try {
         const res = await fetch("/api/team/respond", {
           method: "POST",
@@ -359,6 +367,11 @@ export default function TeamCounselingPage() {
       } finally {
         setIsRunning(false);
         abortRef.current = null;
+        if (loadingIntervalRef.current) {
+          clearInterval(loadingIntervalRef.current);
+          loadingIntervalRef.current = null;
+        }
+        setLoadingSeconds(0);
       }
     },
     [appendMessages, participants, showBanner],
@@ -636,7 +649,7 @@ export default function TeamCounselingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#fff9f5] via-[#fef5f1] to-[#fef0e9]">
+    <div className="min-h-screen bg-[#fffdfa]">
       <div className="mx-auto hidden w-full max-w-7xl px-6 py-10 md:grid md:grid-cols-[320px_1fr] md:gap-6">
         <aside className="hidden md:block">
           <div className="sticky top-6 flex h-[calc(100vh-4rem)] flex-col space-y-4 rounded-3xl border border-[#f5d0c5]/30 bg-white/80 p-5 shadow-xl backdrop-blur-lg">
@@ -848,8 +861,16 @@ export default function TeamCounselingPage() {
             })}
 
             {isRunning && (
-              <div className="flex items-center gap-2 text-sm text-[#8b5a3c]">
-                <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
+              <div className="flex flex-col items-center gap-2 text-center rounded-2xl border border-[#f5d0c5]/40 bg-white/80 px-6 py-4">
+                <div className="flex items-center gap-2 text-sm text-[#8b5a3c]">
+                  <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
+                </div>
+                <div className="text-2xl font-bold text-[#d97757] tabular-nums">
+                  {loadingSeconds}秒
+                </div>
+                <p className="text-xs text-[#a16446]">
+                  参加AIが多いほど応答に時間がかかります
+                </p>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -1013,8 +1034,16 @@ export default function TeamCounselingPage() {
             })}
 
             {isRunning && (
-              <div className="flex items-center gap-2 text-sm text-[#8b5a3c]">
-                <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
+              <div className="flex flex-col items-center gap-2 text-center rounded-2xl border border-[#f5d0c5]/40 bg-white/80 px-4 py-3">
+                <div className="flex items-center gap-2 text-sm text-[#8b5a3c]">
+                  <Loader2 className="h-4 w-4 animate-spin" /> AI が応答中...
+                </div>
+                <div className="text-2xl font-bold text-[#d97757] tabular-nums">
+                  {loadingSeconds}秒
+                </div>
+                <p className="text-xs text-[#a16446]">
+                  参加AIが多いほど応答に時間がかかります
+                </p>
               </div>
             )}
             <div ref={messagesEndRef} />
