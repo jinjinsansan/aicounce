@@ -49,7 +49,7 @@ export default function SiddharthaDetailPage() {
     {
       step: "3",
       title: "実践的な提案",
-      description: "呼吸瞑想や慈悲の瞑想など、無理なく始められる小さな一歩を一緒に見つけます。",
+      detail: "呼吸瞑想や慈悲の瞑想など、無理なく始められる小さな一歩を一緒に見つけます。",
     },
   ];
 
