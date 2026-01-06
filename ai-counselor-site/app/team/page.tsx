@@ -564,6 +564,9 @@ export default function TeamCounselingPage() {
 
     return () => {
       abortRef.current?.abort();
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+      }
     };
   }, [createSession, loadMessagesForSession, persistActiveSessionId, refreshSessions]);
 
