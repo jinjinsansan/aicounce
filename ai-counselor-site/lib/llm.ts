@@ -3,6 +3,8 @@ const PLACEHOLDER =
 
 const DEFAULT_CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-haiku-20240307";
 const FALLBACK_CLAUDE_MODEL = process.env.CLAUDE_FALLBACK_MODEL ?? "claude-3-haiku-20240307";
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash-latest";
+const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-1.5-flash-latest";
 
 type LLMResponse = {
   content: string;
@@ -170,7 +172,7 @@ export async function callGemini({
   systemPrompt,
   messages,
   ragContext,
-  model = "gemini-1.5-pro",
+  model = DEFAULT_GEMINI_MODEL,
 }: CallOptions): Promise<LLMResponse> {
   console.log("[LLM] GOOGLE_API_KEY defined?", !!process.env.GOOGLE_API_KEY);
   if (!process.env.GOOGLE_API_KEY) {
@@ -186,34 +188,54 @@ export async function callGemini({
       },
     ],
   }));
+  let currentModel = model;
+  let attemptedFallback = false;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: {
-          role: "system",
-          parts: [{ text: systemPrompt }],
-        },
-        contents: preparedMessages,
-      }),
-    },
-  );
+  while (true) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${process.env.GOOGLE_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: {
+            role: "system",
+            parts: [{ text: systemPrompt }],
+          },
+          contents: preparedMessages,
+        }),
+      },
+    );
 
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(`[LLM] Gemini API error (${response.status})`, text);
-    return { content: PLACEHOLDER };
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(
+        `[LLM] Gemini API error (${response.status}) model=${currentModel}`,
+        text,
+      );
+      const shouldFallback =
+        !attemptedFallback &&
+        response.status === 404 &&
+        FALLBACK_GEMINI_MODEL &&
+        currentModel !== FALLBACK_GEMINI_MODEL;
+
+      if (shouldFallback) {
+        attemptedFallback = true;
+        console.warn(`[LLM] Gemini falling back to ${FALLBACK_GEMINI_MODEL}`);
+        currentModel = FALLBACK_GEMINI_MODEL;
+        continue;
+      }
+
+      return { content: PLACEHOLDER };
+    }
+
+    const data = await safeJson(response);
+    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) {
+      console.error("[LLM] Gemini response missing content", data);
+    }
+    return { content: content || PLACEHOLDER };
   }
-
-  const data = await safeJson(response);
-  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!content) {
-    console.error("[LLM] Gemini response missing content", data);
-  }
-  return { content: content || PLACEHOLDER };
 }
 
 export async function callDeepseek({

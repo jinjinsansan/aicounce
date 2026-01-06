@@ -120,7 +120,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: GEMINI_SYSTEM_PROMPT,
     negativeInstruction: "専門的な診断名や過度な専門用語は避け、視点の違いを丁寧に説明してください。",
     provider: "gemini",
-    model: "gemini-1.5-pro",
+    model: process.env.NEXT_PUBLIC_GEMINI_MODEL ?? "gemini-1.5-flash-latest",
   },
   claude: {
     name: "倫理的カウンセリング",
@@ -165,7 +165,6 @@ export async function POST(req: Request) {
     }
 
     const selected: Participant[] = participants
-      .slice(0, 5)
       .map((id: string) => {
         const c = FALLBACK_COUNSELORS.find((v) => v.id === id || v.id === id.toLowerCase());
         const spec = AI_SPECIALIZATIONS[id.toLowerCase()] ?? {

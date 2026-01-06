@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 
-type Participant = { id: string; name: string; iconUrl: string };
+type Participant = { id: string; name: string; iconUrl: string; comingSoon?: boolean };
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -78,7 +78,13 @@ export default function TeamCounselingPage() {
   const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const availableParticipants: Participant[] = useMemo(
-    () => FALLBACK_COUNSELORS.map((c) => ({ id: c.id, name: c.name, iconUrl: c.iconUrl ?? "" })),
+    () =>
+      FALLBACK_COUNSELORS.map((c) => ({
+        id: c.id,
+        name: c.name,
+        iconUrl: c.iconUrl ?? "",
+        comingSoon: Boolean(c.comingSoon),
+      })),
     [],
   );
 
@@ -492,7 +498,6 @@ export default function TeamCounselingPage() {
         if (prev.includes(id)) {
           next = prev.filter((p) => p !== id);
         } else {
-          if (prev.length >= 5) return prev;
           next = [...prev, id];
         }
 
@@ -636,9 +641,9 @@ export default function TeamCounselingPage() {
         <aside className="hidden md:block">
           <div className="sticky top-6 flex h-[calc(100vh-4rem)] flex-col space-y-4 rounded-3xl border border-[#f5d0c5]/30 bg-white/80 p-5 shadow-xl backdrop-blur-lg">
             <div className="rounded-2xl border border-[#f5d0c5]/40 bg-gradient-to-br from-[#fff9f5] via-[#fff1ec] to-[#ffe9df] p-4 text-[#6b4423]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d97757]">Team Counseling</p>
-              <h2 className="mt-2 text-lg font-bold">多視点AIのセッション</h2>
-              <p className="mt-1 text-sm text-[#a16446]">個別チャットと同じ横幅・固定サイドバーで履歴と参加AIを管理できます。</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d97757]">AI Team</p>
+              <h2 className="mt-2 text-lg font-bold">多視点AIセッション</h2>
+              <p className="mt-1 text-sm text-[#a16446]">お好みのAIを選んで、ひとつの画面で対話と履歴を落ち着いて見渡せます。</p>
             </div>
             <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1">
               <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
@@ -713,24 +718,37 @@ export default function TeamCounselingPage() {
 
               <div className="rounded-2xl border border-[#f5d0c5]/40 bg-white/80 p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-[#6b4423]">参加AI（最大5名）</p>
+                  <p className="text-sm font-semibold text-[#6b4423]">参加AI</p>
                   <span className="text-xs text-[#c08d75]">{participants.length} 名選択中</span>
                 </div>
                 <div className="space-y-2">
                   {availableParticipants.map((p) => {
                     const checked = participants.includes(p.id);
+                    const isDisabled = Boolean(p.comingSoon);
                     return (
                       <button
                         key={p.id}
-                        onClick={() => toggleParticipant(p.id)}
-                        className="flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/40 bg-white px-3 py-2 text-left hover:bg-[#fff4ef]"
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => {
+                          if (isDisabled) return;
+                          toggleParticipant(p.id);
+                        }}
+                        className={`flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/40 px-3 py-2 text-left transition ${
+                          isDisabled ? "cursor-not-allowed bg-[#fdf7f3] opacity-60" : "bg-white hover:bg-[#fff4ef]"
+                        }`}
                       >
                         {checked ? (
                           <CheckSquare className="h-4 w-4 text-[#d97757]" />
                         ) : (
                           <Square className="h-4 w-4 text-[#c9a394]" />
                         )}
-                        <span className="text-sm text-[#6b4423]">{p.name}</span>
+                        <div className="flex flex-1 items-center justify-between text-sm text-[#6b4423]">
+                          <span>{p.name}</span>
+                          {isDisabled && (
+                            <span className="text-xs font-medium text-[#c08d75]">準備中</span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
@@ -743,7 +761,7 @@ export default function TeamCounselingPage() {
         <section className="flex h-[calc(100vh-4rem)] flex-col rounded-3xl border border-[#f5d0c5]/30 bg-white/85 shadow-xl backdrop-blur-lg">
           <header className="flex flex-col gap-3 border-b border-[#f5d0c5]/30 bg-gradient-to-r from-[#fff9f5] to-[#fef5f1] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d97757]">Live Session</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d97757]">Now Talking</p>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <h1 className="text-2xl font-bold text-[#6b4423]">チームカウンセリング</h1>
                 {participants.length > 0 && (
@@ -752,7 +770,7 @@ export default function TeamCounselingPage() {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-[#a16446]">個別チャットと同じワイドレイアウトで、AIチームの会話を一望できます。</p>
+              <p className="text-sm text-[#a16446]">広いレイアウトでAIチームの会話を並べて読めるので、意見の違いがひと目で分かります。</p>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -909,23 +927,34 @@ export default function TeamCounselingPage() {
 
         <details className="border-b border-[#f5d0c5]/30 bg-white/80 backdrop-blur-sm">
           <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[#8b5a3c]">
-            参加AI（最大5名）- タップして選択
+            参加AI - タップして選択
           </summary>
           <div className="space-y-2 px-4 pb-3">
             {availableParticipants.map((p) => {
               const checked = participants.includes(p.id);
+              const isDisabled = Boolean(p.comingSoon);
               return (
                 <button
                   key={p.id}
-                  onClick={() => toggleParticipant(p.id)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/30 bg-white px-3 py-2 text-left active:bg-[#fff9f5]"
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    toggleParticipant(p.id);
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-xl border border-[#f5d0c5]/30 px-3 py-2 text-left active:bg-[#fff9f5] ${
+                    isDisabled ? "cursor-not-allowed bg-[#fdf7f3] opacity-60" : "bg-white"
+                  }`}
                 >
                   {checked ? (
                     <CheckSquare className="h-4 w-4 text-[#d97757]" />
                   ) : (
                     <Square className="h-4 w-4 text-[#c9a394]" />
                   )}
-                  <span className="text-sm text-[#6b4423]">{p.name}</span>
+                  <div className="flex flex-1 items-center justify-between text-sm text-[#6b4423]">
+                    <span>{p.name}</span>
+                    {isDisabled && <span className="text-xs font-medium text-[#c08d75]">準備中</span>}
+                  </div>
                 </button>
               );
             })}

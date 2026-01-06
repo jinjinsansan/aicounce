@@ -149,7 +149,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     description: "双面的な視点から、物事を多角的に捉え、新しい気づきを与えます。",
     iconUrl: "/images/counselors/gemini.png",
     modelType: "gemini",
-    modelName: "gemini-1.5-pro",
+    modelName: "gemini-1.5-flash-latest",
     ragEnabled: false,
     systemPrompt: COUNSELOR_SYSTEM_PROMPTS.gemini,
     tags: ["多角的", "双面性", "発見"],
