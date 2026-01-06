@@ -1,8 +1,9 @@
 -- Fix match_rag_chunks function to properly use TEXT for counselor_id
 -- This ensures "siddhartha" (text) works instead of expecting UUID
 
--- Drop the existing function first
+-- Drop ALL versions of the function (both UUID and TEXT versions)
 DROP FUNCTION IF EXISTS public.match_rag_chunks(vector, text, integer);
+DROP FUNCTION IF EXISTS public.match_rag_chunks(vector, uuid, integer);
 
 -- Recreate with correct parameter name
 CREATE FUNCTION public.match_rag_chunks (
