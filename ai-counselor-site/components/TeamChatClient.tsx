@@ -304,10 +304,12 @@ export function TeamChatClient() {
         currentSessionId = createData.session.id;
         setActiveSessionId(currentSessionId);
         
-        try {
-          window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, currentSessionId);
-        } catch (e) {
-          console.error("[Session] Failed to save to localStorage:", e);
+        if (currentSessionId) {
+          try {
+            window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, currentSessionId);
+          } catch (e) {
+            console.error("[Session] Failed to save to localStorage:", e);
+          }
         }
 
         await loadSessions();
