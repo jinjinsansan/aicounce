@@ -8,6 +8,7 @@ import { ADAM_SYSTEM_PROMPT } from "@/lib/team/prompts/adam";
 import { GEMINI_SYSTEM_PROMPT } from "@/lib/team/prompts/gemini";
 import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
 import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
+import { NAZARE_SYSTEM_PROMPT } from "@/lib/team/prompts/nazare";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -74,6 +75,10 @@ const AI_ROLES = {
     greeting: "こんにちは。一般的なAIカウンセラーのアダムです。中立的で実用的なアドバイスを提供します。",
     role: "常識的で実用的なアドバイスと多角的な視点の提供",
   },
+  nazare: {
+    greeting: "こんにちは。静かな祈りの姿勢で寄り添うナザレです。",
+    role: "聖書に根ざした共感と祈り・実践の提案",
+  },
   gemini: {
     greeting: "こんにちは。二つの視点で整理するジェミニです。多角的に状況を捉えます。",
     role: "視点の切り替えと選択肢の提示",
@@ -111,6 +116,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["実用的", "多角的", "常識的", "バランス"],
     systemPrompt: ADAM_SYSTEM_PROMPT,
     negativeInstruction: "特定の心理学理論の専門用語（ガムテープ、認知の歪みなど）は使わないでください。一般的でわかりやすい言葉を使ってください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  nazare: {
+    name: "聖書カウンセリング",
+    terms: ["御言葉", "祈り", "静けさ", "慈しみ"],
+    systemPrompt: NAZARE_SYSTEM_PROMPT,
+    negativeInstruction: "他の宗教や信条を否定せず、断定的な口調を避けてください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
