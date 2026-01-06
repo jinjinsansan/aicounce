@@ -277,7 +277,7 @@ async function main() {
     console.log(`  • ${doc.sourceId} -> ${docId}`);
   }
 
-  console.log("🎉 Christ counselor RAG import complete");
+  console.log("🎉 Siddhartha counselor RAG import complete");
 }
 
 main().catch((error) => {

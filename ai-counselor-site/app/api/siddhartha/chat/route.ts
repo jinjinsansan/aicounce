@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       .join("\n\n");
 
     const finalMessage = knowledgeContext
-      ? `【ユーザーメッセージ】\n${parsed.data.message}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル心理学知識を参考にして回答を構築してください。\n${knowledgeContext}`
+      ? `【ユーザーメッセージ】\n${parsed.data.message}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下の仏教経典の知識を参考にして回答を構築してください。\n${knowledgeContext}`
       : parsed.data.message;
 
     // ユーザーメッセージ保存

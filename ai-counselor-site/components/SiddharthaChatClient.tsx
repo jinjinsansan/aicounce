@@ -606,7 +606,7 @@ export function SiddharthaChatClient() {
   const handleShare = async () => {
     if (!messages.length) return;
     const text = messages
-      .map((m) => `${m.role === "user" ? "あなた" : "ミシェル心理学"}: ${m.content}`)
+      .map((m) => `${m.role === "user" ? "あなた" : "シッダールタ"}: ${m.content}`)
       .join("\n\n");
 
     try {
