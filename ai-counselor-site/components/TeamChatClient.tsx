@@ -844,9 +844,12 @@ export function TeamChatClient() {
               {messages.map((m) => {
                 if (m.role === "user") {
                   return (
-                    <div key={m.id} className="flex justify-end">
+                    <div key={m.id} className="flex justify-end gap-3">
                       <div className="max-w-[80%] rounded-2xl bg-slate-900 px-5 py-3 text-white shadow-sm">
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
+                      </div>
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-700 shadow">
+                        <User className="h-5 w-5 text-white" />
                       </div>
                     </div>
                   );
