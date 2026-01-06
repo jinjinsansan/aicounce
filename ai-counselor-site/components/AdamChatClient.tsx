@@ -865,7 +865,7 @@ export function AdamChatClient() {
                     }, 300);
                   }
                 }}
-                placeholder="ナザレに話しかける..."
+                placeholder="アダムに話しかける..."
                 enterKeyHint="send"
                 autoComplete="off"
                 autoCorrect="off"
@@ -883,7 +883,7 @@ export function AdamChatClient() {
                 {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-2 text-center text-xs text-[#a78bfa]">ナザレAIは誤った情報を生成する場合があります。</p>
+            <p className="mt-2 text-center text-xs text-[#14b8a6]">アダムAIは誤った情報を生成する場合があります。</p>
           </div>
         </div>
       </main>
