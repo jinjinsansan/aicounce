@@ -9,8 +9,8 @@ import ChatInterface from "@/components/ChatInterface";
 import MichelleChatClient from "@/components/MichelleChatClient";
 import ClinicalChatClient from "@/components/ClinicalChatClient";
 import NazareChatClient from "@/components/NazareChatClient";
+import AdamChatClient from "@/components/AdamChatClient";
 import {
-  AdamChatClient,
   GeminiChatClient,
   ClaudeChatClient,
   DeepChatClient,
