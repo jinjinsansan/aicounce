@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
         .eq("id", activeConversationId)
         .single();
       if (error) {
-        return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+        console.warn("Conversation not found, creating new one:", activeConversationId);
+        activeConversationId = null;
       }
     }
 
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
           {
             user_id: session.user.id,
             counselor_id: counselorId,
-            title: `${counselor.name}との相談`,
+            title: message.trim().slice(0, 60) || `${counselor.name}との相談`,
           },
         ])
         .select()
