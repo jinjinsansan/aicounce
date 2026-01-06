@@ -278,7 +278,22 @@ export async function POST(req: Request) {
       return { author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl };
     });
 
-    const responses = await Promise.all(responsePromises);
+    // Promise.allSettled を使用して、一部のAIが失敗しても他のAIの応答を返す
+    const results = await Promise.allSettled(responsePromises);
+    const responses = results.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      } else {
+        const p = selected[index];
+        console.error(`[Team] AI ${p.name} failed:`, result.reason);
+        return {
+          author: p.name,
+          authorId: p.id,
+          content: "申し訳ございません。現在応答できません。しばらくしてから再度お試しください。",
+          iconUrl: p.iconUrl,
+        };
+      }
+    });
 
     return NextResponse.json({ responses });
   } catch (error) {
