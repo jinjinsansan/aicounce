@@ -133,7 +133,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: GEMINI_SYSTEM_PROMPT,
     negativeInstruction: "専門的な診断名や過度な専門用語は避け、視点の違いを丁寧に説明してください。",
     provider: "gemini",
-    model: process.env.NEXT_PUBLIC_GEMINI_MODEL ?? "gemini-1.5-flash",
+    model: process.env.NEXT_PUBLIC_GEMINI_MODEL ?? "gemini-2.5-flash",
   },
   claude: {
     name: "倫理的カウンセリング",
