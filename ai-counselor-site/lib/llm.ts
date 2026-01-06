@@ -96,6 +96,7 @@ export async function callClaude({
 }: CallOptions): Promise<LLMResponse> {
   console.log("[LLM] ANTHROPIC_API_KEY defined?", !!process.env.ANTHROPIC_API_KEY);
   if (!process.env.ANTHROPIC_API_KEY) {
+    console.error("[LLM] Claude call aborted: ANTHROPIC_API_KEY missing");
     return { content: PLACEHOLDER };
   }
 
@@ -126,12 +127,15 @@ export async function callClaude({
 
   if (!response.ok) {
     const text = await response.text();
-    console.error("Claude API error", text);
+    console.error(`[LLM] Claude API error (${response.status})`, text);
     return { content: PLACEHOLDER };
   }
 
   const data = await safeJson(response);
   const content = data?.content?.[0]?.text;
+  if (!content) {
+    console.error("[LLM] Claude response missing content", data);
+  }
   return {
     content: content || PLACEHOLDER,
     tokensUsed:
@@ -147,6 +151,7 @@ export async function callGemini({
 }: CallOptions): Promise<LLMResponse> {
   console.log("[LLM] GOOGLE_API_KEY defined?", !!process.env.GOOGLE_API_KEY);
   if (!process.env.GOOGLE_API_KEY) {
+    console.error("[LLM] Gemini call aborted: GOOGLE_API_KEY missing");
     return { content: PLACEHOLDER };
   }
 
@@ -176,12 +181,15 @@ export async function callGemini({
 
   if (!response.ok) {
     const text = await response.text();
-    console.error("Gemini API error", text);
+    console.error(`[LLM] Gemini API error (${response.status})`, text);
     return { content: PLACEHOLDER };
   }
 
   const data = await safeJson(response);
   const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!content) {
+    console.error("[LLM] Gemini response missing content", data);
+  }
   return { content: content || PLACEHOLDER };
 }
 
@@ -193,6 +201,7 @@ export async function callDeepseek({
 }: CallOptions): Promise<LLMResponse> {
   console.log("[LLM] DEEPSEEK_API_KEY defined?", !!process.env.DEEPSEEK_API_KEY);
   if (!process.env.DEEPSEEK_API_KEY) {
+    console.error("[LLM] Deepseek call aborted: DEEPSEEK_API_KEY missing");
     return { content: PLACEHOLDER };
   }
 
@@ -218,12 +227,15 @@ export async function callDeepseek({
 
   if (!response.ok) {
     const text = await response.text();
-    console.error("Deepseek API error", text);
+    console.error(`[LLM] Deepseek API error (${response.status})`, text);
     return { content: PLACEHOLDER };
   }
 
   const data = await safeJson(response);
   const content = data?.choices?.[0]?.message?.content;
+  if (!content) {
+    console.error("[LLM] Deepseek response missing content", data);
+  }
   return {
     content: content || PLACEHOLDER,
     tokensUsed: data?.usage?.total_tokens,
