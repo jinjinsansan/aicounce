@@ -456,7 +456,9 @@ export function TeamChatClient() {
         // Just clear the current session
         setActiveSessionId(null);
         setMessages([]);
+        setError(null);
         setHasLoadedMessages(true);
+        setParticipants([...DEFAULT_PARTICIPANTS]);
         
         try {
           window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
