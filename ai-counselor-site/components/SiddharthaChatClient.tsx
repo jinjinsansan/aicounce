@@ -580,7 +580,7 @@ export function SiddharthaChatClient() {
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
           <p className="text-lg font-semibold text-[#92400e]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#b1637d]">仏教カウンセリングAIをご利用いただくにはログインしてください。</p>
+          <p className="mt-4 text-sm text-[#92400e]">仏教カウンセリングAIをご利用いただくにはログインしてください。</p>
         </div>
       </div>
     );
@@ -789,7 +789,7 @@ export function SiddharthaChatClient() {
             {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#f59e0b]" />}
           </div>
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-[#b1637d]" onClick={handleShare}>
+            <Button variant="ghost" size="sm" className="text-[#92400e]" onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" /> 共有
             </Button>
           )}
@@ -807,8 +807,8 @@ export function SiddharthaChatClient() {
                   </div>
                   <div className="text-center">
                     <h2 className="text-2xl font-bold text-[#92400e]">合掌、シッダールタです</h2>
-                    <p className="mt-2 text-sm text-[#b1637d]">心の苦しみ、迷い、すべてをありのままに。</p>
-                    <p className="mt-1 text-sm text-[#b1637d]">仏の智慧と慈悲で、共に平安の道を歩みましょう。</p>
+                    <p className="mt-2 text-sm text-[#92400e]">心の苦しみ、迷い、すべてをありのままに。</p>
+                    <p className="mt-1 text-sm text-[#92400e]">仏の智慧と慈悲で、共に平安の道を歩みましょう。</p>
                   </div>
                 </div>
 
@@ -854,7 +854,7 @@ export function SiddharthaChatClient() {
                               <div className="h-2 w-2 animate-bounce rounded-full bg-[#f59e0b] [animation-delay:-0.15s]" />
                               <div className="h-2 w-2 animate-bounce rounded-full bg-[#f59e0b]" />
                             </div>
-                            <p className="text-xs text-[#c07b8f]">{thinkingMessages[currentThinkingIndex]}</p>
+                            <p className="text-xs text-[#92400e]">{thinkingMessages[currentThinkingIndex]}</p>
                           </div>
                         )}
                       </div>
@@ -914,7 +914,7 @@ export function SiddharthaChatClient() {
                 {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-2 text-center text-xs text-[#c07b8f]">シッダールタAIは誤った情報を生成する場合があります。</p>
+            <p className="mt-2 text-center text-xs text-[#92400e]">シッダールタAIは誤った情報を生成する場合があります。</p>
           </div>
         </div>
       </main>
