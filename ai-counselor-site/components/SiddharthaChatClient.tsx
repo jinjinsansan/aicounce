@@ -648,10 +648,10 @@ export function SiddharthaChatClient() {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff4f7] via-[#ffe9f1] to-[#ffdfe8]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
           <p className="text-lg font-semibold text-[#92400e]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#b1637d]">テープ式心理学AIをご利用いただくにはログインしてください。</p>
+          <p className="mt-4 text-sm text-[#b1637d]">仏教カウンセリングAIをご利用いただくにはログインしてください。</p>
         </div>
       </div>
     );
@@ -666,9 +666,9 @@ export function SiddharthaChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff7fa] via-[#ffeef5] to-[#ffe3ec]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#f472b6]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#f59e0b]" />
         </div>
       </div>
     );
@@ -693,7 +693,7 @@ export function SiddharthaChatClient() {
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff4f7] via-[#ffe9f1] to-[#ffdfe8] text-[#7b364d]"
+      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7] text-[#78350f]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -711,18 +711,18 @@ export function SiddharthaChatClient() {
         </div>
       )}
       <aside
-        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd4e3] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
+        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#fde68a] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
           variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#92400e] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
+          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#92400e] font-semibold shadow-sm transition hover:bg-[#fefce8]"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f472b6]">チャット</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f59e0b]">チャット</p>
         <div className="flex-1 overflow-y-auto">
           {showSessionSkeleton ? (
             <div>{sessionSkeletonNodes}</div>
@@ -774,7 +774,7 @@ export function SiddharthaChatClient() {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#ffd4e3] bg-white/95 px-4 py-6 shadow-xl">
+          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#fde68a] bg-white/95 px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-semibold text-[#92400e]">履歴</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
@@ -788,11 +788,11 @@ export function SiddharthaChatClient() {
             setIsSidebarOpen(false);
           }}
           disabled={isLoading.sending}
-          className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#92400e] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
+          className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#92400e] font-semibold shadow-sm transition hover:bg-[#fefce8]"
         >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f472b6]">チャット</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f59e0b]">チャット</p>
             <div className="flex-1 overflow-y-auto">
               {showSessionSkeleton ? (
                 <div>{sessionSkeletonNodes}</div>
@@ -818,7 +818,7 @@ export function SiddharthaChatClient() {
                       "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                       session.id === activeSessionId
                         ? "border-[#ffc0d9] bg-[#fff0f7] text-[#8b2e52]"
-                        : "border-transparent bg-transparent text-[#b1637d] hover:border-[#ffd4e3] hover:bg-[#fff8fb]",
+                        : "border-transparent bg-transparent text-[#92400e] hover:border-[#fde68a] hover:bg-[#fefce8]",
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -851,13 +851,13 @@ export function SiddharthaChatClient() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full border border-[#ffd4e3] bg-white text-[#f472b6] hover:bg-[#fff8fb] md:hidden"
+              className="rounded-full border border-[#fde68a] bg-white text-[#f59e0b] hover:bg-[#fefce8] md:hidden"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="font-semibold text-[#92400e]">{activeSession?.title || "テープ式心理学AI"}</span>
-            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#e091b3]" />}
+            <span className="font-semibold text-[#92400e]">{activeSession?.title || "仏教カウンセリングAI"}</span>
+            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#f59e0b]" />}
           </div>
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" className="text-[#b1637d]" onClick={handleShare}>
@@ -889,7 +889,7 @@ export function SiddharthaChatClient() {
                       key={prompt}
                       onClick={() => handleSendMessage(prompt)}
                       disabled={isLoading.sending}
-                      className="rounded-xl border border-[#ffd4e3] bg-white px-6 py-4 text-center text-sm text-[#7b364d] shadow-sm transition-all hover:bg-[#fff8fb] hover:shadow-md disabled:opacity-50"
+                      className="rounded-xl border border-[#fde68a] bg-white px-6 py-4 text-center text-sm text-[#78350f] shadow-sm transition-all hover:bg-[#fefce8] hover:shadow-md disabled:opacity-50"
                     >
                       {prompt}
                     </button>
@@ -912,7 +912,7 @@ export function SiddharthaChatClient() {
                           "max-w-[80%] rounded-2xl px-5 py-3 shadow-sm",
                           message.role === "user"
                             ? "bg-[#f59e0b] text-white"
-                            : "bg-white border border-[#ffd4e3] text-[#7b364d]",
+                            : "bg-white border border-[#fde68a] text-[#78350f]",
                         )}
                       >
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">
