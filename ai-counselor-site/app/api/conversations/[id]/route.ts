@@ -33,9 +33,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
-    const { error: messagesError } = await supabase
+    const { error: messagesError, count: messagesCount } = await supabase
       .from("messages")
-      .delete()
+      .delete({ count: "exact" })
       .eq("conversation_id", id);
     
     if (messagesError) {
@@ -43,9 +43,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Failed to delete messages" }, { status: 500 });
     }
 
-    const { error: conversationError } = await supabase
+    console.log(`Deleted ${messagesCount ?? 0} messages for conversation ${id}`);
+
+    const { error: conversationError, count: conversationCount } = await supabase
       .from("conversations")
-      .delete()
+      .delete({ count: "exact" })
       .eq("id", id)
       .eq("user_id", session.user.id);
     
@@ -54,6 +56,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Failed to delete conversation" }, { status: 500 });
     }
 
+    if (conversationCount === 0) {
+      console.error("Conversation was not deleted (count=0):", id);
+      return NextResponse.json({ error: "Conversation could not be deleted" }, { status: 500 });
+    }
+
+    console.log(`Successfully deleted conversation ${id}`);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("conversation delete error", err);
