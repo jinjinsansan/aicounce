@@ -745,8 +745,8 @@ export function SiddharthaChatClient() {
                 className={cn(
                   "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                   session.id === activeSessionId
-                    ? "border-[#ffc0d9] bg-[#fff0f7] text-[#8b2e52]"
-                    : "border-transparent bg-transparent text-[#b1637d] hover:border-[#ffd4e3] hover:bg-[#fff8fb]",
+                    ? "border-[#fde68a] bg-[#fef3c7] text-[#78350f]"
+                    : "border-transparent bg-transparent text-[#92400e] hover:border-[#fde68a] hover:bg-[#fefce8]",
                 )}
               >
                 <div className="flex min-w-0 items-center gap-2">
@@ -817,7 +817,7 @@ export function SiddharthaChatClient() {
                     className={cn(
                       "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                       session.id === activeSessionId
-                        ? "border-[#ffc0d9] bg-[#fff0f7] text-[#8b2e52]"
+                        ? "border-[#fde68a] bg-[#fef3c7] text-[#78350f]"
                         : "border-transparent bg-transparent text-[#92400e] hover:border-[#fde68a] hover:bg-[#fefce8]",
                     )}
                   >
@@ -941,7 +941,7 @@ export function SiddharthaChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fefce8]"
                           onClick={() => handleGuidedAction("back")}
                           disabled={guidedActionLoading !== null || isLoading.sending}
                         >
@@ -950,7 +950,7 @@ export function SiddharthaChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fefce8]"
                           onClick={() => handleGuidedAction("deeper")}
                           disabled={guidedActionLoading !== null || isLoading.sending}
                         >
@@ -959,7 +959,7 @@ export function SiddharthaChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fefce8]"
                           onClick={() => handleGuidedAction("next")}
                           disabled={guidedActionLoading !== null || isLoading.sending}
                         >
@@ -968,7 +968,7 @@ export function SiddharthaChatClient() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fff0f7]"
+                          className="h-5 px-1.5 text-[9px] text-[#92400e] hover:bg-[#fefce8]"
                           onClick={handlePhaseInsightRequest}
                           disabled={isPhaseInsightLoading || !activeSessionId}
                         >
