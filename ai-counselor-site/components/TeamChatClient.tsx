@@ -384,7 +384,7 @@ export function TeamChatClient() {
         try {
           const messagesToSave = [
             { role: "user", content: textToSend, author: null, author_id: null, icon_url: null },
-            ...aiResponses.map((r) => ({
+            ...aiResponses.map((r: MessageItem) => ({
               role: "assistant" as const,
               content: r.content,
               author: r.author,
