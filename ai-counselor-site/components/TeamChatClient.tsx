@@ -279,6 +279,46 @@ export function TeamChatClient() {
       return;
     }
 
+    let currentSessionId = activeSessionId;
+
+    // Create session if it doesn't exist (first message)
+    if (!currentSessionId) {
+      try {
+        // Generate title from first message (first 60 chars)
+        const title = textToSend.slice(0, 60) + (textToSend.length > 60 ? "..." : "");
+        
+        const createRes = await fetch("/api/team/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            participants,
+          }),
+        });
+
+        if (!createRes.ok) {
+          throw new Error("Failed to create session");
+        }
+
+        const createData = await createRes.json();
+        currentSessionId = createData.session.id;
+        setActiveSessionId(currentSessionId);
+        
+        try {
+          window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, currentSessionId);
+        } catch (e) {
+          console.error("[Session] Failed to save to localStorage:", e);
+        }
+
+        await loadSessions();
+      } catch (err) {
+        console.error("[Session] Failed to create session:", err);
+        setError("セッションの作成に失敗しました");
+        setTimeout(() => setError(null), 2000);
+        return;
+      }
+    }
+
     setInput("");
     const tempUserId = `temp-user-${Date.now()}`;
     const tempAiId = `temp-ai-${Date.now()}`;
@@ -320,26 +360,50 @@ export function TeamChatClient() {
       }
 
       const data = await res.json();
-      
-      if (data.sessionId && !activeSessionId) {
-        setActiveSessionId(data.sessionId);
-        loadSessions();
-      }
 
       // Remove pending message and add all AI responses
+      const aiResponses = (data.responses || []).map((r: any) => ({
+        id: `ai-${Date.now()}-${Math.random()}`,
+        role: "assistant" as const,
+        author: r.author,
+        authorId: r.authorId,
+        content: r.content,
+        iconUrl: r.iconUrl,
+        created_at: new Date().toISOString(),
+      }));
+
       setMessages((prev) => {
         const withoutPending = prev.filter((msg) => msg.id !== tempAiId);
-        const aiResponses = (data.responses || []).map((r: any) => ({
-          id: `ai-${Date.now()}-${Math.random()}`,
-          role: "assistant" as const,
-          author: r.author,
-          authorId: r.authorId,
-          content: r.content,
-          iconUrl: r.iconUrl,
-          created_at: new Date().toISOString(),
-        }));
         return [...withoutPending, ...aiResponses];
       });
+
+      // Save messages to database
+      if (currentSessionId) {
+        try {
+          const messagesToSave = [
+            { role: "user", content: textToSend, author: null, author_id: null, icon_url: null },
+            ...aiResponses.map((r) => ({
+              role: "assistant" as const,
+              content: r.content,
+              author: r.author,
+              author_id: r.authorId,
+              icon_url: r.iconUrl,
+            })),
+          ];
+
+          await fetch(`/api/team/sessions/${currentSessionId}/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: messagesToSave }),
+          });
+
+          // Refresh sessions list to update timestamp
+          await loadSessions();
+        } catch (saveErr) {
+          console.error("[Messages] Failed to save messages:", saveErr);
+          // Don't show error to user, messages are already displayed
+        }
+      }
 
     } catch (err: any) {
       if (err.name === "AbortError") {
