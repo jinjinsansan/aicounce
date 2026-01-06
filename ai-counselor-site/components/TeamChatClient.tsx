@@ -486,7 +486,7 @@ export function TeamChatClient() {
 
       {/* Desktop Sidebar */}
       <aside
-        className="hidden w-[260px] min-w-[260px] flex-col border-r border-slate-200 bg-white px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
+        className="hidden w-[280px] min-w-[280px] flex-col border-r border-slate-200 bg-white px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
@@ -497,6 +497,46 @@ export function TeamChatClient() {
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
+
+        {/* Participant Selection in Sidebar */}
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-900">参加AI</p>
+            <span className="text-xs text-slate-600">{participants.length}名選択中</span>
+          </div>
+          <div className="space-y-2">
+            {availableParticipants.map((p) => {
+              const checked = participants.includes(p.id);
+              const isDisabled = Boolean(p.comingSoon);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    toggleParticipant(p.id);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition text-sm",
+                    isDisabled
+                      ? "cursor-not-allowed bg-slate-100 opacity-50 border-slate-200"
+                      : "bg-white hover:bg-slate-50 border-slate-200"
+                  )}
+                >
+                  {checked ? (
+                    <CheckSquare className="h-4 w-4 text-slate-700 flex-shrink-0" />
+                  ) : (
+                    <Square className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                  )}
+                  <span className="flex-1 truncate text-slate-900">{p.name}</span>
+                  {isDisabled && <span className="text-xs text-slate-500">準備中</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">履歴</p>
         <div className="flex-1 overflow-y-auto">
           {sessions.length === 0 ? (
@@ -539,7 +579,7 @@ export function TeamChatClient() {
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
           <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-slate-200 bg-white px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900">履歴</span>
+              <span className="text-sm font-semibold text-slate-900">メニュー</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -555,7 +595,47 @@ export function TeamChatClient() {
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">チャット</p>
+
+            {/* Participant Selection in Mobile Sidebar */}
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-900">参加AI</p>
+                <span className="text-xs text-slate-600">{participants.length}名</span>
+              </div>
+              <div className="space-y-2">
+                {availableParticipants.map((p) => {
+                  const checked = participants.includes(p.id);
+                  const isDisabled = Boolean(p.comingSoon);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => {
+                        if (isDisabled) return;
+                        toggleParticipant(p.id);
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition text-sm",
+                        isDisabled
+                          ? "cursor-not-allowed bg-slate-100 opacity-50 border-slate-200"
+                          : "bg-white border-slate-200"
+                      )}
+                    >
+                      {checked ? (
+                        <CheckSquare className="h-4 w-4 text-slate-700 flex-shrink-0" />
+                      ) : (
+                        <Square className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                      )}
+                      <span className="flex-1 truncate text-slate-900">{p.name}</span>
+                      {isDisabled && <span className="text-xs text-slate-500">準備中</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">履歴</p>
             <div className="flex-1 overflow-y-auto">
               {sessions.length === 0 ? (
                 <p className="text-center text-xs text-slate-400">履歴がありません</p>
