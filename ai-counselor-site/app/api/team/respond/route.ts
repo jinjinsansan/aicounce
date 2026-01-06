@@ -221,13 +221,11 @@ export async function POST(req: Request) {
           .filter((m) => m.role === "user" || m.role === "assistant")
       : [];
 
-    const responses: { author: string; authorId: string; content: string; iconUrl: string }[] = [];
-
     // ユーザーメッセージが挨拶のみかどうか判定
     const isGreeting = isGreetingOnly(userMessage);
 
-    // 完全独立型：各AIが他のAIの応答を見ずに独立して応答
-    for (const p of selected) {
+    // 完全独立型：各AIが他のAIの応答を見ずに独立して並列応答
+    const responsePromises = selected.map(async (p) => {
       const spec = AI_SPECIALIZATIONS[p.id.toLowerCase()];
       const role = AI_ROLES[p.id.toLowerCase() as keyof typeof AI_ROLES];
       const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 6) : { context: "" };
@@ -235,8 +233,7 @@ export async function POST(req: Request) {
       // 挨拶のみの場合：シンプルな自己紹介
       if (isGreeting) {
         const greetingResponse = role?.greeting || "こんにちは。";
-        responses.push({ author: p.name, authorId: p.id, content: greetingResponse, iconUrl: p.iconUrl });
-        continue;
+        return { author: p.name, authorId: p.id, content: greetingResponse, iconUrl: p.iconUrl };
       }
 
       // 相談の場合：各AIが独立して専門性を発揮
@@ -278,8 +275,10 @@ export async function POST(req: Request) {
 
       const sanitized = sanitizeContent(content ?? "", p.name);
 
-      responses.push({ author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl });
-    }
+      return { author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl };
+    });
+
+    const responses = await Promise.all(responsePromises);
 
     return NextResponse.json({ responses });
   } catch (error) {
