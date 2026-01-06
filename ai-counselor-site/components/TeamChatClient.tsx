@@ -118,6 +118,7 @@ export function TeamChatClient() {
       if (!res.ok) throw new Error("Failed to load sessions");
       const data = await res.json();
       const allSessions = data.sessions || [];
+      console.log("[Sessions] Loaded sessions:", allSessions);
       setSessions(allSessions.map((s: any) => ({
         id: s.id,
         title: s.title || "チームカウンセリング",
@@ -301,6 +302,7 @@ export function TeamChatClient() {
         }
 
         const createData = await createRes.json();
+        console.log("[Session] Created session:", createData.session);
         currentSessionId = createData.session.id;
         setActiveSessionId(currentSessionId);
         
@@ -860,15 +862,15 @@ export function TeamChatClient() {
                 // AI message
                 const color = COLOR_MAP[m.authorId || "moderator"] || COLOR_MAP.moderator;
                 return (
-                  <div key={m.id} className="flex justify-start">
+                  <div key={m.id} className="flex justify-start gap-3">
+                    {m.iconUrl && (
+                      <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-white shadow">
+                        <img src={m.iconUrl} alt={m.author || "AI"} className="h-full w-full object-contain" />
+                      </div>
+                    )}
                     <div className={cn("max-w-[80%] rounded-2xl border px-5 py-3 shadow-sm", color.bubble, color.border)}>
                       {m.author && (
-                        <div className="mb-2 flex items-center gap-2">
-                          {m.iconUrl && (
-                            <div className="h-6 w-6 overflow-hidden rounded-lg border border-white/50">
-                              <img src={m.iconUrl} alt={m.author} className="h-full w-full object-contain" />
-                            </div>
-                          )}
+                        <div className="mb-2">
                           <span className={cn("text-xs font-semibold", color.text)}>{m.author}</span>
                         </div>
                       )}
