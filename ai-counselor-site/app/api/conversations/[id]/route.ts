@@ -33,8 +33,26 @@ export async function DELETE(
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
-    await supabase.from("messages").delete().eq("conversation_id", id);
-    await supabase.from("conversations").delete().eq("id", id).eq("user_id", session.user.id);
+    const { error: messagesError } = await supabase
+      .from("messages")
+      .delete()
+      .eq("conversation_id", id);
+    
+    if (messagesError) {
+      console.error("Failed to delete messages:", messagesError);
+      return NextResponse.json({ error: "Failed to delete messages" }, { status: 500 });
+    }
+
+    const { error: conversationError } = await supabase
+      .from("conversations")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", session.user.id);
+    
+    if (conversationError) {
+      console.error("Failed to delete conversation:", conversationError);
+      return NextResponse.json({ error: "Failed to delete conversation" }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
