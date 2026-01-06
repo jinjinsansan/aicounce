@@ -567,12 +567,11 @@ export function TeamChatClient() {
         </Button>
 
         {/* Participant Selection in Sidebar */}
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-900">参加AI</p>
-            <span className="text-xs text-slate-600">{participants.length}名選択中</span>
-          </div>
-          <div className="space-y-2">
+        <details className="mb-4 rounded-2xl border border-slate-200 bg-slate-50" open>
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-2xl transition">
+            参加AI ({participants.length}名選択中)
+          </summary>
+          <div className="px-4 pb-4 pt-2 space-y-2 max-h-[240px] overflow-y-auto">
             {availableParticipants.map((p) => {
               const checked = participants.includes(p.id);
               const isDisabled = Boolean(p.comingSoon);
@@ -603,7 +602,7 @@ export function TeamChatClient() {
               );
             })}
           </div>
-        </div>
+        </details>
 
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">履歴</p>
         <div className="flex-1 overflow-y-auto">
@@ -665,12 +664,11 @@ export function TeamChatClient() {
             </Button>
 
             {/* Participant Selection in Mobile Sidebar */}
-            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-900">参加AI</p>
-                <span className="text-xs text-slate-600">{participants.length}名</span>
-              </div>
-              <div className="space-y-2">
+            <details className="mb-3 rounded-2xl border border-slate-200 bg-slate-50" open>
+              <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-2xl transition">
+                参加AI ({participants.length}名)
+              </summary>
+              <div className="px-3 pb-3 pt-2 space-y-2 max-h-[200px] overflow-y-auto">
                 {availableParticipants.map((p) => {
                   const checked = participants.includes(p.id);
                   const isDisabled = Boolean(p.comingSoon);
@@ -701,7 +699,7 @@ export function TeamChatClient() {
                   );
                 })}
               </div>
-            </div>
+            </details>
 
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">履歴</p>
             <div className="flex-1 overflow-y-auto">
