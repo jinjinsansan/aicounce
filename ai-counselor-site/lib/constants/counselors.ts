@@ -104,15 +104,15 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     name: "シッダールタ",
     specialty: "仏教カウンセリング",
     description:
-      "仏教経典に基づき天地の教えを説き、穏やかな気づきへと導きます。RAG検索回答はまもなく登場予定です。",
+      "仏教経典に基づき、慈悲と智慧の教えで心の平安へと導きます。四聖諦・八正道など仏の教えを現代の言葉でお伝えします。",
     iconUrl: "/images/counselors/siddhartha.png",
     modelType: "openai",
     modelName: "gpt-4o-mini",
     ragEnabled: true,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.siddhartha,
     tags: ["仏教", "智慧", "慈悲"],
-    responseTime: "準備中",
+    responseTime: "即時",
     sessionCount: 0,
-    comingSoon: true,
   },
   {
     id: "saito",

@@ -3,6 +3,7 @@ import { GEMINI_SYSTEM_PROMPT } from "@/lib/team/prompts/gemini";
 import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
 import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
 import { NAZARE_SYSTEM_PROMPT } from "@/lib/team/prompts/nazare";
+import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 
 export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
   adam: ADAM_SYSTEM_PROMPT,
@@ -10,6 +11,7 @@ export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
   claude: CLAUDE_SYSTEM_PROMPT,
   deep: DEEP_SYSTEM_PROMPT,
   nazare: NAZARE_SYSTEM_PROMPT,
+  siddhartha: SIDDHARTHA_SYSTEM_PROMPT,
 };
 
 export function getDefaultCounselorPrompt(counselorId: string | null | undefined) {
@@ -23,4 +25,5 @@ export {
   CLAUDE_SYSTEM_PROMPT,
   DEEP_SYSTEM_PROMPT,
   NAZARE_SYSTEM_PROMPT,
+  SIDDHARTHA_SYSTEM_PROMPT,
 };

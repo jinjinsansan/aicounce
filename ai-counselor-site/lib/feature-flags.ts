@@ -5,3 +5,6 @@ export const MICHELLE_AI_ENABLED = toBool(process.env.MICHELLE_AI_ENABLED) &&
 
 export const CLINICAL_AI_ENABLED = toBool(process.env.CLINICAL_AI_ENABLED) &&
   Boolean(process.env.OPENAI_API_KEY && process.env.CLINICAL_ASSISTANT_ID);
+
+export const SIDDHARTHA_AI_ENABLED = toBool(process.env.SIDDHARTHA_AI_ENABLED) &&
+  Boolean(process.env.OPENAI_API_KEY);

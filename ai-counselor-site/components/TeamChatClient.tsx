@@ -48,6 +48,8 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   gemini: { bubble: "bg-[#fdf2ff]", text: "text-[#6b21a8]", border: "border-[#f3e8ff]" },
   claude: { bubble: "bg-[#f4f4f5]", text: "text-[#3f3f46]", border: "border-[#e4e4e7]" },
   deep: { bubble: "bg-[#eefdfd]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
+  nazare: { bubble: "bg-[#ede9fe]", text: "text-[#6d28d9]", border: "border-[#e9d5ff]" },
+  siddhartha: { bubble: "bg-[#fffbeb]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
 

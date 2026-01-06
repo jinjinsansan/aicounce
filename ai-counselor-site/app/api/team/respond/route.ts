@@ -9,6 +9,7 @@ import { GEMINI_SYSTEM_PROMPT } from "@/lib/team/prompts/gemini";
 import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
 import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
 import { NAZARE_SYSTEM_PROMPT } from "@/lib/team/prompts/nazare";
+import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -91,6 +92,10 @@ const AI_ROLES = {
     greeting: "こんにちは。詳細に分析するディープです。構造的に状況を見ていきます。",
     role: "要因分析と知識に基づく提案",
   },
+  siddhartha: {
+    greeting: "こんにちは。仏の教えに基づき寄り添うシッダールタです。慈悲と智慧の道をともに歩みましょう。",
+    role: "仏教の智慧による苦の理解と実践の提案",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -124,6 +129,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["御言葉", "祈り", "静けさ", "慈しみ"],
     systemPrompt: NAZARE_SYSTEM_PROMPT,
     negativeInstruction: "他の宗教や信条を否定せず、断定的な口調を避けてください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  siddhartha: {
+    name: "仏教カウンセリング",
+    terms: ["四聖諦", "八正道", "中道", "慈悲", "智慧", "無常", "無我"],
+    systemPrompt: SIDDHARTHA_SYSTEM_PROMPT,
+    negativeInstruction: "仏教を押し付けず、他の宗教や信条を尊重してください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },

@@ -9,6 +9,7 @@ import ChatInterface from "@/components/ChatInterface";
 import MichelleChatClient from "@/components/MichelleChatClient";
 import ClinicalChatClient from "@/components/ClinicalChatClient";
 import NazareChatClient from "@/components/NazareChatClient";
+import SiddharthaChatClient from "@/components/SiddharthaChatClient";
 import AdamChatClient from "@/components/AdamChatClient";
 import GeminiChatClient from "@/components/GeminiChatClient";
 import ClaudeChatClient from "@/components/ClaudeChatClient";
@@ -247,6 +248,10 @@ export default function ChatPage({
 
   if (counselorId === "nazare") {
     return <NazareChatClient />;
+  }
+
+  if (counselorId === "siddhartha") {
+    return <SiddharthaChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;
