@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ActivitySquare, ArrowRight, ListChecks, Search, Workflow } from "lucide-react";
 
 export default function DeepDetailPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const strengths = [
     {

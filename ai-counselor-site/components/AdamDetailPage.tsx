@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Compass, Leaf, Lightbulb, Recycle } from "lucide-react";
 
 export default function AdamDetailPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const highlights = [
     {

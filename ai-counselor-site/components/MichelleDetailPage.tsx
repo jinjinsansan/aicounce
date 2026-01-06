@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { BookOpen, Target, MessageCircle, Search, ArrowRight } from "lucide-react";
 
 export default function MichelleDetailPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const categories = [
     { id: "love", label: "恋愛の悩み", color: "from-pink-400 to-rose-400" },
