@@ -45,7 +45,10 @@ export async function searchRagContext(
   query: string,
   matchCount = 5,
 ) {
-  if (!hasSupabaseConfig() || !process.env.OPENAI_API_KEY) {
+  const canUseServiceClient = hasServiceRole();
+  const hasPublicClient = hasSupabaseConfig();
+
+  if (!process.env.OPENAI_API_KEY || (!canUseServiceClient && !hasPublicClient)) {
     return { context: "", sources: [] };
   }
 
@@ -55,7 +58,7 @@ export async function searchRagContext(
   }
 
   try {
-    const supabase = getSupabaseClient();
+    const supabase = canUseServiceClient ? getServiceSupabase() : getSupabaseClient();
     const { data, error } = await supabase.rpc("match_rag_chunks", {
       counselor_id: counselorId,
       match_count: matchCount,
