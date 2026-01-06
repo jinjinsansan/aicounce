@@ -3,8 +3,8 @@ const PLACEHOLDER =
 
 const DEFAULT_CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-haiku-20240307";
 const FALLBACK_CLAUDE_MODEL = process.env.CLAUDE_FALLBACK_MODEL ?? "claude-3-haiku-20240307";
-const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash-latest";
-const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-1.5-flash-latest";
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const FALLBACK_GEMINI_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-1.5-flash-001";
 
 type LLMResponse = {
   content: string;
