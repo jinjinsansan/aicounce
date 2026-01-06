@@ -132,16 +132,17 @@ LANGUAGE sql
 STABLE
 AS $$
   SELECT
-    rd.id,
-    rd.content,
-    rd.metadata,
-    1 - (rd.embedding <=> query_embedding) as similarity
-  FROM public.rag_documents rd
+    rc.id,
+    rc.chunk_text as content,
+    rc.metadata,
+    1 - (rc.embedding <=> query_embedding) as similarity
+  FROM public.rag_chunks rc
+  JOIN public.rag_documents rd ON rc.document_id = rd.id
   WHERE rd.counselor_id = 'siddhartha'
-    AND rd.embedding IS NOT NULL
-    AND rd.parent_id IS NULL
-    AND 1 - (rd.embedding <=> query_embedding) >= similarity_threshold
-  ORDER BY rd.embedding <=> query_embedding
+    AND rc.embedding IS NOT NULL
+    AND rc.parent_chunk_id IS NULL
+    AND 1 - (rc.embedding <=> query_embedding) >= similarity_threshold
+  ORDER BY rc.embedding <=> query_embedding
   LIMIT match_count;
 $$;
 
@@ -161,19 +162,19 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 AS $$
-  SELECT DISTINCT ON (p.id)
-    p.id as parent_id,
-    p.content as parent_content,
-    p.metadata as parent_metadata,
-    p.source_id as parent_source,
-    1 - (c.embedding <=> query_embedding) as child_similarity
-  FROM public.rag_documents c
-  JOIN public.rag_documents p ON c.parent_id = p.id
-  WHERE p.counselor_id = 'siddhartha'
-    AND c.counselor_id = 'siddhartha'
-    AND c.embedding IS NOT NULL
-    AND c.parent_id IS NOT NULL
-    AND 1 - (c.embedding <=> query_embedding) >= similarity_threshold
-  ORDER BY p.id, c.embedding <=> query_embedding
+  SELECT DISTINCT ON (parent_chunk.id)
+    parent_chunk.id as parent_id,
+    parent_chunk.chunk_text as parent_content,
+    parent_chunk.metadata as parent_metadata,
+    rd.source_id as parent_source,
+    1 - (child_chunk.embedding <=> query_embedding) as child_similarity
+  FROM public.rag_chunks child_chunk
+  JOIN public.rag_chunks parent_chunk ON child_chunk.parent_chunk_id = parent_chunk.id
+  JOIN public.rag_documents rd ON parent_chunk.document_id = rd.id
+  WHERE rd.counselor_id = 'siddhartha'
+    AND child_chunk.embedding IS NOT NULL
+    AND child_chunk.parent_chunk_id IS NOT NULL
+    AND 1 - (child_chunk.embedding <=> query_embedding) >= similarity_threshold
+  ORDER BY parent_chunk.id, child_chunk.embedding <=> query_embedding
   LIMIT GREATEST(match_count, 1);
 $$;
