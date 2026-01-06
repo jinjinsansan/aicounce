@@ -803,7 +803,42 @@ const DEEP_CONFIG: ChatConfig = {
   ],
 };
 
+const NAZARE_CONFIG: ChatConfig = {
+  counselorId: "nazare",
+  storageKey: "nazare-bible-chat-session",
+  hero: {
+    name: "ナザレ",
+    subtitle: "聖書カウンセリング",
+    description: "キリスト教聖典に基づき、悩める方に静かな光と寄り添いを届けます",
+    iconUrl: "/images/counselors/nazare.png",
+  },
+  theme: {
+    gradientFrom: "#faf5ff",
+    gradientTo: "#ede9fe",
+    accent: "#7c3aed",
+    cardBorder: "border-purple-100",
+    bubbleUser: "bg-[#fef3c7] text-[#78350f]",
+    bubbleAssistant: "bg-[#f5f3ff]",
+    assistantText: "text-[#5b21b6]",
+    assistantBorder: "border border-purple-100",
+    activeBackground: "bg-gradient-to-r from-purple-600 to-violet-600",
+  },
+  initialPrompts: [
+    "最近、心が重く感じます",
+    "人を許せない自分がいます",
+    "人生の意味について考えています",
+    "希望を見失いそうです",
+  ],
+  thinkingMessages: [
+    "聖書の言葉を探しています...",
+    "御心を尋ね求めています...",
+    "祈りながら考えています...",
+    "導きを受け取っています...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
 export const DeepChatClient = () => <GeneralCounselorChatClient config={DEEP_CONFIG} />;
+export const NazareChatClient = () => <GeneralCounselorChatClient config={NAZARE_CONFIG} />;
