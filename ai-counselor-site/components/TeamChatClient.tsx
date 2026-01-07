@@ -242,7 +242,13 @@ export function TeamChatClient() {
   }, [messages.length, scheduleScroll]);
 
   useEffect(() => {
-    if (!isMounted || hasRestoredSessionRef.current || !hasInitializedSessions || sessions.length === 0) {
+    if (!isMounted || hasRestoredSessionRef.current || !hasInitializedSessions) {
+      return;
+    }
+
+    if (sessions.length === 0) {
+      hasRestoredSessionRef.current = true;
+      setIsRestoringSession(false);
       return;
     }
 
