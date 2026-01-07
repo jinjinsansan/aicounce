@@ -10,13 +10,6 @@ import { cn } from "@/lib/utils";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { useChatLayout } from "@/hooks/useChatLayout";
 import { useChatDevice } from "@/hooks/useChatDevice";
-import {
-  DEFAULT_PHASE_DETAILS,
-  DEFAULT_PHASE_HINTS,
-  DEFAULT_PHASE_LABELS,
-  inferGuidedPhase,
-  type GuidedPhase,
-} from "@/components/chat/guidance";
 
 type Participant = { id: string; name: string; iconUrl: string; comingSoon?: boolean };
 
@@ -80,7 +73,7 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   gemini: { bubble: "bg-[#f9efff]", text: "text-[#6b21a8]", border: "border-[#ead8ff]" },
   claude: { bubble: "bg-[#f8fafc]", text: "text-[#1f2937]", border: "border-[#e2e8f0]" },
   deep: { bubble: "bg-[#ecfeff]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
-  nazare: { bubble: "bg-[#fff7ed]", text: "text-[#7c4a1d]", border: "border-[#fcd34d]" },
+  nazare: { bubble: "bg-[#ede9fe]", text: "text-[#5b21b6]", border: "border-[#d8b4fe]" },
   siddhartha: { bubble: "bg-[#fffbeb]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
@@ -111,7 +104,6 @@ export function TeamChatClient() {
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
   const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
@@ -152,11 +144,6 @@ export function TeamChatClient() {
   }, [participants, participantLookup]);
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
-  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
-
-  useEffect(() => {
-    setCurrentPhase(inferGuidedPhase(userMessageCount));
-  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -611,8 +598,14 @@ export function TeamChatClient() {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-white">
-        <div className="rounded-3xl bg-white border border-slate-200 px-10 py-12 text-center shadow-lg">
+      <div
+        className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200"
+        style={{
+          backgroundImage:
+            "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
+        }}
+      >
+        <div className="rounded-3xl border border-slate-200 bg-white px-10 py-12 text-center shadow-lg">
           <p className="text-lg font-semibold text-slate-900">ログインが必要です</p>
           <p className="mt-4 text-sm text-slate-600">チームカウンセリングをご利用いただくにはログインしてください。</p>
         </div>
@@ -622,8 +615,14 @@ export function TeamChatClient() {
 
   if (needsPremium) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-white">
-        <div className="rounded-3xl bg-white border border-slate-200 px-10 py-12 text-center shadow-lg">
+      <div
+        className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200"
+        style={{
+          backgroundImage:
+            "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
+        }}
+      >
+        <div className="rounded-3xl border border-slate-200 bg-white px-10 py-12 text-center shadow-lg">
           <p className="text-lg font-semibold text-slate-900">プレミアムプラン限定</p>
           <p className="mt-4 text-sm text-slate-600">チームカウンセリングはプレミアムプランでご利用いただけます。</p>
         </div>
@@ -631,9 +630,6 @@ export function TeamChatClient() {
     );
   }
 
-  const phaseLabels = DEFAULT_PHASE_LABELS;
-  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
-  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
 
   const showGlobalLoader =
     !isMounted ||
@@ -644,7 +640,13 @@ export function TeamChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-white">
+      <div
+        className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200"
+        style={{
+          backgroundImage:
+            "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
+        }}
+      >
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-400" />
         </div>
@@ -654,15 +656,17 @@ export function TeamChatClient() {
 
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 128);
   const newChatButtonClasses =
-    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#334155] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-200 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
+    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#0ea5e9] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-200 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-white text-slate-900"
+      className="relative flex w-full flex-1 items-stretch border-t border-slate-200 text-slate-900"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
         maxHeight: "calc(100vh - 4rem)",
+        backgroundImage:
+          "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
       }}
     >
       {isOffline && (
@@ -677,10 +681,10 @@ export function TeamChatClient() {
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
-          variant="ghost"
+          variant="default"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className={cn("mb-6", newChatButtonClasses)}
+          className={cn("mb-6 border border-transparent", newChatButtonClasses)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -771,13 +775,10 @@ export function TeamChatClient() {
               </Button>
             </div>
             <Button
-              variant="ghost"
-              onClick={() => {
-                handleNewChat();
-                setIsSidebarOpen(false);
-              }}
+              variant="default"
+              onClick={handleNewChat}
               disabled={isLoading.sending}
-              className={cn("mb-4", newChatButtonClasses)}
+              className={cn("mb-4 border border-transparent", newChatButtonClasses)}
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
@@ -880,10 +881,6 @@ export function TeamChatClient() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800">
-              {phaseLabels[currentPhase]}
-            </span>
-            <span className="text-xs text-slate-600">{phaseHint}</span>
             {messages.length > 0 && (
               <Button variant="ghost" size="sm" className="text-slate-700" onClick={handleShare}>
                 <Share2 className="mr-2 h-4 w-4" /> 共有
@@ -1000,14 +997,6 @@ export function TeamChatClient() {
             </div>
           ) : (
             <div className="mx-auto max-w-3xl space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
-                  <span>{phaseDetail.title}</span>
-                  <span>{phaseLabels[currentPhase]}</span>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-slate-700">{phaseDetail.summary}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-800">{phaseDetail.cta}</p>
-              </div>
               {messages.map((m) => {
                 if (m.role === "user") {
                   return (

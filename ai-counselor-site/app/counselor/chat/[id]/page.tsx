@@ -8,12 +8,14 @@ import MessageBubble from "@/components/MessageBubble";
 import ChatInterface from "@/components/ChatInterface";
 import MichelleChatClient from "@/components/MichelleChatClient";
 import ClinicalChatClient from "@/components/ClinicalChatClient";
-import NazareChatClient from "@/components/NazareChatClient";
 import SiddharthaChatClient from "@/components/SiddharthaChatClient";
-import AdamChatClient from "@/components/AdamChatClient";
-import GeminiChatClient from "@/components/GeminiChatClient";
-import ClaudeChatClient from "@/components/ClaudeChatClient";
-import DeepChatClient from "@/components/DeepChatClient";
+import {
+  AdamChatClient,
+  GeminiChatClient,
+  ClaudeChatClient,
+  DeepChatClient,
+  NazareChatClient,
+} from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
 import { loadCounselorById } from "@/lib/client-counselors";
@@ -169,7 +171,7 @@ function StandardChatExperience({ counselorId }: { counselorId: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
+    <div className="min-h-screen border-t border-slate-200 bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-6xl gap-6">
         <Sidebar
           selectedCounselorId={counselorId}

@@ -9,13 +9,6 @@ import { debugLog } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import { useChatLayout } from "@/hooks/useChatLayout";
 import { useChatDevice } from "@/hooks/useChatDevice";
-import {
-  DEFAULT_PHASE_DETAILS,
-  DEFAULT_PHASE_HINTS,
-  DEFAULT_PHASE_LABELS,
-  inferGuidedPhase,
-  type GuidedPhase,
-} from "@/components/chat/guidance";
 
 type SessionSummary = {
   id: string;
@@ -83,7 +76,6 @@ export function SiddharthaChatClient() {
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
 
   const [isOffline, setIsOffline] = useState(false);
-  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
   const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
@@ -95,11 +87,6 @@ export function SiddharthaChatClient() {
     activeSessionId,
   ]);
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
-  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
-
-  useEffect(() => {
-    setCurrentPhase(inferGuidedPhase(userMessageCount));
-  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -530,7 +517,7 @@ export function SiddharthaChatClient() {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200 bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
           <p className="text-lg font-semibold text-[#92400e]">ログインが必要です</p>
           <p className="mt-4 text-sm text-[#92400e]">仏教カウンセリングAIをご利用いただくにはログインしてください。</p>
@@ -539,9 +526,6 @@ export function SiddharthaChatClient() {
     );
   }
 
-  const phaseLabels = DEFAULT_PHASE_LABELS;
-  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
-  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
 
   const showGlobalLoader =
     !isMounted ||
@@ -552,7 +536,7 @@ export function SiddharthaChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200 bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7]">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#f59e0b]" />
         </div>
@@ -581,7 +565,7 @@ export function SiddharthaChatClient() {
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7] text-[#78350f]"
+      className="relative flex w-full flex-1 items-stretch border-t border-slate-200 bg-gradient-to-br from-[#fffbf0] via-[#fef8e7] to-[#fef3c7] text-[#78350f]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -603,10 +587,10 @@ export function SiddharthaChatClient() {
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
-          variant="ghost"
+          variant="default"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className={cn("mb-6", newChatButtonBase)}
+          className={cn("mb-6 border border-transparent", newChatButtonBase)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -669,15 +653,12 @@ export function SiddharthaChatClient() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-        <Button
-          variant="ghost"
-          onClick={() => {
-            handleNewChat();
-            setIsSidebarOpen(false);
-          }}
-          disabled={isLoading.sending}
-          className={cn("mb-4", newChatButtonBase)}
-        >
+            <Button
+              variant="default"
+              onClick={handleNewChat}
+              disabled={isLoading.sending}
+              className={cn("mb-4 border border-transparent", newChatButtonBase)}
+            >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f59e0b]">チャット</p>
@@ -748,10 +729,6 @@ export function SiddharthaChatClient() {
             {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#f59e0b]" />}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-[#fef3c7] px-3 py-1 text-xs font-semibold text-[#b45309]">
-              {phaseLabels[currentPhase]}
-            </span>
-            <span className="text-xs text-[#92400e]">{phaseHint}</span>
             {messages.length > 0 && (
               <Button variant="ghost" size="sm" className="text-[#92400e]" onClick={handleShare}>
                 <Share2 className="mr-2 h-4 w-4" /> 共有
@@ -793,14 +770,6 @@ export function SiddharthaChatClient() {
               </div>
             ) : (
               <div className="mx-auto max-w-3xl space-y-6" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
-                <div className="rounded-2xl border border-[#fde68a] bg-white/80 px-5 py-4 shadow-sm">
-                  <div className="flex items-center justify-between text-xs font-semibold text-[#b45309]">
-                    <span>{phaseDetail.title}</span>
-                    <span>{phaseLabels[currentPhase]}</span>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-[#78350f]">{phaseDetail.summary}</p>
-                  <p className="mt-1 text-xs font-semibold text-[#b45309]">{phaseDetail.cta}</p>
-                </div>
                 {messages.map((message) => (
                   <div key={message.id}>
                     <div className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}

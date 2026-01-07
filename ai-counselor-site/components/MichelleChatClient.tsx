@@ -648,7 +648,7 @@ export function MichelleChatClient() {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff4f7] via-[#ffe9f1] to-[#ffdfe8]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200 bg-gradient-to-br from-[#fff4f7] via-[#ffe9f1] to-[#ffdfe8]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
           <p className="text-lg font-semibold text-[#a34264]">ログインが必要です</p>
           <p className="mt-4 text-sm text-[#b1637d]">テープ式心理学AIをご利用いただくにはログインしてください。</p>
@@ -666,7 +666,7 @@ export function MichelleChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff7fa] via-[#ffeef5] to-[#ffe3ec]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200 bg-gradient-to-br from-[#fff7fa] via-[#ffeef5] to-[#ffe3ec]">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#f472b6]" />
         </div>
@@ -695,7 +695,7 @@ export function MichelleChatClient() {
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fffdfa] via-[#fff1f5] to-[#ffe3ed] text-[#7b364d]"
+      className="relative flex w-full flex-1 items-stretch border-t border-slate-200 bg-gradient-to-br from-[#fffdfa] via-[#fff1f5] to-[#ffe3ed] text-[#7b364d]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -717,10 +717,10 @@ export function MichelleChatClient() {
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
-          variant="ghost"
+          variant="default"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className={cn("mb-6", newChatButtonBase)}
+          className={cn("mb-6 border border-transparent", newChatButtonBase)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -783,15 +783,12 @@ export function MichelleChatClient() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-        <Button
-          variant="ghost"
-          onClick={() => {
-            handleNewChat();
-            setIsSidebarOpen(false);
-          }}
-          disabled={isLoading.sending}
-          className={cn("mb-4", newChatButtonBase)}
-        >
+            <Button
+              variant="default"
+              onClick={handleNewChat}
+              disabled={isLoading.sending}
+              className={cn("mb-4 border border-transparent", newChatButtonBase)}
+            >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#f472b6]">チャット</p>

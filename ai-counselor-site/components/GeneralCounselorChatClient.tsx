@@ -53,6 +53,31 @@ type ChatConfig = {
     assistantBorder: string;
     activeBackground: string;
     newChatButton: string;
+    headingText: string;
+    headerSubtitle: string;
+    headerDescription: string;
+    badgeBackground: string;
+    badgeText: string;
+    badgeHintText: string;
+    statsBadgeBackground: string;
+    statsBadgeText: string;
+    sectionBorder: string;
+    promptBorder: string;
+    promptText: string;
+    promptHoverBorder: string;
+    detailBorder: string;
+    detailBackground: string;
+    detailText: string;
+    emptyBorder: string;
+    emptyText: string;
+    inputBorder: string;
+    inputBg: string;
+    inputPlaceholder: string;
+    skeletonBorder: string;
+    skeletonHighlight: string;
+    skeletonShade: string;
+    deleteButtonText: string;
+    deleteButtonHover: string;
   };
   initialPrompts: string[];
   thinkingMessages: string[];
@@ -446,9 +471,9 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
 
   const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
   const sessionSkeletonNodes = Array.from({ length: 3 }).map((_, index) => (
-    <div key={index} className="animate-pulse rounded-3xl border border-emerald-50 bg-white/60 px-4 py-4">
-      <div className="h-4 w-1/2 rounded-full bg-emerald-100" />
-      <div className="mt-2 h-3 w-1/3 rounded-full bg-emerald-50" />
+    <div key={index} className={cn("animate-pulse rounded-3xl border bg-white/60 px-4 py-4", config.theme.skeletonBorder)}>
+      <div className={cn("h-4 w-1/2 rounded-full", config.theme.skeletonHighlight)} />
+      <div className={cn("mt-2 h-3 w-1/3 rounded-full", config.theme.skeletonShade)} />
     </div>
   ));
 
@@ -457,9 +482,9 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
       <div className="space-y-2">
         <Button
           type="button"
-          variant="ghost"
+          variant="default"
           onClick={handleNewChat}
-          className={newChatButtonClasses}
+          className={cn("border border-transparent", newChatButtonClasses)}
           disabled={isLoading.sending}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
@@ -477,7 +502,13 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
       <div className="space-y-3">
         {showSessionSkeleton && <div className="space-y-3">{sessionSkeletonNodes}</div>}
         {!showSessionSkeleton && sessions.length === 0 && (
-          <p className="rounded-3xl border border-dashed border-emerald-200 bg-white/70 px-4 py-6 text-center text-sm text-emerald-800">
+          <p
+            className={cn(
+              "rounded-3xl border border-dashed bg-white/70 px-4 py-6 text-center text-sm",
+              config.theme.emptyBorder,
+              config.theme.emptyText,
+            )}
+          >
             まだチャット履歴がありません。
           </p>
         )}
@@ -519,7 +550,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                   "rounded-full p-1 transition",
                   session.id === activeSessionId
                     ? "text-white/80 hover:bg-white/20"
-                    : "text-emerald-700 hover:bg-emerald-50",
+                    : cn(config.theme.deleteButtonText, config.theme.deleteButtonHover),
                 )}
               >
                 <Trash2 className="h-4 w-4" />
@@ -543,7 +574,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
         </aside>
 
         <main className="flex flex-1 flex-col rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
-          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-50 px-6 py-4">
+          <header className={cn("flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4", config.theme.sectionBorder)}>
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -554,19 +585,21 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">{config.hero.subtitle}</p>
-                <h1 className="text-2xl font-bold text-[#063221]">{config.hero.name}</h1>
-                <p className="text-sm text-emerald-700">{config.hero.description}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-emerald-700">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-800">
+              <p className={cn("text-xs font-semibold uppercase tracking-[0.3em]", config.theme.headerSubtitle)}>
+                {config.hero.subtitle}
+              </p>
+              <h1 className={cn("text-2xl font-bold", config.theme.headingText)}>{config.hero.name}</h1>
+              <p className={cn("text-sm", config.theme.headerDescription)}>{config.hero.description}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span className={cn("rounded-full px-3 py-1 font-semibold", config.theme.badgeBackground, config.theme.badgeText)}>
                   {phaseLabels[currentPhase]}
                 </span>
-                <span className="text-emerald-700/80">{phaseHint}</span>
-              </div>
+                <span className={cn(config.theme.badgeHintText)}>{phaseHint}</span>
               </div>
             </div>
+            </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
+              <div className={cn("flex items-center gap-2 rounded-full px-3 py-1 text-xs", config.theme.statsBadgeBackground, config.theme.statsBadgeText)}>
                 <MessageSquare className="h-3.5 w-3.5" /> {sessions.length} 件の相談履歴
               </div>
               <Image
@@ -574,21 +607,26 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                 alt={config.hero.name}
                 width={56}
                 height={56}
-                className="h-14 w-14 rounded-2xl border border-emerald-100 bg-white object-contain"
+                className={cn("h-14 w-14 rounded-2xl bg-white object-contain", config.theme.detailBorder)}
               />
             </div>
           </header>
 
           {messages.length === 0 && config.initialPrompts.length > 0 && (
-            <section className="border-b border-emerald-50 px-6 py-4">
-              <p className="text-sm font-semibold text-emerald-800">すぐに話したいことを選べます</p>
+            <section className={cn("border-b px-6 py-4", config.theme.sectionBorder)}>
+              <p className={cn("text-sm font-semibold", config.theme.headingText)}>すぐに話したいことを選べます</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {config.initialPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     onClick={() => handlePromptClick(prompt)}
-                    className="rounded-full border border-emerald-100 bg-white px-4 py-1.5 text-xs text-emerald-700 transition hover:border-emerald-300"
+                    className={cn(
+                      "rounded-full border bg-white px-4 py-1.5 text-xs transition",
+                      config.theme.promptBorder,
+                      config.theme.promptText,
+                      config.theme.promptHoverBorder,
+                    )}
                   >
                     {prompt}
                   </button>
@@ -599,7 +637,13 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
 
           <div className="relative flex flex-1 flex-col overflow-hidden">
             {error && (
-              <div className="pointer-events-none absolute inset-x-6 top-4 z-10 rounded-2xl border border-emerald-100 bg-white/90 px-4 py-2 text-center text-sm text-emerald-800 shadow">
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-x-6 top-4 z-10 rounded-2xl border bg-white/90 px-4 py-2 text-center text-sm shadow",
+                  config.theme.detailBorder,
+                  config.theme.detailText,
+                )}
+              >
                 {error}
               </div>
             )}
@@ -610,20 +654,26 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
               style={{ paddingBottom: `${messagePaddingBottom}px` }}
             >
               {messages.length === 0 && (
-                <div className="flex h-full flex-col items-center justify-center text-center text-emerald-700">
+                <div className={cn("flex h-full flex-col items-center justify-center text-center", config.theme.promptText)}>
                   <p className="text-base font-semibold">まだ会話はありません</p>
                   <p className="mt-1 text-sm">感じていることを一言で送ってみてください。</p>
                 </div>
               )}
 
               {messages.length > 0 && (
-                <div className="mx-auto mb-4 w-full max-w-3xl rounded-3xl border border-emerald-100 bg-emerald-50/70 px-5 py-4">
-                  <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+                <div
+                  className={cn(
+                    "mx-auto mb-4 w-full max-w-3xl rounded-3xl border px-5 py-4",
+                    config.theme.detailBorder,
+                    config.theme.detailBackground,
+                  )}
+                >
+                  <div className={cn("flex items-center justify-between text-xs font-semibold", config.theme.detailText)}>
                     <span>{phaseDetail.title}</span>
                     <span>{phaseLabels[currentPhase]}</span>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-emerald-900">{phaseDetail.summary}</p>
-                  <p className="mt-1 text-xs font-semibold text-emerald-800">{phaseDetail.cta}</p>
+                  <p className={cn("mt-2 text-sm leading-relaxed", config.theme.detailText)}>{phaseDetail.summary}</p>
+                  <p className={cn("mt-1 text-xs font-semibold", config.theme.detailText)}>{phaseDetail.cta}</p>
                 </div>
               )}
 
@@ -652,7 +702,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
 
                   return (
                     <div key={message.id} className="flex gap-3">
-                      <div className="h-10 w-10 rounded-2xl border border-emerald-100 bg-white">
+                      <div className={cn("h-10 w-10 rounded-2xl border bg-white", config.theme.detailBorder)}>
                         <Image
                           src={config.hero.iconUrl}
                           alt={config.hero.name}
@@ -670,7 +720,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                         )}
                       >
                         {message.pending ? (
-                          <div className="flex items-center gap-2 text-emerald-700">
+                          <div className={cn("flex items-center gap-2", config.theme.promptText)}>
                             <Loader2 className="h-4 w-4 animate-spin" />
                             {config.thinkingMessages[currentThinkingIndex]}
                           </div>
@@ -687,7 +737,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
 
             <div
               ref={composerRef}
-              className="border-t border-emerald-50 bg-white px-4 py-3"
+              className={cn("border-t bg-white px-4 py-3", config.theme.sectionBorder)}
               style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
             >
               <div className="flex items-end gap-2">
@@ -697,7 +747,12 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="悩みや状況を入力してください"
-                  className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border border-emerald-100 bg-emerald-50/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400 focus:border-emerald-300 focus:outline-none"
+                  className={cn(
+                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none",
+                    config.theme.inputBorder,
+                    config.theme.inputBg,
+                    config.theme.inputPlaceholder,
+                  )}
                   rows={1}
                   autoComplete="off"
                   autoCorrect="off"
@@ -727,7 +782,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-emerald-800">チャット履歴</p>
+              <p className={cn("text-sm font-semibold", config.theme.headingText)}>チャット履歴</p>
               <button type="button" onClick={() => setIsSidebarOpen(false)} className="rounded-full border p-1">
                 <X className="h-4 w-4" />
               </button>
@@ -774,6 +829,31 @@ const ADAM_CONFIG: ChatConfig = {
     assistantBorder: "border border-emerald-100",
     activeBackground: "bg-gradient-to-r from-emerald-500 to-teal-500",
     newChatButton: "bg-gradient-to-r from-emerald-500 to-teal-500 focus-visible:ring-emerald-200 shadow-emerald-500/30",
+    headingText: "text-[#063221]",
+    headerSubtitle: "text-emerald-700",
+    headerDescription: "text-emerald-700/80",
+    badgeBackground: "bg-emerald-50",
+    badgeText: "text-emerald-800",
+    badgeHintText: "text-emerald-600/80",
+    statsBadgeBackground: "bg-emerald-50",
+    statsBadgeText: "text-emerald-700",
+    sectionBorder: "border-emerald-50",
+    promptBorder: "border-emerald-100",
+    promptText: "text-emerald-700",
+    promptHoverBorder: "hover:border-emerald-300",
+    detailBorder: "border-emerald-100",
+    detailBackground: "bg-emerald-50/70",
+    detailText: "text-emerald-800",
+    emptyBorder: "border-emerald-200",
+    emptyText: "text-emerald-700",
+    inputBorder: "border-emerald-100 focus:border-emerald-300",
+    inputBg: "bg-emerald-50/50",
+    inputPlaceholder: "placeholder-emerald-400",
+    skeletonBorder: "border-emerald-50",
+    skeletonHighlight: "bg-emerald-100",
+    skeletonShade: "bg-emerald-50",
+    deleteButtonText: "text-emerald-700",
+    deleteButtonHover: "hover:bg-emerald-50",
   },
   initialPrompts: basePrompts,
   thinkingMessages: baseThinking,
@@ -789,23 +869,50 @@ const GEMINI_CONFIG: ChatConfig = {
     iconUrl: "/images/counselors/gemini.png",
   },
   theme: {
-    gradientFrom: "#faf5ff",
-    gradientVia: "#fbe8ff",
-    gradientTo: "#f3ddff",
-    accent: "#9333ea",
-    accentMuted: "#6b21a8",
-    cardBorder: "border-purple-100",
-    bubbleUser: "bg-[#fdf2f8] text-[#9f1239]",
-    bubbleAssistant: "bg-[#f9f5ff]",
-    assistantText: "text-[#6b21a8]",
-    assistantBorder: "border border-purple-100",
-    activeBackground: "bg-gradient-to-r from-fuchsia-500 to-purple-500",
-    newChatButton: "bg-gradient-to-r from-fuchsia-500 to-purple-500 focus-visible:ring-purple-200 shadow-fuchsia-400/30",
+    gradientFrom: "#fff0f7",
+    gradientVia: "#fde7fb",
+    gradientTo: "#fae8ff",
+    accent: "#db2777",
+    accentMuted: "#a21caf",
+    cardBorder: "border-pink-100",
+    bubbleUser: "bg-[#fff1f2] text-[#be123c]",
+    bubbleAssistant: "bg-[#fdf2fe]",
+    assistantText: "text-[#a21caf]",
+    assistantBorder: "border border-pink-100",
+    activeBackground: "bg-gradient-to-r from-[#fb7185] via-[#f472b6] to-[#c026d3]",
+    newChatButton:
+      "bg-gradient-to-r from-[#fb7185] via-[#f472b6] to-[#c084fc] focus-visible:ring-pink-200 shadow-pink-300/40",
+    headingText: "text-[#86198f]",
+    headerSubtitle: "text-[#db2777]",
+    headerDescription: "text-[#a21caf]",
+    badgeBackground: "bg-[#fdf2f8]",
+    badgeText: "text-[#a21caf]",
+    badgeHintText: "text-[#a21caf]/80",
+    statsBadgeBackground: "bg-[#fdf4ff]",
+    statsBadgeText: "text-[#a21caf]",
+    sectionBorder: "border-pink-100",
+    promptBorder: "border-pink-100",
+    promptText: "text-[#a21caf]",
+    promptHoverBorder: "hover:border-pink-300",
+    detailBorder: "border-pink-100",
+    detailBackground: "bg-[#fdf4ff]",
+    detailText: "text-[#86198f]",
+    emptyBorder: "border-pink-200",
+    emptyText: "text-[#a21caf]",
+    inputBorder: "border-pink-100 focus:border-pink-300",
+    inputBg: "bg-pink-50/60",
+    inputPlaceholder: "placeholder-pink-300",
+    skeletonBorder: "border-pink-100",
+    skeletonHighlight: "bg-pink-100",
+    skeletonShade: "bg-pink-50",
+    deleteButtonText: "text-[#be185d]",
+    deleteButtonHover: "hover:bg-pink-50",
   },
   initialPrompts: [
     "感情と行動のバランスが崩れています",
     "決断で迷っていて整理したい",
     "自分を責める気持ちと頑張りたい気持ちが混ざります",
+    "選択肢を比較する視点を整理したい",
   ],
   thinkingMessages: [
     "視点を切り替えています...",
@@ -836,11 +943,37 @@ const CLAUDE_CONFIG: ChatConfig = {
     assistantBorder: "border border-slate-200",
     activeBackground: "bg-gradient-to-r from-slate-800 to-slate-600",
     newChatButton: "bg-gradient-to-r from-slate-900 to-slate-700 focus-visible:ring-slate-200 shadow-slate-900/30",
+    headingText: "text-slate-800",
+    headerSubtitle: "text-slate-500",
+    headerDescription: "text-slate-600",
+    badgeBackground: "bg-slate-100",
+    badgeText: "text-slate-700",
+    badgeHintText: "text-slate-500",
+    statsBadgeBackground: "bg-slate-100",
+    statsBadgeText: "text-slate-700",
+    sectionBorder: "border-slate-200",
+    promptBorder: "border-slate-200",
+    promptText: "text-slate-700",
+    promptHoverBorder: "hover:border-slate-400",
+    detailBorder: "border-slate-200",
+    detailBackground: "bg-slate-50",
+    detailText: "text-slate-700",
+    emptyBorder: "border-slate-200",
+    emptyText: "text-slate-600",
+    inputBorder: "border-slate-200 focus:border-slate-400",
+    inputBg: "bg-slate-50",
+    inputPlaceholder: "placeholder-slate-400",
+    skeletonBorder: "border-slate-200",
+    skeletonHighlight: "bg-slate-200",
+    skeletonShade: "bg-slate-100",
+    deleteButtonText: "text-slate-600",
+    deleteButtonHover: "hover:bg-slate-100",
   },
   initialPrompts: [
     "気持ちを落ち着けながら整理したい",
     "丁寧に振り返りをさせてください",
     "自分の価値観が揺らいでいます",
+    "静かな文章で考えをまとめたい",
   ],
   thinkingMessages: [
     "言葉を丁寧に整えています...",
@@ -871,6 +1004,31 @@ const DEEP_CONFIG: ChatConfig = {
     assistantBorder: "border border-teal-100",
     activeBackground: "bg-gradient-to-r from-teal-500 to-cyan-500",
     newChatButton: "bg-gradient-to-r from-teal-500 to-cyan-500 focus-visible:ring-cyan-200 shadow-cyan-400/30",
+    headingText: "text-[#0f4c45]",
+    headerSubtitle: "text-teal-600",
+    headerDescription: "text-teal-700",
+    badgeBackground: "bg-teal-50",
+    badgeText: "text-teal-800",
+    badgeHintText: "text-teal-600",
+    statsBadgeBackground: "bg-teal-50",
+    statsBadgeText: "text-teal-700",
+    sectionBorder: "border-teal-50",
+    promptBorder: "border-teal-100",
+    promptText: "text-teal-700",
+    promptHoverBorder: "hover:border-teal-300",
+    detailBorder: "border-teal-100",
+    detailBackground: "bg-teal-50/70",
+    detailText: "text-teal-800",
+    emptyBorder: "border-teal-200",
+    emptyText: "text-teal-700",
+    inputBorder: "border-teal-100 focus:border-teal-300",
+    inputBg: "bg-teal-50/50",
+    inputPlaceholder: "placeholder-teal-400",
+    skeletonBorder: "border-teal-100",
+    skeletonHighlight: "bg-teal-100",
+    skeletonShade: "bg-teal-50",
+    deleteButtonText: "text-teal-700",
+    deleteButtonHover: "hover:bg-teal-50",
   },
   initialPrompts: [
     "原因を一緒に分析してほしい",
@@ -894,18 +1052,44 @@ const NAZARE_CONFIG: ChatConfig = {
     iconUrl: "/images/counselors/nazare.png",
   },
   theme: {
-    gradientFrom: "#fffaf5",
-    gradientVia: "#f8f4ff",
-    gradientTo: "#f0f4ff",
-    accent: "#7c3aed",
-    accentMuted: "#6d28d9",
-    cardBorder: "border-purple-100",
-    bubbleUser: "bg-[#fef3c7] text-[#78350f]",
-    bubbleAssistant: "bg-[#f5f3ff]",
-    assistantText: "text-[#5b21b6]",
-    assistantBorder: "border border-purple-100",
-    activeBackground: "bg-gradient-to-r from-purple-600 to-violet-600",
-    newChatButton: "bg-gradient-to-r from-purple-600 to-violet-600 focus-visible:ring-purple-200 shadow-purple-500/30",
+    gradientFrom: "#f5f0ff",
+    gradientVia: "#ede9fe",
+    gradientTo: "#e0e7ff",
+    accent: "#6d28d9",
+    accentMuted: "#4c1d95",
+    cardBorder: "border-violet-100",
+    bubbleUser: "bg-[#ede9fe] text-[#5b21b6]",
+    bubbleAssistant: "bg-[#f4f1ff]",
+    assistantText: "text-[#4c1d95]",
+    assistantBorder: "border border-violet-100",
+    activeBackground: "bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#5b21b6]",
+    newChatButton:
+      "bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#5b21b6] focus-visible:ring-violet-200 shadow-violet-400/30",
+    headingText: "text-[#3b0a63]",
+    headerSubtitle: "text-[#9333ea]",
+    headerDescription: "text-[#4c1d95]",
+    badgeBackground: "bg-[#f4f1ff]",
+    badgeText: "text-[#5b21b6]",
+    badgeHintText: "text-[#6d28d9]",
+    statsBadgeBackground: "bg-[#f4f1ff]",
+    statsBadgeText: "text-[#5b21b6]",
+    sectionBorder: "border-violet-100",
+    promptBorder: "border-violet-100",
+    promptText: "text-[#5b21b6]",
+    promptHoverBorder: "hover:border-violet-300",
+    detailBorder: "border-violet-100",
+    detailBackground: "bg-[#f4f1ff]",
+    detailText: "text-[#4c1d95]",
+    emptyBorder: "border-violet-200",
+    emptyText: "text-[#4c1d95]",
+    inputBorder: "border-violet-100 focus:border-violet-300",
+    inputBg: "bg-violet-50/60",
+    inputPlaceholder: "placeholder-violet-300",
+    skeletonBorder: "border-violet-100",
+    skeletonHighlight: "bg-violet-100",
+    skeletonShade: "bg-violet-50",
+    deleteButtonText: "text-[#6d28d9]",
+    deleteButtonHover: "hover:bg-violet-50",
   },
   initialPrompts: [
     "最近、心が重く感じます",
