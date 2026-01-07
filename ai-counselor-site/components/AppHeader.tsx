@@ -128,7 +128,7 @@ export default function AppHeader() {
                       src="/logo.png"
                       alt="Mental AI Team"
                       fill
-                      className="object-cover"
+                      className="object-contain"
                       sizes="48px"
                     />
                   </div>
@@ -257,8 +257,9 @@ export default function AppHeader() {
                 src="/logo.png"
                 alt="Mental AI Team"
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="40px"
+                priority
               />
             </div>
             <div>
