@@ -42,7 +42,8 @@
 
 ### 6. コンポーザー（送信エリア）
 - `composerRef` ラッパ：`border-t` にテーマの `sectionBorder` を再利用し、`bg-white px-4 py-3`。
-- `textarea` は `rounded-2xl`, `config.theme.inputBorder/inputBg/inputPlaceholder` で配色を制御。
+- `textarea` は `rounded-2xl`, `border-2`, `config.theme.inputBorder/inputBg/inputPlaceholder` を組み合わせてテーマ色の丸み枠線を作る。
+  - 共通クラスに `focus:ring-2 focus:ring-offset-0` を仕込み、`config.theme.inputBorder` 内の `focus:border-*` と `focus:ring-*` で counselor 固有の発光感を統一。
 - 送信ボタン：`Button` + `style={{ backgroundColor: config.theme.accent }}` を採用し、どの counselor でも同じ動作。
 
 ### 7. モバイル動作
