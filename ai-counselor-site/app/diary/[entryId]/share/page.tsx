@@ -1,27 +1,35 @@
 import Link from "next/link";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { buildDiaryShareText } from "@/lib/diary-share";
-import { getDiaryEntry } from "@/lib/diary";
 import { DiaryShareButton } from "@/components/DiaryShareButton";
 
 type SharePageProps = {
   params: { entryId: string };
 };
 
-const appUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const rawSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const appUrl = rawSiteUrl.startsWith("http") ? rawSiteUrl : `https://${rawSiteUrl}`;
 
 const clippedPreview = (value: string) => {
   const trimmed = value?.trim() ?? "";
   return trimmed.length > 120 ? `${trimmed.slice(0, 120)}…` : trimmed;
 };
 
+async function fetchDiary(entryId: string) {
+  const res = await fetch(`${appUrl}/api/diary/${entryId}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  return data?.entry ?? null;
+}
+
 export async function generateMetadata({ params }: SharePageProps): Promise<Metadata> {
-  const entry = await getDiaryEntry(params.entryId).catch(() => null);
+  const entry = await fetchDiary(params.entryId);
   if (!entry || entry.is_shareable === false) {
     return {
       title: "日記が見つかりません",
@@ -61,7 +69,7 @@ export async function generateMetadata({ params }: SharePageProps): Promise<Meta
 }
 
 export default async function DiarySharePage({ params }: SharePageProps) {
-  const entry = await getDiaryEntry(params.entryId);
+  const entry = await fetchDiary(params.entryId);
   if (!entry || entry.is_shareable === false) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-0">
