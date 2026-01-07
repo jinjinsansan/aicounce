@@ -1134,9 +1134,93 @@ export interface Database {
         };
         Relationships: [];
       };
+      diary_entries: {
+        Row: {
+          author_avatar_url: string | null;
+          author_id: string;
+          author_name: string;
+          content: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          is_shareable: boolean;
+          journal_date: string;
+          metadata: Json | null;
+          published_at: string;
+          share_count: number;
+          title: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          author_avatar_url?: string | null;
+          author_id: string;
+          author_name: string;
+          content: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          is_shareable?: boolean;
+          journal_date: string;
+          metadata?: Json | null;
+          published_at?: string;
+          share_count?: number;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          author_avatar_url?: string | null;
+          author_id?: string;
+          author_name?: string;
+          content?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          is_shareable?: boolean;
+          journal_date?: string;
+          metadata?: Json | null;
+          published_at?: string;
+          share_count?: number;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      diary_state: {
+        Row: {
+          counselor_id: string;
+          id: string;
+          last_chunk_path: string | null;
+          last_index: number | null;
+          last_journal_date: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          counselor_id: string;
+          id?: string;
+          last_chunk_path?: string | null;
+          last_index?: number | null;
+          last_journal_date?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          counselor_id?: string;
+          id?: string;
+          last_chunk_path?: string | null;
+          last_index?: number | null;
+          last_journal_date?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
+      increment_diary_share_count: {
+        Args: {
+          target_entry_id: string;
+        };
+        Returns: number;
+      };
       increment_counselor_session: {
         Args: {
           target_counselor: string;

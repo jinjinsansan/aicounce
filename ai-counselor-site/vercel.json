@@ -3,6 +3,10 @@
     {
       "path": "/api/admin/notify-trial-expiry",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/internal/cron/daily-diary",
+      "schedule": "0 23 * * *"
     }
   ]
 }
