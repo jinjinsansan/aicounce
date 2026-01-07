@@ -82,6 +82,7 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   siddhartha: { bubble: "bg-[#f0fdf4]", text: "text-[#166534]", border: "border-[#bbf7d0]" },
   saito: { bubble: "bg-[#fffbea]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
   nana: { bubble: "bg-[#fff1f5]", text: "text-[#be123c]", border: "border-[#fecdd3]" },
+  dale: { bubble: "bg-[#0f172a]", text: "text-[#bfdbfe]", border: "border-[#1e3a8a]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
 

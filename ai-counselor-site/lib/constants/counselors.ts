@@ -37,10 +37,11 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     modelType: "openai",
     modelName: "gpt-4o-mini",
     ragEnabled: true,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.dale,
     tags: ["自己啓発", "行動習慣", "不安対処"],
-    responseTime: "準備中",
+    responseTime: "即時",
     sessionCount: 0,
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: "nana",

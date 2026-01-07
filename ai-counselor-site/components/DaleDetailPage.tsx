@@ -76,13 +76,12 @@ export default function DaleDetailPage() {
             <button
               type="button"
               onClick={() => router.push("/counselor/chat/dale")}
-              disabled
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#38bdf8] via-[#2563eb] to-[#0ea5e9] px-10 py-3 font-shippori text-lg font-bold text-white opacity-70 shadow-2xl transition"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#38bdf8] via-[#2563eb] to-[#0ea5e9] px-10 py-3 font-shippori text-lg font-bold text-white shadow-2xl transition hover:scale-105"
             >
-              近日公開予定
+              相談を始める
               <ArrowRight size={20} />
             </button>
-            <p className="mt-2 text-sm text-sky-100/80">RAG・チャット準備中です</p>
+            <p className="mt-2 text-sm text-sky-100/80">『道は開ける』RAGを用いて回答します</p>
           </div>
         </div>
       </section>

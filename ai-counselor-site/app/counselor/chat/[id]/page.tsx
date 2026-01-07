@@ -17,6 +17,7 @@ import {
   NazareChatClient,
   NanaChatClient,
   SaitoChatClient,
+  DaleChatClient,
 } from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
@@ -264,6 +265,10 @@ export default function ChatPage({
 
   if (counselorId === "saito") {
     return <SaitoChatClient />;
+  }
+
+  if (counselorId === "dale") {
+    return <DaleChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;

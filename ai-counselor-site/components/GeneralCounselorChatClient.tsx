@@ -1238,6 +1238,68 @@ const SAITO_CONFIG: ChatConfig = {
   thinkingMessages: ["ついてるね、と考え中...", "感謝の呼び水を探しています...", "いい例え話を準備中..."],
 };
 
+const DALE_CONFIG: ChatConfig = {
+  counselorId: "dale",
+  storageKey: "dale-counseling-chat-session",
+  hero: {
+    name: "デール",
+    subtitle: "自己啓発カウンセラー",
+    description: "『道は開ける』の原則で、不安を具体的な行動ステップに変えます。",
+    iconUrl: "/dale.png",
+  },
+  theme: {
+    gradientFrom: "#0b1224",
+    gradientVia: "#0f1e34",
+    gradientTo: "#0f2744",
+    accent: "#38bdf8",
+    accentMuted: "#2563eb",
+    cardBorder: "border-sky-900/40",
+    bubbleUser: "bg-[#0f172a] text-[#cbd5f5]",
+    bubbleAssistant: "bg-[#0b1224]",
+    assistantText: "text-[#e0f2fe]",
+    assistantBorder: "border border-sky-900/40",
+    activeBackground: "bg-gradient-to-r from-[#0ea5e9] via-[#2563eb] to-[#1d4ed8]",
+    newChatButton:
+      "bg-gradient-to-r from-[#38bdf8] via-[#2563eb] to-[#0ea5e9] focus-visible:ring-sky-200 shadow-sky-400/40",
+    headingText: "text-[#e2e8f0]",
+    headerSubtitle: "text-[#7dd3fc]",
+    headerDescription: "text-[#bfdbfe]",
+    badgeBackground: "bg-[#0f172a]",
+    badgeText: "text-[#e0f2fe]",
+    badgeHintText: "text-[#bfdbfe]",
+    statsBadgeBackground: "bg-[#0f172a]",
+    statsBadgeText: "text-[#e0f2fe]",
+    sectionBorder: "border-sky-900/50",
+    promptBorder: "border-sky-900/50",
+    promptText: "text-[#bfdbfe]",
+    promptHoverBorder: "hover:border-sky-400",
+    detailBorder: "border-sky-900/50",
+    detailBackground: "bg-[#0b1224]",
+    detailText: "text-[#e0f2fe]",
+    emptyBorder: "border-sky-900/40",
+    emptyText: "text-[#bfdbfe]",
+    inputBorder: "border-sky-900/50 focus:border-sky-400 focus:ring-sky-200/40",
+    inputBg: "bg-[#0f172a]",
+    inputPlaceholder: "placeholder:text-sky-200/70",
+    skeletonBorder: "border-sky-900/40",
+    skeletonHighlight: "#1d2b4a",
+    skeletonShade: "#0f172a",
+    deleteButtonText: "text-[#e0f2fe]",
+    deleteButtonHover: "hover:bg-[#0f172a]",
+  },
+  initialPrompts: [
+    "最悪を想像して受け入れる方法を知りたい",
+    "今日1日の区切りで考えるコツは？",
+    "批判への向き合い方を教えて",
+    "不安で眠れないときの行動ステップ",
+  ],
+  thinkingMessages: [
+    "最悪ケースを整理しています...",
+    "行動ステップを組み立てています...",
+    "原則に沿って優先順位を決めています...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
@@ -1245,3 +1307,4 @@ export const DeepChatClient = () => <GeneralCounselorChatClient config={DEEP_CON
 export const NazareChatClient = () => <GeneralCounselorChatClient config={NAZARE_CONFIG} />;
 export const NanaChatClient = () => <GeneralCounselorChatClient config={NANA_CONFIG} />;
 export const SaitoChatClient = () => <GeneralCounselorChatClient config={SAITO_CONFIG} />;
+export const DaleChatClient = () => <GeneralCounselorChatClient config={DALE_CONFIG} />;

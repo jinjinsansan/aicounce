@@ -11,6 +11,7 @@ import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
 import { NAZARE_SYSTEM_PROMPT } from "@/lib/team/prompts/nazare";
 import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
+import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -101,6 +102,10 @@ const AI_ROLES = {
     greeting: "こんにちは。サイトウです。ついてるね、感謝してます。軽やかに本質を伝えるよ。",
     role: "軽口と例え話で核心をズバッと伝えつつ前向きにする",
   },
+  dale: {
+    greeting: "デールです。『道は開ける』の原則で不安をほどいていきましょう。",
+    role: "デール・カーネギーの実践原則で心配を行動ステップに変える",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -174,6 +179,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["感謝", "天国言葉", "ついてる", "例え話", "呼び水"],
     systemPrompt: SAITO_SYSTEM_PROMPT,
     negativeInstruction: "敬語（です・ます）や説教臭い長文は避け、軽やかな口調で短く伝えてください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  dale: {
+    name: "自己啓発カウンセリング（道は開ける）",
+    terms: ["最悪を受け入れる", "今日一日", "レモネード", "行動ステップ", "不安対処"],
+    systemPrompt: DALE_SYSTEM_PROMPT,
+    negativeInstruction: "説教臭くせず、短く実践的に。抽象論のみで終わらず必ず行動を添えてください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
