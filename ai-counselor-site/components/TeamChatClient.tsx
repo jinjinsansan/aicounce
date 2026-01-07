@@ -69,7 +69,7 @@ const DEFAULT_PARTICIPANTS =
   NON_COMING_SOON_PARTICIPANTS.length > 0
     ? NON_COMING_SOON_PARTICIPANTS.map((c) => c.id)
     : ["michele", "sato"];
-const TEAM_CHAT_LOGO_SRC = "/images/logo/logo_square.png";
+const TEAM_CHAT_LOGO_SRC = "/logo.png";
 
 const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
   michele: { bubble: "bg-[#fff3f8]", text: "text-[#7b364d]", border: "border-[#ffd4e3]" },

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, Menu, X } from "lucide-react";
+import Image from "next/image";
 
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { useChatStore } from "@/store/chatStore";
@@ -122,8 +123,14 @@ export default function AppHeader() {
             >
               <div className="relative bg-gradient-to-br from-white via-slate-50 to-slate-100 px-6 pt-8 pb-6 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white text-xl font-semibold shadow-lg shadow-slate-900/20">
-                    AI
+                  <div className="relative h-12 w-12 overflow-hidden rounded-2xl shadow-lg">
+                    <Image
+                      src="/logo.png"
+                      alt="Mental AI Team"
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">MENTAL WELLNESS</p>
@@ -245,7 +252,15 @@ export default function AppHeader() {
       <header className="sticky top-0 z-50 border-b border-white/70 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3" onClick={closeMenu}>
-            <div className="rounded-2xl bg-slate-900 px-3 py-2 text-sm font-bold tracking-[0.3em] text-white">AI</div>
+            <div className="relative h-10 w-10 overflow-hidden rounded-2xl">
+              <Image
+                src="/logo.png"
+                alt="Mental AI Team"
+                fill
+                className="object-cover"
+                sizes="40px"
+              />
+            </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-slate-400">MENTAL CARE</p>
               <p className="text-lg font-bold text-slate-900">メンタルAIチーム</p>
