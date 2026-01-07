@@ -99,7 +99,7 @@ const AI_ROLES = {
   },
   saito: {
     greeting: "こんにちは。サイトウです。ついてるね、感謝してます。軽やかに本質を伝えるよ。",
-    role: "斎藤一人流の軽口と例え話で核心をズバッと伝えつつ前向きにする",
+    role: "軽口と例え話で核心をズバッと伝えつつ前向きにする",
   },
 };
 
@@ -173,7 +173,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "感謝と言霊のカウンセリング",
     terms: ["感謝", "天国言葉", "ついてる", "例え話", "呼び水"],
     systemPrompt: SAITO_SYSTEM_PROMPT,
-    negativeInstruction: "敬語（です・ます）や説教臭い長文は避け、斎藤一人風の軽やかな言葉で短く伝えてください。",
+    negativeInstruction: "敬語（です・ます）や説教臭い長文は避け、軽やかな口調で短く伝えてください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },

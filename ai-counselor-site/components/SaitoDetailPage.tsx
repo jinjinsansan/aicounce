@@ -12,7 +12,7 @@ const THEMES = [
   {
     icon: Feather,
     title: "軽やかな例え話で核心を伝える",
-    body: "井戸とポンプ、うさぎと虎、映写機とフィルムなど、斎藤一人さん流の比喩でズバッと本質に触れます。",
+    body: "井戸とポンプ、うさぎと虎、映写機とフィルムなど、軽口の例え話でズバッと本質に触れます。",
   },
   {
     icon: MessageCircle,
@@ -58,7 +58,7 @@ export default function SaitoDetailPage() {
               Saito <span className="ml-3 text-3xl font-normal text-amber-700">サイトウ</span>
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-amber-800/90">
-              斎藤一人さん流の軽やかな語り口で、感謝と言霊を呼び水にしながら核心をズバッとお届け。<br className="hidden sm:inline" />
+              軽やかな語り口で、感謝と言霊を呼び水にしながら核心をズバッとお届け。<br className="hidden sm:inline" />
               RAGで整理した教えを背景に、前向きに一歩進めるヒントを短く提案します。
             </p>
 
@@ -115,7 +115,7 @@ export default function SaitoDetailPage() {
             </div>
             <div className="rounded-2xl bg-white/90 p-4 shadow-sm">
               <p className="font-semibold text-amber-800">RAGソース</p>
-              <p className="mt-2 text-sm text-amber-700">斎藤一人さんの教えチャンク 67本（親26・子41）から状況に沿って引用します</p>
+              <p className="mt-2 text-sm text-amber-700">感謝メソッドと前向きな言霊に関するチャンク67本（親26・子41）から状況に沿って引用します</p>
             </div>
           </div>
         </div>
