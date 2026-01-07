@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/notify-trial-expiry",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
