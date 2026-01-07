@@ -119,15 +119,15 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     name: "サイトウ",
     specialty: "スピリチュアルカウンセラー",
     description:
-      "ありがとうを100回唱える感謝のメソッドで人生を整える教えを中心に、わかりやすく人生相談へ応じます（RAG検索サポート準備中）。",
+      "ありがとうを100回唱える感謝メソッドで人生を整える教えを中心に、斎藤一人さん流の軽やかな言葉で寄り添います。",
     iconUrl: "/images/counselors/saito.png",
     modelType: "openai",
     modelName: "gpt-4o-mini",
     ragEnabled: true,
+    systemPrompt: COUNSELOR_SYSTEM_PROMPTS.saito,
     tags: ["スピリチュアル", "感謝習慣", "前向き"],
-    responseTime: "準備中",
+    responseTime: "即時",
     sessionCount: 0,
-    comingSoon: true,
   },
   {
     id: "adam",

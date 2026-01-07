@@ -80,6 +80,7 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   deep: { bubble: "bg-[#ecfeff]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
   nazare: { bubble: "bg-[#ede9fe]", text: "text-[#5b21b6]", border: "border-[#d8b4fe]" },
   siddhartha: { bubble: "bg-[#fffbeb]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
+  saito: { bubble: "bg-[#fff7ed]", text: "text-[#92400e]", border: "border-[#fed7aa]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
 

@@ -10,6 +10,7 @@ import { CLAUDE_SYSTEM_PROMPT } from "@/lib/team/prompts/claude";
 import { DEEP_SYSTEM_PROMPT } from "@/lib/team/prompts/deep";
 import { NAZARE_SYSTEM_PROMPT } from "@/lib/team/prompts/nazare";
 import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
+import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -96,6 +97,10 @@ const AI_ROLES = {
     greeting: "こんにちは。仏の教えに基づき寄り添うシッダールタです。慈悲と智慧の道をともに歩みましょう。",
     role: "仏教の智慧による苦の理解と実践の提案",
   },
+  saito: {
+    greeting: "こんにちは。サイトウです。ついてるね、感謝してます。軽やかに本質を伝えるよ。",
+    role: "斎藤一人流の軽口と例え話で核心をズバッと伝えつつ前向きにする",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -163,6 +168,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction: "専門用語のみで説明せず、平易な言葉と補足を添えてください。",
     provider: "deepseek",
     model: "deepseek-chat",
+  },
+  saito: {
+    name: "感謝と言霊のカウンセリング",
+    terms: ["感謝", "天国言葉", "ついてる", "例え話", "呼び水"],
+    systemPrompt: SAITO_SYSTEM_PROMPT,
+    negativeInstruction: "敬語（です・ます）や説教臭い長文は避け、斎藤一人風の軽やかな言葉で短く伝えてください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
   },
 };
 

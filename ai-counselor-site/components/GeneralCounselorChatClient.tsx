@@ -1117,6 +1117,64 @@ const NANA_CONFIG: ChatConfig = {
   ],
 };
 
+const SAITO_CONFIG: ChatConfig = {
+  counselorId: "saito",
+  storageKey: "saito-gratitude-chat-session",
+  hero: {
+    name: "サイトウ",
+    subtitle: "感謝と言霊カウンセラー",
+    description: "斎藤一人さん流の軽やかな言葉で、感謝と天国言葉を促しながら核心をズバッと伝えます。",
+    iconUrl: "/images/counselors/saito.png",
+  },
+  theme: {
+    gradientFrom: "#fff7ed",
+    gradientVia: "#fff1db",
+    gradientTo: "#fef3c7",
+    accent: "#f59e0b",
+    accentMuted: "#fbbf24",
+    cardBorder: "border-amber-100",
+    bubbleUser: "bg-white",
+    bubbleAssistant: "bg-amber-50",
+    assistantText: "text-amber-900",
+    assistantBorder: "border border-amber-100",
+    activeBackground: "bg-gradient-to-r from-[#fcd34d] via-[#f59e0b] to-[#fbbf24]",
+    newChatButton:
+      "bg-gradient-to-r from-[#fcd34d] via-[#f59e0b] to-[#fbbf24] focus-visible:ring-amber-200 shadow-amber-300/50",
+    headingText: "text-amber-900",
+    headerSubtitle: "text-amber-600",
+    headerDescription: "text-amber-700",
+    badgeBackground: "bg-amber-100",
+    badgeText: "text-amber-800",
+    badgeHintText: "text-amber-700",
+    statsBadgeBackground: "bg-amber-50",
+    statsBadgeText: "text-amber-700",
+    sectionBorder: "border-amber-100",
+    promptBorder: "border-amber-200",
+    promptText: "text-amber-800",
+    promptHoverBorder: "hover:border-amber-300",
+    detailBorder: "border-amber-100",
+    detailBackground: "bg-amber-50",
+    detailText: "text-amber-800",
+    emptyBorder: "border-amber-200",
+    emptyText: "text-amber-700",
+    inputBorder: "border-2 border-amber-200 focus:border-amber-400 focus:ring-amber-200",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-amber-400",
+    skeletonBorder: "border-amber-100",
+    skeletonHighlight: "bg-amber-100",
+    skeletonShade: "bg-amber-50",
+    deleteButtonText: "text-amber-700",
+    deleteButtonHover: "hover:bg-amber-50",
+  },
+  initialPrompts: [
+    "最近あった『感謝してます』と言える出来事は？",
+    "ついてると思えない状況を変えたい",
+    "挑戦したいけど迷っていること",
+    "言霊で気分を切り替えたい",
+  ],
+  thinkingMessages: ["ついてるね、と考え中...", "感謝の呼び水を探しています...", "いい例え話を準備中..."],
+};
+
 const NAZARE_CONFIG: ChatConfig = {
   counselorId: "nazare",
   storageKey: "nazare-bible-chat-session",
@@ -1186,3 +1244,4 @@ export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE
 export const DeepChatClient = () => <GeneralCounselorChatClient config={DEEP_CONFIG} />;
 export const NazareChatClient = () => <GeneralCounselorChatClient config={NAZARE_CONFIG} />;
 export const NanaChatClient = () => <GeneralCounselorChatClient config={NANA_CONFIG} />;
+export const SaitoChatClient = () => <GeneralCounselorChatClient config={SAITO_CONFIG} />;
