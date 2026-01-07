@@ -38,6 +38,7 @@ export const buildDiaryShareText = ({ title, snippet, authorName, journalDate }:
     lines.push(`📝 一言: ${sanitized}`);
   }
 
-  lines.push("#MentalAITeam");
+  lines.push("#メンタルAIチーム");
+  lines.push("#メンタルAIカウンセラー");
   return lines.join("\n");
 };
