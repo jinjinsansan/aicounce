@@ -199,7 +199,8 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "未来型ロボットカウンセリング",
     terms: ["未来", "行動", "習慣化", "優しいロボット", "前向き"],
     systemPrompt: MIRAI_SYSTEM_PROMPT,
-    negativeInstruction: "抽象論だけで終わらず、RAGから1〜2件引用しつつ今日の行動を添えてください。説教口調は禁止。",
+    negativeInstruction:
+      "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。「RAGの教えによれば」などの前置きは使わない。抽象論だけや説教口調は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
