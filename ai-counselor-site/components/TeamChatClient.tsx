@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
-import { CheckSquare, Square, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
+import { CheckSquare, Square, Loader2, Menu, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,13 @@ const thinkingMessages = [
 
 const THINKING_MESSAGE_INTERVAL_MS = 1400;
 
+const PROMPT_PRESETS = [
+  "最近の気持ちを整理したい",
+  "複数の視点でアドバイスが欲しい",
+  "意思決定に迷っています",
+  "セルフケアのアイデアを教えて",
+];
+
 export function TeamChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -144,6 +151,20 @@ export function TeamChatClient() {
   }, [participants, participantLookup]);
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+
+  const gradientStyle = useMemo(
+    () => ({
+      background:
+        "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
+      minHeight: "calc(100vh - 4rem)",
+      height: "calc(100vh - 4rem)",
+      maxHeight: "calc(100vh - 4rem)",
+    }),
+    [],
+  );
+
+  const newChatButtonClasses =
+    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#0ea5e9] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-black/10 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-200 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -316,6 +337,14 @@ export function TeamChatClient() {
     };
   }, [isLoading.sending]);
 
+  const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
+  const sessionSkeletonNodes = Array.from({ length: 3 }).map((_, index) => (
+    <div key={index} className="animate-pulse rounded-3xl border border-white/60 bg-white/70 p-4">
+      <div className="h-4 w-1/2 rounded-full bg-slate-200/80" />
+      <div className="mt-2 h-3 w-1/3 rounded-full bg-slate-200/60" />
+    </div>
+  ));
+
   const handleNewChat = () => {
     debugLog("[User Action] New chat clicked");
     setActiveSessionId(null);
@@ -415,7 +444,9 @@ export function TeamChatClient() {
       }
     }
 
-    setInput("");
+    if (!overrideText) {
+      setInput("");
+    }
     setError(null);
     const tempUserId = `temp-user-${Date.now()}`;
     const tempAiId = `temp-ai-${Date.now()}`;
@@ -602,35 +633,18 @@ export function TeamChatClient() {
     }
   };
 
-  if (needsAuth) {
-    return (
-      <div
-        className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200"
-        style={{
-          backgroundImage:
-            "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
-        }}
-      >
-        <div className="rounded-3xl border border-slate-200 bg-white px-10 py-12 text-center shadow-lg">
-          <p className="text-lg font-semibold text-slate-900">ログインが必要です</p>
-          <p className="mt-4 text-sm text-slate-600">チームカウンセリングをご利用いただくにはログインしてください。</p>
-        </div>
-      </div>
-    );
-  }
+  if (needsAuth || needsPremium) {
+    const message = needsAuth
+      ? { title: "ログインが必要です", body: "チームカウンセリングをご利用いただくにはログインしてください。" }
+      : { title: "プレミアムプラン限定", body: "チームカウンセリングはプレミアムプランでご利用いただけます。" };
 
-  if (needsPremium) {
     return (
-      <div
-        className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200"
-        style={{
-          backgroundImage:
-            "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
-        }}
-      >
-        <div className="rounded-3xl border border-slate-200 bg-white px-10 py-12 text-center shadow-lg">
-          <p className="text-lg font-semibold text-slate-900">プレミアムプラン限定</p>
-          <p className="mt-4 text-sm text-slate-600">チームカウンセリングはプレミアムプランでご利用いただけます。</p>
+      <div className="relative w-full border-t border-slate-200" style={gradientStyle}>
+        <div className="flex min-h-full items-center justify-center px-6">
+          <div className="rounded-3xl border border-white/50 bg-white/95 px-10 py-12 text-center shadow-2xl">
+            <p className="text-lg font-semibold text-slate-900">{message.title}</p>
+            <p className="mt-4 text-sm text-slate-600">{message.body}</p>
+          </div>
         </div>
       </div>
     );
@@ -646,466 +660,352 @@ export function TeamChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div
-        className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200"
-        style={{
-          backgroundImage:
-            "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
-        }}
-      >
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-400" />
+      <div className="relative w-full border-t border-slate-200" style={gradientStyle}>
+        <div className="flex min-h-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
         </div>
       </div>
     );
   }
 
-  const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 128);
-  const newChatButtonClasses =
-    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#0ea5e9] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-200 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
+  const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 140);
+
+  const renderSidebarContent = (closeOnAction = false) => (
+    <div className="flex flex-col gap-5">
+      <div className="space-y-3">
+        <Button
+          className={newChatButtonClasses}
+          onClick={() => {
+            handleNewChat();
+            if (closeOnAction) setIsSidebarOpen(false);
+          }}
+          disabled={isLoading.sending}
+        >
+          <Plus className="mr-2 h-4 w-4" /> 新しいチャット
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full border border-slate-200 bg-white/80 text-slate-700"
+          onClick={handleShare}
+          disabled={!messages.length}
+        >
+          <Share2 className="mr-2 h-4 w-4" /> 会話をコピー
+        </Button>
+      </div>
+
+      <div className="rounded-3xl border border-slate-100 bg-white/80 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">参加AI</p>
+        <div className="mt-3 space-y-2">
+          {availableParticipants.map((participant) => {
+            const isSelected = participants.includes(participant.id);
+            return (
+              <button
+                key={participant.id}
+                type="button"
+                disabled={participant.comingSoon}
+                onClick={() => toggleParticipant(participant.id)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm transition",
+                  participant.comingSoon && "cursor-not-allowed opacity-50",
+                  isSelected
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="relative h-7 w-7 overflow-hidden rounded-xl border border-slate-100 bg-white">
+                    <Image
+                      src={participant.iconUrl || "/images/counselors/placeholder.png"}
+                      alt={participant.name}
+                      fill
+                      className="object-contain"
+                      sizes="28px"
+                    />
+                  </span>
+                  {participant.name}
+                </span>
+                {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-slate-100 bg-white/80 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">セッション</p>
+        <div className="mt-3 space-y-3">
+          {showSessionSkeleton
+            ? sessionSkeletonNodes
+            : sessions.map((session) => (
+                <div
+                  key={session.id}
+                  className={cn(
+                    "rounded-2xl border px-3 py-3 text-sm transition",
+                    session.id === activeSessionId
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-transparent bg-white text-slate-700 hover:border-slate-200",
+                  )}
+                >
+                  <button
+                    type="button"
+                    className="w-full text-left"
+                    onClick={() => {
+                      setActiveSessionId(session.id);
+                      if (closeOnAction) setIsSidebarOpen(false);
+                    }}
+                  >
+                    <p className="font-semibold">{session.title || "チームカウンセリング"}</p>
+                    <p className="text-xs text-white/70 md:text-slate-400 md:text-opacity-100">
+                      {new Date(session.updated_at).toLocaleString()}
+                    </p>
+                  </button>
+                  <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-white/80 md:text-slate-500 md:text-opacity-100">
+                    {(session.participants ?? []).slice(0, 4).map((p) => (
+                      <span key={p} className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white md:bg-slate-100 md:text-slate-600">
+                        #{p}
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(event) => handleDeleteSession(session.id, event)}
+                    className="mt-2 w-full rounded-xl border border-white/40 py-1 text-center text-xs text-white transition hover:bg-white/10 md:border-slate-200 md:text-slate-500 md:hover:bg-slate-50"
+                  >
+                    <Trash2 className="mr-1 inline h-3 w-3" /> 削除
+                  </button>
+                </div>
+              ))}
+          {!showSessionSkeleton && sessions.length === 0 && (
+            <p className="text-xs text-slate-500">まだチームチャット履歴がありません。</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const participantChips = (
+    <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+      {activeParticipantDetails.length === 0 ? (
+        <span className="rounded-full border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500">
+          参加AIを選択してください
+        </span>
+      ) : (
+        activeParticipantDetails.map((counselor) => (
+          <div
+            key={counselor.id}
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700"
+          >
+            <span className="relative h-6 w-6 overflow-hidden rounded-full border border-white">
+              <Image src={counselor.iconUrl ?? "/images/counselors/placeholder.png"} alt={counselor.name} fill className="object-contain" sizes="24px" />
+            </span>
+            {counselor.name}
+          </div>
+        ))
+      )}
+      <button
+        type="button"
+        className="rounded-full border border-dashed border-slate-300 px-3 py-1 text-xs font-semibold text-slate-500 md:hidden"
+        onClick={() => setIsSidebarOpen(true)}
+      >
+        参加AIを編集
+      </button>
+    </div>
+  );
 
   return (
-    <div
-      className="relative flex w-full flex-1 items-stretch border-t border-slate-200 text-slate-900"
-      style={{
-        minHeight: "calc(100vh - 4rem)",
-        height: "calc(100vh - 4rem)",
-        maxHeight: "calc(100vh - 4rem)",
-        backgroundImage:
-          "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
-      }}
-    >
+    <div className="relative w-full border-t border-slate-200 text-slate-900" style={gradientStyle}>
       {isOffline && (
         <div className="pointer-events-auto absolute left-1/2 top-4 z-50 w-[90%] max-w-md -translate-x-1/2 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-2 text-xs font-semibold text-yellow-800 shadow-lg">
           オフラインです。接続を確認してください。
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside
-        className="hidden w-[280px] min-w-[280px] flex-col border-r border-slate-200 bg-white px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
-        style={{ height: "calc(100vh - 4rem)" }}
-      >
-        <Button
-          variant="default"
-          onClick={handleNewChat}
-          disabled={isLoading.sending}
-          className={cn("mb-6 border border-transparent", newChatButtonClasses)}
-        >
-          <Plus className="h-4 w-4" /> 新しいチャット
-        </Button>
+      <div className="mx-auto flex h-full max-w-6xl gap-6 px-4 py-6 lg:px-8">
+        <aside className="hidden w-80 rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:flex md:flex-col">
+          {renderSidebarContent(false)}
+        </aside>
 
-        {/* Participant Selection in Sidebar */}
-        <details className="mb-4 rounded-2xl border border-slate-200 bg-slate-50" open>
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-2xl transition">
-            参加AI ({participants.length}名選択中)
-          </summary>
-          <div className="px-4 pb-4 pt-2 space-y-2 max-h-[240px] overflow-y-auto">
-            {availableParticipants.map((p) => {
-              const checked = participants.includes(p.id);
-              const isDisabled = Boolean(p.comingSoon);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => {
-                    if (isDisabled) return;
-                    toggleParticipant(p.id);
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition text-sm",
-                    isDisabled
-                      ? "cursor-not-allowed bg-slate-100 opacity-50 border-slate-200"
-                      : "bg-white hover:bg-slate-50 border-slate-200"
-                  )}
-                >
-                  {checked ? (
-                    <CheckSquare className="h-4 w-4 text-slate-700 flex-shrink-0" />
-                  ) : (
-                    <Square className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                  )}
-                  <span className="flex-1 truncate text-slate-900">{p.name}</span>
-                  {isDisabled && <span className="text-xs text-slate-500">準備中</span>}
-                </button>
-              );
-            })}
-          </div>
-        </details>
-
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">履歴</p>
-        <div className="flex-1 overflow-y-auto">
-          {sessions.length === 0 ? (
-            <p className="text-center text-xs text-slate-400">履歴がありません</p>
-          ) : (
-            sessions.map((session) => (
-              <button
-                key={session.id}
-                type="button"
-                onClick={() => setActiveSessionId(session.id)}
-                className={cn(
-                  "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
-                  session.id === activeSessionId
-                    ? "border-slate-300 bg-slate-50 text-slate-900"
-                    : "border-transparent bg-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50",
-                )}
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate">{session.title || "チームカウンセリング"}</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={(event) => handleDeleteSession(session.id, event)}
-                  className="rounded-full p-1 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-white hover:text-slate-600"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </button>
-            ))
-          )}
-        </div>
-      </aside>
-
-      {/* Mobile Sidebar */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-slate-200 bg-white px-4 py-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900">メニュー</span>
-              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <Button
-              variant="default"
-              onClick={handleNewChat}
-              disabled={isLoading.sending}
-              className={cn("mb-4 border border-transparent", newChatButtonClasses)}
-            >
-              <Plus className="h-4 w-4" /> 新しいチャット
-            </Button>
-
-            {/* Participant Selection in Mobile Sidebar */}
-            <details className="mb-3 rounded-2xl border border-slate-200 bg-slate-50" open>
-              <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-2xl transition">
-                参加AI ({participants.length}名)
-              </summary>
-              <div className="px-3 pb-3 pt-2 space-y-2 max-h-[200px] overflow-y-auto">
-                {availableParticipants.map((p) => {
-                  const checked = participants.includes(p.id);
-                  const isDisabled = Boolean(p.comingSoon);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => {
-                        if (isDisabled) return;
-                        toggleParticipant(p.id);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition text-sm",
-                        isDisabled
-                          ? "cursor-not-allowed bg-slate-100 opacity-50 border-slate-200"
-                          : "bg-white border-slate-200"
-                      )}
-                    >
-                      {checked ? (
-                        <CheckSquare className="h-4 w-4 text-slate-700 flex-shrink-0" />
-                      ) : (
-                        <Square className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                      )}
-                      <span className="flex-1 truncate text-slate-900">{p.name}</span>
-                      {isDisabled && <span className="text-xs text-slate-500">準備中</span>}
-                    </button>
-                  );
-                })}
+        <main className="flex flex-1 flex-col rounded-[34px] border border-white/30 bg-white/90 p-6 shadow-2xl backdrop-blur">
+          <header className="rounded-[28px] border border-slate-100 bg-white/80 p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">集合カウンセリング</p>
+                <h1 className="mt-2 text-2xl font-bold text-slate-900">Team Counseling</h1>
+                <p className="mt-1 text-sm text-slate-600">複数AIの異なる専門性で、あなたのテーマを多角的に整理します。</p>
               </div>
-            </details>
-
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">履歴</p>
-            <div className="flex-1 overflow-y-auto">
-              {sessions.length === 0 ? (
-                <p className="text-center text-xs text-slate-400">履歴がありません</p>
-              ) : (
-                sessions.map((session) => (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveSessionId(session.id);
-                      setIsSidebarOpen(false);
-                    }}
-                    className={cn(
-                      "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
-                      session.id === activeSessionId
-                        ? "border-slate-300 bg-slate-50 text-slate-900"
-                        : "border-transparent bg-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50",
-                    )}
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate">{session.title || "チームカウンセリング"}</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(event) => handleDeleteSession(session.id, event)}
-                      className="rounded-full p-1 text-slate-400 transition hover:bg-white hover:text-slate-600"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </button>
-                ))
-              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full border border-slate-200 text-slate-600 md:hidden"
+                  onClick={() => setIsSidebarOpen(true)}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border border-slate-200 text-slate-700"
+                  onClick={handleShare}
+                  disabled={!messages.length}
+                >
+                  <Share2 className="mr-2 h-4 w-4" /> 会話をコピー
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+            {participantChips}
+          </header>
 
-      {/* Main Content */}
-      <main className="relative flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 md:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">チームカウンセリング</h1>
-              <p className="text-xs text-slate-500">{participants.length}名のAIがディスカッション中</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {messages.length > 0 && (
-              <Button variant="ghost" size="sm" className="text-slate-700" onClick={handleShare}>
-                <Share2 className="mr-2 h-4 w-4" /> 共有
-              </Button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2" />
-        </header>
-
-        {activeParticipantDetails.length > 0 && (
-          <section className="border-b border-slate-100 bg-slate-50/70 px-6 py-3">
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {activeParticipantDetails.map((participant) => {
-                const color = COLOR_MAP[participant.id] ?? COLOR_MAP.moderator;
-                return (
-                  <div
-                    key={participant.id}
-                    className={cn(
-                      "flex min-w-[220px] items-center gap-3 rounded-2xl border bg-white/90 px-3 py-2 shadow-sm",
-                      color.border,
-                    )}
-                  >
-                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-white shadow">
-                      <Image src={participant.iconUrl ?? "/images/counselors/michelle.png"} alt={participant.name} fill sizes="40px" className="object-contain" />
-                      <span className="absolute -bottom-1 -right-1 rounded-full bg-slate-900 px-1 text-[9px] font-semibold uppercase tracking-wide text-white">
-                        AI
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">{participant.name}</p>
-                      <p className="text-xs text-slate-500">{participant.specialty ?? "AIカウンセラー"}</p>
-                    </div>
-                  </div>
-                );
-              })}
+          <section className="mt-4 rounded-[28px] border border-slate-100 bg-white/80 p-5">
+            <p className="text-sm font-semibold text-slate-800">すぐに話したいことを選べます</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {PROMPT_PRESETS.map((prompt) => (
+                <Button
+                  key={prompt}
+                  variant="outline"
+                  className="rounded-full border-slate-200 bg-white px-4 py-2 text-sm text-slate-700"
+                  onClick={() => handleSendMessage(prompt)}
+                  disabled={isLoading.sending}
+                >
+                  {prompt}
+                </Button>
+              ))}
             </div>
           </section>
-        )}
 
-        {/* Messages Area */}
-        <div
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto px-4 py-6"
-          style={{ paddingBottom: `${messagePaddingBottom}px` }}
-        >
-          {messages.length === 0 ? (
-            <div className="mx-auto flex max-w-2xl flex-col items-center gap-8 py-12 text-center">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-100">
-                <MessageSquare className="h-12 w-12 text-slate-400" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">複数のAIで深く対話</h2>
-                <p className="mt-2 text-slate-600">
-                  異なる専門性を持つAIカウンセラーが協力してサポートします
-                </p>
-              </div>
-
-              {/* Participant Selection */}
-              <div className="w-full">
-                <p className="mb-4 text-sm font-semibold text-slate-700">参加AIを選択 (1人以上)</p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {availableParticipants.map((p) => {
-                    const checked = participants.includes(p.id);
-                    const isDisabled = Boolean(p.comingSoon);
+          <div
+            ref={scrollContainerRef}
+            className="mt-4 flex-1 overflow-y-auto rounded-[32px] border border-white/50 bg-white/70 px-4 py-6"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <div className="mx-auto max-w-3xl space-y-5" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-slate-100 bg-white/80 px-6 py-12 text-center">
+                  <div className="text-2xl font-semibold text-slate-900">まだ会話はありません</div>
+                  <p className="text-sm text-slate-500">感じていることを一言で送ってみてください。複数のAIが順番に応答します。</p>
+                </div>
+              ) : (
+                messages.map((message) => {
+                  if (message.role === "user") {
                     return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        disabled={isDisabled}
-                        onClick={() => toggleParticipant(p.id)}
+                      <div key={message.id} className="flex justify-end">
+                        <div className="max-w-[80%] rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-3 text-sm text-white shadow">
+                          <div className="mb-1 flex items-center gap-2 text-xs opacity-70">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white">
+                              <User className="h-3.5 w-3.5" />
+                            </div>
+                            あなた
+                          </div>
+                          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const authorId = message.authorId ?? "moderator";
+                  const participantColors = COLOR_MAP[authorId] ?? COLOR_MAP.moderator;
+
+                  return (
+                    <div key={message.id} className="flex gap-3">
+                      <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white bg-white shadow">
+                        <Image
+                          src={message.iconUrl || participantLookup.get(authorId)?.iconUrl || "/images/counselors/placeholder.png"}
+                          alt={message.author || "AI"}
+                          fill
+                          className="object-contain"
+                          sizes="44px"
+                        />
+                      </div>
+                      <div
                         className={cn(
-                          "flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition",
-                          isDisabled
-                            ? "cursor-not-allowed bg-slate-50 opacity-60"
-                            : checked
-                            ? "border-slate-400 bg-slate-100"
-                            : "border-slate-200 bg-white hover:bg-slate-50"
+                          "max-w-[85%] rounded-3xl border px-4 py-3 text-sm leading-relaxed shadow",
+                          participantColors.bubble,
+                          participantColors.border,
+                          participantColors.text,
                         )}
                       >
-                        {checked ? (
-                          <CheckSquare className="h-4 w-4 text-slate-700 flex-shrink-0" />
-                        ) : (
-                          <Square className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                        )}
-                        <span className="flex-1 truncate text-slate-900">{p.name}</span>
-                        {isDisabled && <span className="text-xs text-slate-500">準備中</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Initial Prompts */}
-              <div className="w-full">
-                <p className="mb-4 text-sm font-semibold text-slate-700">こんな時に使えます</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    "複数の視点から意見がほしい",
-                    "いろんな角度で考えたい",
-                    "多様なアドバイスを聞きたい",
-                    "チームで議論してほしい",
-                  ].map((prompt) => (
-                    <button
-                      key={prompt}
-                      onClick={() => handleSendMessage(prompt)}
-                      disabled={isLoading.sending || participants.length === 0}
-                      className="rounded-xl border border-slate-200 bg-white px-6 py-4 text-center text-sm text-slate-900 shadow-sm transition-all hover:bg-slate-50 hover:shadow-md disabled:opacity-50"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="mx-auto max-w-3xl space-y-4">
-              {messages.map((m) => {
-                if (m.role === "user") {
-                  return (
-                    <div key={m.id} className="flex justify-end gap-3">
-                      <div className="max-w-[80%] rounded-2xl bg-slate-900 px-5 py-3 text-white shadow-sm">
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
-                      </div>
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-700 shadow">
-                        <User className="h-5 w-5 text-white" />
+                        <div className="mb-1 text-xs font-semibold opacity-80">{message.author || "AI"}</div>
+                        <p className="whitespace-pre-wrap">
+                          {message.pending ? thinkingMessages[currentThinkingIndex] : message.content}
+                        </p>
                       </div>
                     </div>
                   );
-                }
-
-                // AI message
-                const color = COLOR_MAP[m.authorId || "moderator"] || COLOR_MAP.moderator;
-                return (
-                  <div key={m.id} className="flex justify-start gap-3">
-                    {m.iconUrl && (
-                      <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-white shadow">
-                        <Image
-                          src={m.iconUrl}
-                          alt={m.author || "AI"}
-                          fill
-                          sizes="48px"
-                          className="object-contain"
-                        />
-                      </div>
-                    )}
-                    <div className={cn("max-w-[80%] rounded-2xl border px-5 py-3 shadow-sm", color.bubble, color.border)}>
-                      {m.author && (
-                        <div className="mb-2">
-                          <span className={cn("text-xs font-semibold", color.text)}>{m.author}</span>
-                        </div>
-                      )}
-                      <p className={cn("whitespace-pre-wrap text-sm leading-relaxed", color.text)}>
-                        {m.pending ? thinkingMessages[currentThinkingIndex] : m.content}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-
+                })
+              )}
               {isLoading.sending && (
-                <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-center shadow-sm">
+                <div className="flex flex-col items-center gap-2 rounded-3xl border border-slate-200 bg-white px-6 py-4 text-center shadow-sm">
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Loader2 className="h-4 w-4 animate-spin" /> チームで応答中...
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 tabular-nums">
-                    {loadingSeconds}秒
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    参加AIが多いほど応答に時間がかかります
-                  </p>
+                  <div className="text-2xl font-bold text-slate-900 tabular-nums">{loadingSeconds}秒</div>
+                  <p className="text-xs text-slate-500">参加AIが多いほど応答に時間がかかります</p>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
-          )}
-        </div>
-
-        {/* Input Area */}
-        <div
-          ref={composerRef}
-          className="border-t border-slate-200 bg-white px-6 py-4"
-          style={{
-            position: "sticky",
-            bottom: 0,
-            left: 0,
-            right: 0,
-          }}
-        >
-          {error && <p className="mb-2 text-xs font-medium text-red-600">{error}</p>}
-          <div className="flex items-end gap-3 rounded-3xl border border-slate-300 bg-white px-4 py-3 shadow-sm">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={scrollIntoViewOnFocus}
-              placeholder="チームに相談する..."
-              enterKeyHint="send"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              disabled={isLoading.sending}
-              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-60 md:text-sm"
-              rows={1}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                void handleSendMessage();
-              }}
-              disabled={isLoading.sending || !input.trim() || hasPendingResponse}
-              className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </button>
           </div>
-          <p className="mt-2 text-center text-xs text-slate-500">チームカウンセリングAIは誤った情報を生成する場合があります。</p>
+
+          <div
+            ref={composerRef}
+            className="mt-4 border-t border-slate-100 bg-white/90 px-4 pt-3"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+          >
+            <div className="mx-auto max-w-3xl">
+              {error && <p className="mb-2 text-xs font-medium text-rose-500">{error}</p>}
+              <div className="flex items-end gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="感じていることを入力してください"
+                  className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-900 transition placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                  rows={1}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  enterKeyHint="send"
+                  onFocus={scrollIntoViewOnFocus}
+                  disabled={isLoading.sending}
+                />
+                <Button
+                  onClick={() => {
+                    void handleSendMessage();
+                  }}
+                  disabled={!input.trim() || isLoading.sending || hasPendingResponse}
+                  className="mb-1 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white"
+                >
+                  {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="mt-2 text-center text-xs text-slate-500">複数AIの回答保存に数秒かかる場合があります。</p>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur" onClick={() => setIsSidebarOpen(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 rounded-t-[32px] border border-white/40 bg-white p-6"
+            style={{ maxHeight: "80vh" }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">セッション &amp; 参加AI</p>
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(false)}
+                className="rounded-full border border-slate-200 p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-5 overflow-y-auto" style={{ maxHeight: "65vh" }}>
+              {renderSidebarContent(true)}
+            </div>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }
