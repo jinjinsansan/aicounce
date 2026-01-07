@@ -7,6 +7,18 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { debugLog } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { useChatLayout } from "@/hooks/useChatLayout";
+import { useChatDevice } from "@/hooks/useChatDevice";
+import {
+  DEFAULT_GUIDED_ACTIONS,
+  DEFAULT_PHASE_DETAILS,
+  DEFAULT_PHASE_HINTS,
+  DEFAULT_PHASE_LABELS,
+  getPhaseProgress,
+  inferGuidedPhase,
+  type GuidedActionPreset,
+  type GuidedPhase,
+} from "@/components/chat/guidance";
 
 type SessionSummary = {
   id: string;
@@ -61,18 +73,15 @@ export function ClinicalChatClient() {
   const [error, setError] = useState<string | null>(null);
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
+  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const composerRef = useRef<HTMLDivElement | null>(null);
-  const autoScrollRef = useRef(true);
-  const scrollFrameRef = useRef<number | undefined>(undefined);
-  const [composerHeight, setComposerHeight] = useState(0);
+  const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
+  const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
   const hasRestoredSessionRef = useRef(false);
   const lastRequestTimeRef = useRef<number>(0);
 
@@ -81,6 +90,11 @@ export function ClinicalChatClient() {
     activeSessionId,
   ]);
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
+
+  useEffect(() => {
+    setCurrentPhase(inferGuidedPhase(userMessageCount));
+  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -163,19 +177,6 @@ export function ClinicalChatClient() {
   useEffect(() => {
     debugLog("[Mount] Component mounted");
     setIsMounted(true);
-    setIsMobile(window.innerWidth < 768);
-
-    if (window.innerWidth < 768 && textareaRef.current) {
-      textareaRef.current.blur();
-      debugLog("[Mount] Mobile: textarea blur applied to prevent unwanted keyboard");
-    }
-
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -284,55 +285,6 @@ export function ClinicalChatClient() {
   }, [isMounted, activeSessionId]);
 
   useEffect(() => {
-    if (!composerRef.current) return;
-
-    const updateHeight = () => {
-      if (composerRef.current) {
-        setComposerHeight(composerRef.current.offsetHeight);
-      }
-    };
-
-    updateHeight();
-
-    if (typeof ResizeObserver === "undefined") {
-      const interval = window.setInterval(updateHeight, 500);
-      return () => window.clearInterval(interval);
-    }
-
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(composerRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const scheduleScrollToBottom = useCallback(() => {
-    if (!autoScrollRef.current) return;
-    if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    scrollFrameRef.current = requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
-    });
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const distanceFromBottom = container.scrollHeight - (container.scrollTop + container.clientHeight);
-      autoScrollRef.current = distanceFromBottom < 120;
-    };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
     if (isLoading.sending) return;
 
     debugLog("[Load Messages] activeSessionId:", activeSessionId);
@@ -350,8 +302,8 @@ export function ClinicalChatClient() {
 
   useLayoutEffect(() => {
     if (messages.length === 0) return;
-    scheduleScrollToBottom();
-  }, [messages.length, scheduleScrollToBottom]);
+    scheduleScroll();
+  }, [messages.length, scheduleScroll]);
 
   useEffect(() => {
     if (!hasPendingResponse) return;
@@ -540,6 +492,20 @@ export function ClinicalChatClient() {
     }
   };
 
+  const handleGuidedAction = async (action: GuidedActionPreset) => {
+    if (guidedActionLoading === action.id) return;
+    setGuidedActionLoading(action.id);
+    try {
+      await handleSendMessage(action.prompt);
+      if (action.success) {
+        setError(action.success);
+        setTimeout(() => setError(null), 2000);
+      }
+    } finally {
+      setGuidedActionLoading(null);
+    }
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -577,6 +543,13 @@ export function ClinicalChatClient() {
     );
   }
 
+  const guidedActions = DEFAULT_GUIDED_ACTIONS;
+  const phaseLabels = DEFAULT_PHASE_LABELS;
+  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
+  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
+  const phaseProgress = getPhaseProgress(userMessageCount);
+  const phaseProgressPercent = Math.round(phaseProgress * 100);
+
   const showGlobalLoader =
     !isMounted ||
     isRestoringSession ||
@@ -610,6 +583,8 @@ export function ClinicalChatClient() {
       ))}
     </div>
   );
+  const newChatButtonBase =
+    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-[#2563eb]/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#c7d2fe] hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div
@@ -638,7 +613,7 @@ export function ClinicalChatClient() {
           variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#1d4ed8] font-semibold shadow-sm transition hover:bg-[#f4f8ff]"
+          className={cn("mb-6", newChatButtonBase)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -708,7 +683,7 @@ export function ClinicalChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#1d4ed8] font-semibold shadow-sm transition hover:bg-[#f4f8ff]"
+              className={cn("mb-4", newChatButtonBase)}
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
@@ -766,7 +741,7 @@ export function ClinicalChatClient() {
       )}
 
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
-        <header className="flex items-center justify-between border-b border-[#dbeeff] px-4 py-3 text-sm text-[#1e3a8a]">
+        <header className="flex flex-col gap-3 border-b border-[#dbeeff] px-4 py-3 text-sm text-[#1e3a8a] md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -779,11 +754,44 @@ export function ClinicalChatClient() {
             <span className="font-semibold text-[#1d4ed8]">{activeSession?.title || "臨床心理AI（ドクター・サトウ）"}</span>
             {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#93c5fd]" />}
           </div>
-          {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-[#1e3a8a]" onClick={handleShare}>
-              <Share2 className="mr-2 h-4 w-4" /> 共有
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-[#e0edff] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
+              {phaseLabels[currentPhase]}
+            </span>
+            <span className="text-xs text-[#1e3a8a]">{phaseHint}</span>
+            {messages.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-[#1e3a8a]" onClick={handleShare}>
+                <Share2 className="mr-2 h-4 w-4" /> 共有
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {guidedActions.map((action) => (
+              <Button
+                key={action.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleGuidedAction(action)}
+                disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
+                className="h-7 rounded-full border border-[#d7e9ff] bg-white/80 px-3 text-[11px] text-[#1d4ed8] hover:bg-[#f0f7ff]"
+              >
+                {guidedActionLoading === action.id ? action.loadingLabel ?? "進行中..." : action.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex w-full max-w-xs flex-col">
+            <div className="flex items-center justify-between text-[11px] text-[#1e3a8a]/80">
+              <span>フェーズ進捗</span>
+              <span>{phaseProgressPercent}%</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-[#d7e9ff]">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${Math.min(phaseProgressPercent, 100)}%`, backgroundColor: "#1d4ed8" }}
+              />
+            </div>
+            <p className="mt-1 text-[11px] font-semibold text-[#1e3a8a]">{phaseDetail.cta}</p>
+          </div>
         </header>
 
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#f4f9ff] to-[#eaf3ff]" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -818,6 +826,13 @@ export function ClinicalChatClient() {
               </div>
             ) : (
               <div className="mx-auto max-w-3xl space-y-6" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
+                <div className="rounded-2xl border border-[#dbeeff] bg-white/80 px-5 py-4 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#1d4ed8]">
+                    <span>{phaseDetail.title}</span>
+                    <span>{phaseLabels[currentPhase]}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-[#123a66]">{phaseDetail.summary}</p>
+                </div>
                 {messages.map((message) => (
                   <div key={message.id}>
                     <div className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
@@ -879,13 +894,7 @@ export function ClinicalChatClient() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={(event) => {
-                  if (isMobile) {
-                    setTimeout(() => {
-                      event.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 300);
-                  }
-                }}
+                onFocus={scrollIntoViewOnFocus}
                 placeholder="ドクター・サトウに話しかける..."
                 enterKeyHint="send"
                 autoComplete="off"
@@ -897,7 +906,9 @@ export function ClinicalChatClient() {
               />
               <button
                 type="button"
-                onClick={() => handleSendMessage()}
+                onClick={() => {
+                  void handleSendMessage();
+                }}
                 disabled={isLoading.sending || !input.trim() || hasPendingResponse}
                 className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#38bdf8] to-[#0ea5e9] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
               >

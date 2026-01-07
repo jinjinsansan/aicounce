@@ -8,6 +8,18 @@ import { Button } from "@/components/ui/button";
 import { debugLog } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
+import { useChatLayout } from "@/hooks/useChatLayout";
+import { useChatDevice } from "@/hooks/useChatDevice";
+import {
+  DEFAULT_GUIDED_ACTIONS,
+  DEFAULT_PHASE_DETAILS,
+  DEFAULT_PHASE_HINTS,
+  DEFAULT_PHASE_LABELS,
+  getPhaseProgress,
+  inferGuidedPhase,
+  type GuidedActionPreset,
+  type GuidedPhase,
+} from "@/components/chat/guidance";
 
 type Participant = { id: string; name: string; iconUrl: string; comingSoon?: boolean };
 
@@ -29,13 +41,36 @@ type MessageItem = {
   pending?: boolean;
 };
 
+type TeamMessageRow = {
+  id: string;
+  role: "user" | "assistant";
+  author?: string | null;
+  author_id?: string | null;
+  content: string;
+  icon_url?: string | null;
+  created_at: string;
+};
+
 type MessagesResponse = {
-  session: Pick<SessionSummary, "id" | "title" | "participants">;
-  messages: MessageItem[];
+  session?: Pick<SessionSummary, "id" | "title" | "participants">;
+  messages?: TeamMessageRow[];
 };
 
 type SessionsResponse = {
-  sessions: SessionSummary[];
+  sessions?: SessionSummary[];
+};
+
+type CreateSessionResponse = {
+  session: SessionSummary;
+};
+
+type RespondResponse = {
+  responses?: {
+    author?: string;
+    authorId?: string | null;
+    content: string;
+    iconUrl?: string | null;
+  }[];
 };
 
 const ACTIVE_SESSION_STORAGE_KEY = "team-counseling-active-session-id";
@@ -70,27 +105,24 @@ export function TeamChatClient() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState({ sessions: false, messages: false, sending: false });
   const [needsAuth, setNeedsAuth] = useState(false);
-  const [needsPremium, setNeedsPremium] = useState(false);
+  const [needsPremium] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
+  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const composerRef = useRef<HTMLDivElement | null>(null);
-  const autoScrollRef = useRef(true);
-  const scrollFrameRef = useRef<number | undefined>(undefined);
-  const [composerHeight, setComposerHeight] = useState(0);
+  const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
+  const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
   const hasRestoredSessionRef = useRef(false);
-  const lastRequestTimeRef = useRef<number>(0);
   const abortRef = useRef<AbortController | null>(null);
   const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastRequestTimeRef = useRef<number>(0);
 
   const availableParticipants: Participant[] = useMemo(
     () =>
@@ -103,11 +135,12 @@ export function TeamChatClient() {
     [],
   );
 
-  const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
-    sessions,
-    activeSessionId,
-  ]);
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
+
+  useEffect(() => {
+    setCurrentPhase(inferGuidedPhase(userMessageCount));
+  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -118,15 +151,17 @@ export function TeamChatClient() {
         return;
       }
       if (!res.ok) throw new Error("Failed to load sessions");
-      const data = await res.json();
-      const allSessions = data.sessions || [];
+      const data = (await res.json()) as SessionsResponse;
+      const allSessions = data.sessions ?? [];
       console.log("[Sessions] Loaded sessions:", allSessions);
-      setSessions(allSessions.map((s: any) => ({
-        id: s.id,
-        title: s.title || "チームカウンセリング",
-        participants: s.participants || [],
-        updated_at: s.updated_at,
-      })));
+      setSessions(
+        allSessions.map((session) => ({
+          id: session.id,
+          title: session.title || "チームカウンセリング",
+          participants: session.participants ?? [],
+          updated_at: session.updated_at,
+        })),
+      );
       setHasInitializedSessions(true);
     } catch (err) {
       console.error("[Sessions] Failed to load:", err);
@@ -141,21 +176,23 @@ export function TeamChatClient() {
     try {
       const res = await fetch(`/api/team/sessions/${sessionId}/messages`);
       if (!res.ok) throw new Error("Failed to load messages");
-      const data = await res.json();
-      const sessionData = data.session || {};
-      const msgs = data.messages || [];
-      
-      setMessages(msgs.map((m: any) => ({
-        id: m.id || Math.random().toString(),
-        role: m.role,
-        author: m.author,
-        authorId: m.author_id,
-        content: m.content,
-        iconUrl: m.icon_url,
-        created_at: m.created_at,
-      })));
-      
-      if (sessionData.participants) {
+      const data = (await res.json()) as MessagesResponse;
+      const sessionData = data.session;
+      const msgs = data.messages ?? [];
+
+      setMessages(
+        msgs.map((m) => ({
+          id: m.id,
+          role: m.role,
+          author: m.author ?? undefined,
+          authorId: m.author_id ?? undefined,
+          content: m.content,
+          iconUrl: m.icon_url ?? undefined,
+          created_at: m.created_at,
+        })),
+      );
+
+      if (sessionData?.participants) {
         setParticipants(sessionData.participants);
       }
       
@@ -175,13 +212,31 @@ export function TeamChatClient() {
 
   useEffect(() => {
     setIsMounted(true);
-    setIsMobile(window.innerWidth < 768);
+  }, []);
+
+  useEffect(() => {
+    const updateStatus = () => {
+      if (typeof navigator === "undefined") return;
+      setIsOffline(!navigator.onLine);
+    };
+    updateStatus();
+    window.addEventListener("online", updateStatus);
+    window.addEventListener("offline", updateStatus);
+    return () => {
+      window.removeEventListener("online", updateStatus);
+      window.removeEventListener("offline", updateStatus);
+    };
   }, []);
 
   useEffect(() => {
     debugLog("[Sessions] Loading sessions...");
     loadSessions();
   }, [loadSessions]);
+
+  useLayoutEffect(() => {
+    if (messages.length === 0) return;
+    scheduleScroll();
+  }, [messages.length, scheduleScroll]);
 
   useEffect(() => {
     if (!isMounted || hasRestoredSessionRef.current || !hasInitializedSessions || sessions.length === 0) {
@@ -275,12 +330,38 @@ export function TeamChatClient() {
   const handleSendMessage = async (overrideText?: string) => {
     const textToSend = overrideText ? overrideText.trim() : input.trim();
 
-    if (!textToSend || isLoading.sending || hasPendingResponse) return;
+    if (!textToSend) {
+      return;
+    }
+
     if (participants.length === 0) {
       setError("参加AIを1人以上選択してください");
       setTimeout(() => setError(null), 2000);
       return;
     }
+
+    if (hasPendingResponse) {
+      setError("前の応答を待っています...");
+      setTimeout(() => setError(null), 1000);
+      return;
+    }
+
+    if (isLoading.sending) {
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTimeRef.current;
+    const MIN_REQUEST_INTERVAL = 3000;
+
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL && lastRequestTimeRef.current > 0) {
+      const remainingTime = Math.ceil((MIN_REQUEST_INTERVAL - timeSinceLastRequest) / 1000);
+      setError(`${remainingTime}秒お待ちください...`);
+      setTimeout(() => setError(null), 1000);
+      return;
+    }
+
+    lastRequestTimeRef.current = now;
 
     let currentSessionId = activeSessionId;
 
@@ -303,7 +384,7 @@ export function TeamChatClient() {
           throw new Error("Failed to create session");
         }
 
-        const createData = await createRes.json();
+        const createData = (await createRes.json()) as CreateSessionResponse;
         console.log("[Session] Created session:", createData.session);
         currentSessionId = createData.session.id;
         setActiveSessionId(currentSessionId);
@@ -326,6 +407,7 @@ export function TeamChatClient() {
     }
 
     setInput("");
+    setError(null);
     const tempUserId = `temp-user-${Date.now()}`;
     const tempAiId = `temp-ai-${Date.now()}`;
 
@@ -365,11 +447,11 @@ export function TeamChatClient() {
         throw new Error(serverMessage);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as RespondResponse;
 
       // Remove pending message and add all AI responses
-      const aiResponses = (data.responses || []).map((r: any) => ({
-        id: `ai-${Date.now()}-${Math.random()}`,
+      const aiResponses = (data.responses ?? []).map((r, index) => ({
+        id: `ai-${Date.now()}-${index}`,
         role: "assistant" as const,
         author: r.author,
         authorId: r.authorId,
@@ -411,8 +493,8 @@ export function TeamChatClient() {
         }
       }
 
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
         console.log("[Send] Request was aborted");
         setMessages((prev) => prev.filter((msg) => msg.id !== tempUserId && msg.id !== tempAiId));
         return;
@@ -502,6 +584,20 @@ export function TeamChatClient() {
     }
   };
 
+  const handleGuidedAction = async (action: GuidedActionPreset) => {
+    if (guidedActionLoading === action.id) return;
+    setGuidedActionLoading(action.id);
+    try {
+      await handleSendMessage(action.prompt);
+      if (action.success) {
+        setError(action.success);
+        setTimeout(() => setError(null), 2000);
+      }
+    } finally {
+      setGuidedActionLoading(null);
+    }
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -533,6 +629,13 @@ export function TeamChatClient() {
     );
   }
 
+  const guidedActions = DEFAULT_GUIDED_ACTIONS;
+  const phaseLabels = DEFAULT_PHASE_LABELS;
+  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
+  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
+  const phaseProgress = getPhaseProgress(userMessageCount);
+  const phaseProgressPercent = Math.round(phaseProgress * 100);
+
   const showGlobalLoader =
     !isMounted ||
     isRestoringSession ||
@@ -551,6 +654,8 @@ export function TeamChatClient() {
   }
 
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 128);
+  const newChatButtonClasses =
+    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#334155] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-200 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div
@@ -576,7 +681,7 @@ export function TeamChatClient() {
           variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-slate-900 font-semibold shadow-sm transition hover:bg-slate-50"
+          className={cn("mb-6", newChatButtonClasses)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -673,7 +778,7 @@ export function TeamChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 w-full justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-slate-900 font-semibold shadow-sm transition hover:bg-slate-50"
+              className={cn("mb-4", newChatButtonClasses)}
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
@@ -760,7 +865,7 @@ export function TeamChatClient() {
       {/* Main Content */}
       <main className="relative flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -770,14 +875,48 @@ export function TeamChatClient() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-bold text-slate-900">チームカウンセリング</h1>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">チームカウンセリング</h1>
+              <p className="text-xs text-slate-500">{participants.length}名のAIがディスカッション中</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800">
+              {phaseLabels[currentPhase]}
+            </span>
+            <span className="text-xs text-slate-600">{phaseHint}</span>
             {messages.length > 0 && (
-              <Button variant="ghost" size="icon" onClick={handleShare}>
-                <Share2 className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="text-slate-700" onClick={handleShare}>
+                <Share2 className="mr-2 h-4 w-4" /> 共有
               </Button>
             )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {guidedActions.map((action) => (
+              <Button
+                key={action.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleGuidedAction(action)}
+                disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
+                className="h-7 rounded-full border border-slate-200 bg-white/80 px-3 text-[11px] text-slate-800 hover:bg-slate-50"
+              >
+                {guidedActionLoading === action.id ? action.loadingLabel ?? "進行中..." : action.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex w-full max-w-xs flex-col">
+            <div className="flex items-center justify-between text-[11px] text-slate-600">
+              <span>フェーズ進捗</span>
+              <span>{phaseProgressPercent}%</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-slate-900 transition-all"
+                style={{ width: `${Math.min(phaseProgressPercent, 100)}%` }}
+              />
+            </div>
+            <p className="mt-1 text-[11px] font-semibold text-slate-700">{phaseDetail.cta}</p>
           </div>
         </header>
 
@@ -858,6 +997,13 @@ export function TeamChatClient() {
             </div>
           ) : (
             <div className="mx-auto max-w-3xl space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
+                  <span>{phaseDetail.title}</span>
+                  <span>{phaseLabels[currentPhase]}</span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">{phaseDetail.summary}</p>
+              </div>
               {messages.map((m) => {
                 if (m.role === "user") {
                   return (
@@ -878,7 +1024,13 @@ export function TeamChatClient() {
                   <div key={m.id} className="flex justify-start gap-3">
                     {m.iconUrl && (
                       <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-white shadow">
-                        <img src={m.iconUrl} alt={m.author || "AI"} className="h-full w-full object-contain" />
+                        <Image
+                          src={m.iconUrl}
+                          alt={m.author || "AI"}
+                          fill
+                          sizes="48px"
+                          className="object-contain"
+                        />
                       </div>
                     )}
                     <div className={cn("max-w-[80%] rounded-2xl border px-5 py-3 shadow-sm", color.bubble, color.border)}>
@@ -931,6 +1083,7 @@ export function TeamChatClient() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={scrollIntoViewOnFocus}
               placeholder="チームに相談する..."
               enterKeyHint="send"
               autoComplete="off"
@@ -942,7 +1095,9 @@ export function TeamChatClient() {
             />
             <button
               type="button"
-              onClick={() => handleSendMessage()}
+              onClick={() => {
+                void handleSendMessage();
+              }}
               disabled={isLoading.sending || !input.trim() || hasPendingResponse}
               className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >

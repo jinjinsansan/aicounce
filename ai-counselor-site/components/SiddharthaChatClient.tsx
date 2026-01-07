@@ -7,6 +7,18 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { debugLog } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { useChatLayout } from "@/hooks/useChatLayout";
+import { useChatDevice } from "@/hooks/useChatDevice";
+import {
+  DEFAULT_GUIDED_ACTIONS,
+  DEFAULT_PHASE_DETAILS,
+  DEFAULT_PHASE_HINTS,
+  DEFAULT_PHASE_LABELS,
+  getPhaseProgress,
+  inferGuidedPhase,
+  type GuidedActionPreset,
+  type GuidedPhase,
+} from "@/components/chat/guidance";
 
 type SessionSummary = {
   id: string;
@@ -21,6 +33,23 @@ type MessageItem = {
   content: string;
   created_at: string;
   pending?: boolean;
+};
+
+type ConversationListResponse = {
+  conversations?: {
+    id: string;
+    title: string | null;
+    updated_at: string;
+  }[];
+};
+
+type ConversationMessagesResponse = {
+  messages?: {
+    id: string;
+    role: "user" | "assistant" | "system";
+    content: string;
+    created_at: string;
+  }[];
 };
 
 const ACTIVE_SESSION_STORAGE_KEY = "siddhartha-buddhism-active-session-id";
@@ -52,19 +81,16 @@ export function SiddharthaChatClient() {
   const [error, setError] = useState<string | null>(null);
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
 
   const [isOffline, setIsOffline] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
+  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const composerRef = useRef<HTMLDivElement | null>(null);
-  const autoScrollRef = useRef(true);
-  const scrollFrameRef = useRef<number | undefined>(undefined);
-  const [composerHeight, setComposerHeight] = useState(0);
+  const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
+  const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
   const hasRestoredSessionRef = useRef(false);
   const lastRequestTimeRef = useRef<number>(0);
 
@@ -73,6 +99,11 @@ export function SiddharthaChatClient() {
     activeSessionId,
   ]);
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
+
+  useEffect(() => {
+    setCurrentPhase(inferGuidedPhase(userMessageCount));
+  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -83,13 +114,15 @@ export function SiddharthaChatClient() {
         return;
       }
       if (!res.ok) throw new Error("Failed to load sessions");
-      const data = await res.json();
-      const allConversations = data.conversations || [];
-      setSessions(allConversations.map((c: any) => ({
-        id: c.id,
-        title: c.title || "新しいチャット",
-        updated_at: c.updated_at,
-      })));
+      const data = (await res.json()) as ConversationListResponse;
+      const allConversations = data.conversations ?? [];
+      setSessions(
+        allConversations.map((conversation) => ({
+          id: conversation.id,
+          title: conversation.title || "新しいチャット",
+          updated_at: conversation.updated_at,
+        })),
+      );
     } catch (err) {
       console.error(err);
     } finally {
@@ -120,19 +153,21 @@ export function SiddharthaChatClient() {
         }
         if (!res.ok) throw new Error("Failed to load messages");
 
-        const data = await res.json();
-        const messagesData = data.messages || [];
+        const data = (await res.json()) as ConversationMessagesResponse;
+        const messagesData = data.messages ?? [];
         debugLog("[loadMessages] Received data:", {
           messagesCount: messagesData.length,
           firstMessage: messagesData[0]?.content?.substring(0, 50),
         });
 
-        setMessages(messagesData.map((msg: any) => ({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-          created_at: msg.created_at,
-        })));
+        setMessages(
+          messagesData.map((msg) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+            created_at: msg.created_at,
+          })),
+        );
         setHasLoadedMessages(true);
         debugLog("[loadMessages] Messages state updated with", messagesData.length, "messages");
       } catch (err) {
@@ -148,19 +183,6 @@ export function SiddharthaChatClient() {
   useEffect(() => {
     debugLog("[Mount] Component mounted");
     setIsMounted(true);
-    setIsMobile(window.innerWidth < 768);
-
-    if (window.innerWidth < 768 && textareaRef.current) {
-      textareaRef.current.blur();
-      debugLog("[Mount] Mobile: textarea blur applied to prevent unwanted keyboard");
-    }
-
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -269,55 +291,6 @@ export function SiddharthaChatClient() {
   }, [isMounted, activeSessionId]);
 
   useEffect(() => {
-    if (!composerRef.current) return;
-
-    const updateHeight = () => {
-      if (composerRef.current) {
-        setComposerHeight(composerRef.current.offsetHeight);
-      }
-    };
-
-    updateHeight();
-
-    if (typeof ResizeObserver === "undefined") {
-      const interval = window.setInterval(updateHeight, 500);
-      return () => window.clearInterval(interval);
-    }
-
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(composerRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const scheduleScrollToBottom = useCallback(() => {
-    if (!autoScrollRef.current) return;
-    if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    scrollFrameRef.current = requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
-    });
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const distanceFromBottom = container.scrollHeight - (container.scrollTop + container.clientHeight);
-      autoScrollRef.current = distanceFromBottom < 120;
-    };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
     if (isLoading.sending) return;
 
     debugLog("[Load Messages] activeSessionId:", activeSessionId);
@@ -335,8 +308,8 @@ export function SiddharthaChatClient() {
 
   useLayoutEffect(() => {
     if (messages.length === 0) return;
-    scheduleScrollToBottom();
-  }, [messages.length, scheduleScrollToBottom]);
+    scheduleScroll();
+  }, [messages.length, scheduleScroll]);
 
   useEffect(() => {
     if (!hasPendingResponse) return;
@@ -532,6 +505,20 @@ export function SiddharthaChatClient() {
     }
   };
 
+  const handleGuidedAction = async (action: GuidedActionPreset) => {
+    if (guidedActionLoading === action.id) return;
+    setGuidedActionLoading(action.id);
+    try {
+      await handleSendMessage(action.prompt);
+      if (action.success) {
+        setError(action.success);
+        setTimeout(() => setError(null), 2000);
+      }
+    } finally {
+      setGuidedActionLoading(null);
+    }
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -569,6 +556,13 @@ export function SiddharthaChatClient() {
     );
   }
 
+  const guidedActions = DEFAULT_GUIDED_ACTIONS;
+  const phaseLabels = DEFAULT_PHASE_LABELS;
+  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
+  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
+  const phaseProgress = getPhaseProgress(userMessageCount);
+  const phaseProgressPercent = Math.round(phaseProgress * 100);
+
   const showGlobalLoader =
     !isMounted ||
     isRestoringSession ||
@@ -602,6 +596,8 @@ export function SiddharthaChatClient() {
       ))}
     </div>
   );
+  const newChatButtonBase =
+    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#f59e0b] to-[#f97316] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-[#f97316]/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#fde68a] hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div
@@ -630,7 +626,7 @@ export function SiddharthaChatClient() {
           variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#92400e] font-semibold shadow-sm transition hover:bg-[#fefce8]"
+          className={cn("mb-6", newChatButtonBase)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -700,7 +696,7 @@ export function SiddharthaChatClient() {
             setIsSidebarOpen(false);
           }}
           disabled={isLoading.sending}
-          className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#92400e] font-semibold shadow-sm transition hover:bg-[#fefce8]"
+          className={cn("mb-4", newChatButtonBase)}
         >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
@@ -758,7 +754,7 @@ export function SiddharthaChatClient() {
       )}
 
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
-        <header className="flex items-center justify-between border-b border-[#fde68a] px-4 py-3 text-sm text-[#92400e]">
+        <header className="flex flex-col gap-3 border-b border-[#fde68a] px-4 py-3 text-sm text-[#92400e] md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -771,11 +767,44 @@ export function SiddharthaChatClient() {
             <span className="font-semibold text-[#92400e]">{activeSession?.title || "仏教カウンセリングAI"}</span>
             {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#f59e0b]" />}
           </div>
-          {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-[#92400e]" onClick={handleShare}>
-              <Share2 className="mr-2 h-4 w-4" /> 共有
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-[#fef3c7] px-3 py-1 text-xs font-semibold text-[#b45309]">
+              {phaseLabels[currentPhase]}
+            </span>
+            <span className="text-xs text-[#92400e]">{phaseHint}</span>
+            {messages.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-[#92400e]" onClick={handleShare}>
+                <Share2 className="mr-2 h-4 w-4" /> 共有
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {guidedActions.map((action) => (
+              <Button
+                key={action.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleGuidedAction(action)}
+                disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
+                className="h-7 rounded-full border border-[#fde68a] bg-white/80 px-3 text-[11px] text-[#b45309] hover:bg-[#fefce8]"
+              >
+                {guidedActionLoading === action.id ? action.loadingLabel ?? "進行中..." : action.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex w-full max-w-xs flex-col">
+            <div className="flex items-center justify-between text-[11px] text-[#b45309]">
+              <span>フェーズ進捗</span>
+              <span>{phaseProgressPercent}%</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-[#fde68a]">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${Math.min(phaseProgressPercent, 100)}%`, backgroundColor: "#d97706" }}
+              />
+            </div>
+            <p className="mt-1 text-[11px] font-semibold text-[#b45309]">{phaseDetail.cta}</p>
+          </div>
         </header>
 
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fffbf0] to-[#fef8e7]" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -810,6 +839,13 @@ export function SiddharthaChatClient() {
               </div>
             ) : (
               <div className="mx-auto max-w-3xl space-y-6" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
+                <div className="rounded-2xl border border-[#fde68a] bg-white/80 px-5 py-4 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#b45309]">
+                    <span>{phaseDetail.title}</span>
+                    <span>{phaseLabels[currentPhase]}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-[#78350f]">{phaseDetail.summary}</p>
+                </div>
                 {messages.map((message) => (
                   <div key={message.id}>
                     <div className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
@@ -872,13 +908,7 @@ export function SiddharthaChatClient() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={(event) => {
-                  if (isMobile) {
-                    setTimeout(() => {
-                      event.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 300);
-                  }
-                }}
+                onFocus={scrollIntoViewOnFocus}
                 placeholder="シッダールタに話しかける..."
                 enterKeyHint="send"
                 autoComplete="off"
@@ -890,7 +920,9 @@ export function SiddharthaChatClient() {
               />
               <button
                 type="button"
-                onClick={() => handleSendMessage()}
+                onClick={() => {
+                  void handleSendMessage();
+                }}
                 disabled={isLoading.sending || !input.trim() || hasPendingResponse}
                 className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#f59e0b] to-[#d97706] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
               >

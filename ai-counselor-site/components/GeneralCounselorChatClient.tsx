@@ -1,11 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
 import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useChatLayout } from "@/hooks/useChatLayout";
+import { useChatDevice } from "@/hooks/useChatDevice";
+import {
+  DEFAULT_GUIDED_ACTIONS,
+  DEFAULT_PHASE_DETAILS,
+  DEFAULT_PHASE_HINTS,
+  DEFAULT_PHASE_LABELS,
+  getPhaseProgress,
+  inferGuidedPhase,
+  type GuidedActionPreset,
+  type GuidedPhase,
+} from "@/components/chat/guidance";
 
 type ConversationRow = {
   id: string;
@@ -41,9 +53,12 @@ type ChatConfig = {
     assistantText: string;
     assistantBorder: string;
     activeBackground: string;
+    newChatButton: string;
   };
   initialPrompts: string[];
   thinkingMessages: string[];
+  guidedActions?: GuidedActionPreset[];
+  phaseLabels?: Record<GuidedPhase, string>;
 };
 
 type SessionSummary = {
@@ -70,29 +85,32 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [input, setInput] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState({ sessions: false, messages: false, sending: false });
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
+  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const composerRef = useRef<HTMLDivElement | null>(null);
+  const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
+  const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
   const hasRestoredRef = useRef(false);
-  const [composerHeight, setComposerHeight] = useState(0);
-  const autoScrollRef = useRef(true);
-  const scrollFrameRef = useRef<number | null>(null);
   const lastSendRef = useRef<number>(0);
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
+
+  useEffect(() => {
+    setCurrentPhase(inferGuidedPhase(userMessageCount));
+  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
     try {
-      const res = await fetch("/api/conversations");
+      const res = await fetch(`/api/conversations?counselorId=${encodeURIComponent(config.counselorId)}`);
       if (res.status === 401) {
         setNeedsAuth(true);
         return;
@@ -149,11 +167,20 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
 
   const handleSend = async (override?: string) => {
     const text = (override ?? input).trim();
-    if (!text || isLoading.sending || hasPendingResponse) return;
+    if (!text || isLoading.sending) return;
+
+    if (hasPendingResponse) {
+      setError("前の応答を待っています...");
+      setTimeout(() => setError(null), 1200);
+      return;
+    }
 
     const now = Date.now();
-    if (now - lastSendRef.current < 1500) {
-      setError("少し待ってから送信してください");
+    const MIN_REQUEST_INTERVAL = 3000;
+    const elapsed = now - lastSendRef.current;
+    if (lastSendRef.current && elapsed < MIN_REQUEST_INTERVAL) {
+      const remaining = Math.ceil((MIN_REQUEST_INTERVAL - elapsed) / 1000);
+      setError(`${remaining}秒お待ちください...`);
       setTimeout(() => setError(null), 1200);
       return;
     }
@@ -163,6 +190,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     if (isMobile && textareaRef.current) {
       textareaRef.current.blur();
     }
+    setError(null);
 
     const userTempId = `user-${now}`;
     const aiTempId = `assistant-${now}`;
@@ -271,25 +299,53 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     }
   };
 
+  const guidedActions = config.guidedActions ?? DEFAULT_GUIDED_ACTIONS;
+
+  const handleGuidedAction = async (action: GuidedActionPreset) => {
+    if (guidedActionLoading === action.id) return;
+    setGuidedActionLoading(action.id);
+    try {
+      await handleSend(action.prompt);
+      if (action.success) {
+        setError(action.success);
+        setTimeout(() => setError(null), 2000);
+      }
+    } finally {
+      setGuidedActionLoading(null);
+    }
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
+      if (hasPendingResponse) {
+        setError("前の応答を待っています...");
+        setTimeout(() => setError(null), 1200);
+        return;
+      }
       handleSend();
     }
   };
 
   const handlePromptClick = (prompt: string) => {
     setInput(prompt);
-    if (!isMobile && textareaRef.current) {
-      textareaRef.current.focus();
+    if (!isLoading.sending && !hasPendingResponse) {
+      void handleSend(prompt);
     }
   };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const updateStatus = () => {
+      if (typeof navigator === "undefined") return;
+      setIsOffline(!navigator.onLine);
+    };
+    updateStatus();
+    window.addEventListener("online", updateStatus);
+    window.addEventListener("offline", updateStatus);
+    return () => {
+      window.removeEventListener("online", updateStatus);
+      window.removeEventListener("offline", updateStatus);
+    };
   }, []);
 
   useEffect(() => {
@@ -324,6 +380,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
       setHasLoadedMessages(true);
       return;
     }
+    setHasLoadedMessages(false);
     loadMessages(activeSessionId);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(config.storageKey, activeSessionId);
@@ -336,43 +393,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
   }, [input]);
 
-  useEffect(() => {
-    if (!composerRef.current) return;
-    const update = () => {
-      if (composerRef.current) {
-        setComposerHeight(composerRef.current.offsetHeight);
-      }
-    };
-    update();
-    if (typeof ResizeObserver === "undefined") {
-      const interval = window.setInterval(update, 500);
-      return () => window.clearInterval(interval);
-    }
-    const observer = new ResizeObserver(update);
-    observer.observe(composerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const scheduleScroll = useCallback(() => {
-    if (!autoScrollRef.current) return;
-    if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
-    scrollFrameRef.current = requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    });
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const handleScroll = () => {
-      const distance = container.scrollHeight - (container.scrollTop + container.clientHeight);
-      autoScrollRef.current = distance < 120;
-    };
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (messages.length === 0) return;
     scheduleScroll();
   }, [messages.length, scheduleScroll]);
@@ -408,22 +429,40 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     );
   }
 
+  const phaseLabels = config.phaseLabels ?? DEFAULT_PHASE_LABELS;
+  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
+  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
+  const phaseProgress = getPhaseProgress(userMessageCount);
+  const phaseProgressPercent = Math.round(phaseProgress * 100);
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 24, 160);
+  const newChatButtonClasses = cn(
+    "w-full justify-center gap-2 rounded-3xl border border-transparent px-5 py-4 text-base font-semibold text-white shadow-lg shadow-black/10 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60",
+    config.theme.newChatButton,
+  );
+
+  const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
+  const sessionSkeletonNodes = Array.from({ length: 3 }).map((_, index) => (
+    <div key={index} className="animate-pulse rounded-3xl border border-emerald-50 bg-white/60 px-4 py-4">
+      <div className="h-4 w-1/2 rounded-full bg-emerald-100" />
+      <div className="mt-2 h-3 w-1/3 rounded-full bg-emerald-50" />
+    </div>
+  ));
 
   const SessionList = (
     <div className="flex flex-col gap-4">
       <div className="space-y-2">
         <Button
+          type="button"
+          variant="ghost"
           onClick={handleNewChat}
-          className="w-full justify-center gap-2 rounded-2xl border border-emerald-200 bg-white text-[#065f46] hover:bg-emerald-50"
-          variant="outline"
+          className={newChatButtonClasses}
           disabled={isLoading.sending}
         >
-          <Plus className="h-4 w-4" /> 新規チャット
+          <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
         <Button
           onClick={handleShare}
-          className="w-full justify-center gap-2 rounded-2xl border border-emerald-100 bg-white text-[#0f3d2e] hover:bg-emerald-50"
+          className="w-full justify-center gap-2 rounded-2xl border border-white/70 bg-white/80 text-slate-800 shadow-sm hover:bg-white"
           variant="outline"
           disabled={!messages.length}
         >
@@ -432,56 +471,76 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
       </div>
 
       <div className="space-y-3">
-        {sessions.length === 0 && (
+        {showSessionSkeleton && <div className="space-y-3">{sessionSkeletonNodes}</div>}
+        {!showSessionSkeleton && sessions.length === 0 && (
           <p className="rounded-3xl border border-dashed border-emerald-200 bg-white/70 px-4 py-6 text-center text-sm text-emerald-800">
             まだチャット履歴がありません。
           </p>
         )}
-        {sessions.map((session) => (
-          <button
-            key={session.id}
-            type="button"
-            onClick={() => {
-              setActiveSessionId(session.id);
-              setIsSidebarOpen(false);
-            }}
-            className={cn(
-              "flex w-full items-center justify-between rounded-3xl border px-4 py-3 text-left text-sm transition",
-              session.id === activeSessionId
-                ? cn("border-transparent text-white", config.theme.activeBackground)
-                : cn(config.theme.cardBorder, "bg-white text-slate-900 hover:bg-slate-50"),
-            )}
-          >
-            <div>
-              <p className="font-semibold">{session.title}</p>
-              <p className="text-xs opacity-80">{new Date(session.updatedAt).toLocaleString("ja-JP")}</p>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteSession(session.id);
+        {!showSessionSkeleton &&
+          sessions.map((session) => (
+            <div
+              key={session.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setActiveSessionId(session.id);
+                setIsSidebarOpen(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setActiveSessionId(session.id);
+                  setIsSidebarOpen(false);
+                }
               }}
               className={cn(
-                "rounded-full p-1 transition",
+                "flex w-full items-center justify-between rounded-3xl border px-4 py-3 text-left text-sm transition",
                 session.id === activeSessionId
-                  ? "text-white/80 hover:bg-white/20"
-                  : "text-emerald-500 hover:bg-emerald-50",
+                  ? cn("border-transparent text-white", config.theme.activeBackground)
+                  : cn(config.theme.cardBorder, "bg-white text-slate-900 hover:bg-slate-50"),
               )}
             >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </button>
-        ))}
+              <div>
+                <p className="font-semibold">{session.title}</p>
+                <p className="text-xs opacity-80">{new Date(session.updatedAt).toLocaleString("ja-JP")}</p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteSession(session.id);
+                }}
+                className={cn(
+                  "rounded-full p-1 transition",
+                  session.id === activeSessionId
+                    ? "text-white/80 hover:bg-white/20"
+                    : "text-emerald-700 hover:bg-emerald-50",
+                )}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
       </div>
     </div>
   );
 
   return (
     <div
-      className="relative min-h-[calc(100vh-4rem)] w-full"
-      style={{ background: `linear-gradient(135deg, ${config.theme.gradientFrom}, ${config.theme.gradientTo})` }}
+      className="relative w-full"
+      style={{
+        background: `linear-gradient(135deg, ${config.theme.gradientFrom}, ${config.theme.gradientTo})`,
+        minHeight: "calc(100vh - 4rem)",
+        height: "calc(100vh - 4rem)",
+        maxHeight: "calc(100vh - 4rem)",
+      }}
     >
+      {isOffline && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-10 w-[90%] max-w-md -translate-x-1/2 rounded-2xl border border-yellow-200 bg-yellow-50/95 px-4 py-2 text-xs font-semibold text-yellow-900 shadow-lg">
+          オフラインです。接続が戻り次第自動で再同期します。
+        </div>
+      )}
       <div className="mx-auto flex h-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row">
         <aside className="hidden w-80 flex-shrink-0 rounded-[30px] border border-white/30 bg-white/70 p-5 backdrop-blur md:flex">
           {SessionList}
@@ -498,10 +557,47 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <div>
+            <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">{config.hero.subtitle}</p>
                 <h1 className="text-2xl font-bold text-[#063221]">{config.hero.name}</h1>
                 <p className="text-sm text-emerald-700">{config.hero.description}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-emerald-700">
+                <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-800">
+                  {phaseLabels[currentPhase]}
+                </span>
+                <span className="text-emerald-700/80">{phaseHint}</span>
+              </div>
+              {guidedActions.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {guidedActions.map((action) => (
+                    <Button
+                      key={action.id}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleGuidedAction(action)}
+                      disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
+                      className="h-7 rounded-full border border-emerald-100 bg-white/70 px-3 text-[11px] text-emerald-800 hover:bg-emerald-50"
+                    >
+                      {guidedActionLoading === action.id
+                        ? action.loadingLabel ?? "進行中..."
+                        : action.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 w-full max-w-xs">
+                <div className="flex items-center justify-between text-[11px] text-emerald-700/80">
+                  <span>フェーズ進捗</span>
+                  <span>{phaseProgressPercent}%</span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-emerald-100">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${Math.min(phaseProgressPercent, 100)}%`, backgroundColor: config.theme.accent }}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] font-semibold text-emerald-700">{phaseDetail.cta}</p>
+              </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -552,6 +648,16 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                 <div className="flex h-full flex-col items-center justify-center text-center text-emerald-700">
                   <p className="text-base font-semibold">まだ会話はありません</p>
                   <p className="mt-1 text-sm">感じていることを一言で送ってみてください。</p>
+                </div>
+              )}
+
+              {messages.length > 0 && (
+                <div className="mx-auto mb-4 w-full max-w-3xl rounded-3xl border border-emerald-100 bg-emerald-50/70 px-5 py-4">
+                  <div className="flex items-center justify-between text-xs font-semibold text-emerald-800">
+                    <span>{phaseDetail.title}</span>
+                    <span>{phaseLabels[currentPhase]}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-emerald-900">{phaseDetail.summary}</p>
                 </div>
               )}
 
@@ -630,16 +736,13 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                   autoComplete="off"
                   autoCorrect="off"
                   enterKeyHint="send"
-                  onFocus={() => {
-                    if (!isMobile) return;
-                    setTimeout(() => {
-                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-                    }, 300);
-                  }}
+                  onFocus={scrollIntoViewOnFocus}
                 />
                 <Button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() || isLoading.sending}
+                  onClick={() => {
+                    void handleSend();
+                  }}
+                  disabled={!input.trim() || isLoading.sending || hasPendingResponse}
                   className="mb-1 flex h-12 w-12 items-center justify-center rounded-2xl"
                   style={{ backgroundColor: config.theme.accent, color: "#ffffff" }}
                 >
@@ -702,6 +805,7 @@ const ADAM_CONFIG: ChatConfig = {
     assistantText: "text-[#064e3b]",
     assistantBorder: "border border-emerald-100",
     activeBackground: "bg-gradient-to-r from-emerald-500 to-teal-500",
+    newChatButton: "bg-gradient-to-r from-emerald-500 to-teal-500 focus-visible:ring-emerald-200 shadow-emerald-500/30",
   },
   initialPrompts: basePrompts,
   thinkingMessages: baseThinking,
@@ -726,6 +830,7 @@ const GEMINI_CONFIG: ChatConfig = {
     assistantText: "text-[#6b21a8]",
     assistantBorder: "border border-purple-100",
     activeBackground: "bg-gradient-to-r from-fuchsia-500 to-purple-500",
+    newChatButton: "bg-gradient-to-r from-fuchsia-500 to-purple-500 focus-visible:ring-purple-200 shadow-fuchsia-400/30",
   },
   initialPrompts: [
     "感情と行動のバランスが崩れています",
@@ -758,6 +863,7 @@ const CLAUDE_CONFIG: ChatConfig = {
     assistantText: "text-[#27272a]",
     assistantBorder: "border border-slate-200",
     activeBackground: "bg-gradient-to-r from-slate-800 to-slate-600",
+    newChatButton: "bg-gradient-to-r from-slate-900 to-slate-700 focus-visible:ring-slate-200 shadow-slate-900/30",
   },
   initialPrompts: [
     "気持ちを落ち着けながら整理したい",
@@ -790,6 +896,7 @@ const DEEP_CONFIG: ChatConfig = {
     assistantText: "text-[#115e59]",
     assistantBorder: "border border-teal-100",
     activeBackground: "bg-gradient-to-r from-teal-500 to-cyan-500",
+    newChatButton: "bg-gradient-to-r from-teal-500 to-cyan-500 focus-visible:ring-cyan-200 shadow-cyan-400/30",
   },
   initialPrompts: [
     "原因を一緒に分析してほしい",
@@ -822,6 +929,7 @@ const NAZARE_CONFIG: ChatConfig = {
     assistantText: "text-[#5b21b6]",
     assistantBorder: "border border-purple-100",
     activeBackground: "bg-gradient-to-r from-purple-600 to-violet-600",
+    newChatButton: "bg-gradient-to-r from-purple-600 to-violet-600 focus-visible:ring-purple-200 shadow-purple-500/30",
   },
   initialPrompts: [
     "最近、心が重く感じます",
