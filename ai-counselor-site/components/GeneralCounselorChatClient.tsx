@@ -2,19 +2,12 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
-import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
+import { Loader2, Menu, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useChatLayout } from "@/hooks/useChatLayout";
 import { useChatDevice } from "@/hooks/useChatDevice";
-import {
-  DEFAULT_PHASE_DETAILS,
-  DEFAULT_PHASE_HINTS,
-  DEFAULT_PHASE_LABELS,
-  inferGuidedPhase,
-  type GuidedPhase,
-} from "@/components/chat/guidance";
 
 type ConversationRow = {
   id: string;
@@ -81,7 +74,6 @@ type ChatConfig = {
   };
   initialPrompts: string[];
   thinkingMessages: string[];
-  phaseLabels?: Record<GuidedPhase, string>;
 };
 
 type SessionSummary = {
@@ -115,7 +107,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
-  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
   const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
@@ -123,11 +114,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const lastSendRef = useRef<number>(0);
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
-  const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
-
-  useEffect(() => {
-    setCurrentPhase(inferGuidedPhase(userMessageCount));
-  }, [userMessageCount]);
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -460,9 +446,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     );
   }
 
-  const phaseLabels = config.phaseLabels ?? DEFAULT_PHASE_LABELS;
-  const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
-  const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 24, 160);
   const newChatButtonClasses = cn(
     "w-full justify-center gap-2 rounded-3xl border border-transparent px-5 py-4 text-base font-semibold text-white shadow-lg shadow-black/10 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60",
@@ -562,7 +545,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   );
 
   return (
-    <div className="relative w-full" style={gradientStyle}>
+    <div className="relative w-full border-t border-slate-200" style={gradientStyle}>
       {isOffline && (
         <div className="pointer-events-none absolute left-1/2 top-4 z-10 w-[90%] max-w-md -translate-x-1/2 rounded-2xl border border-yellow-200 bg-yellow-50/95 px-4 py-2 text-xs font-semibold text-yellow-900 shadow-lg">
           オフラインです。接続が戻り次第自動で再同期します。
@@ -590,18 +573,10 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
               </p>
               <h1 className={cn("text-2xl font-bold", config.theme.headingText)}>{config.hero.name}</h1>
               <p className={cn("text-sm", config.theme.headerDescription)}>{config.hero.description}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className={cn("rounded-full px-3 py-1 font-semibold", config.theme.badgeBackground, config.theme.badgeText)}>
-                  {phaseLabels[currentPhase]}
-                </span>
-                <span className={cn(config.theme.badgeHintText)}>{phaseHint}</span>
-              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" />
             </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className={cn("flex items-center gap-2 rounded-full px-3 py-1 text-xs", config.theme.statsBadgeBackground, config.theme.statsBadgeText)}>
-                <MessageSquare className="h-3.5 w-3.5" /> {sessions.length} 件の相談履歴
-              </div>
               <Image
                 src={config.hero.iconUrl}
                 alt={config.hero.name}
@@ -660,22 +635,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                 </div>
               )}
 
-              {messages.length > 0 && (
-                <div
-                  className={cn(
-                    "mx-auto mb-4 w-full max-w-3xl rounded-3xl border px-5 py-4",
-                    config.theme.detailBorder,
-                    config.theme.detailBackground,
-                  )}
-                >
-                  <div className={cn("flex items-center justify-between text-xs font-semibold", config.theme.detailText)}>
-                    <span>{phaseDetail.title}</span>
-                    <span>{phaseLabels[currentPhase]}</span>
-                  </div>
-                  <p className={cn("mt-2 text-sm leading-relaxed", config.theme.detailText)}>{phaseDetail.summary}</p>
-                  <p className={cn("mt-1 text-xs font-semibold", config.theme.detailText)}>{phaseDetail.cta}</p>
-                </div>
-              )}
 
               <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
                 {messages.map((message) => {
