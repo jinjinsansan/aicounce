@@ -14,7 +14,6 @@ import {
   DEFAULT_PHASE_DETAILS,
   DEFAULT_PHASE_HINTS,
   DEFAULT_PHASE_LABELS,
-  getPhaseProgress,
   inferGuidedPhase,
   type GuidedPhase,
 } from "@/components/chat/guidance";
@@ -635,8 +634,6 @@ export function TeamChatClient() {
   const phaseLabels = DEFAULT_PHASE_LABELS;
   const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
   const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
-  const phaseProgress = getPhaseProgress(userMessageCount);
-  const phaseProgressPercent = Math.round(phaseProgress * 100);
 
   const showGlobalLoader =
     !isMounted ||
@@ -894,19 +891,6 @@ export function TeamChatClient() {
             )}
           </div>
           <div className="flex flex-wrap gap-2" />
-          <div className="flex w-full max-w-xs flex-col">
-            <div className="flex items-center justify-between text-[11px] text-slate-600">
-              <span>フェーズ進捗</span>
-              <span>{phaseProgressPercent}%</span>
-            </div>
-            <div className="mt-1 h-1.5 rounded-full bg-slate-200">
-              <div
-                className="h-full rounded-full bg-slate-900 transition-all"
-                style={{ width: `${Math.min(phaseProgressPercent, 100)}%` }}
-              />
-            </div>
-            <p className="mt-1 text-[11px] font-semibold text-slate-700">{phaseDetail.cta}</p>
-          </div>
         </header>
 
         {activeParticipantDetails.length > 0 && (
@@ -1022,6 +1006,7 @@ export function TeamChatClient() {
                   <span>{phaseLabels[currentPhase]}</span>
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-slate-700">{phaseDetail.summary}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-800">{phaseDetail.cta}</p>
               </div>
               {messages.map((m) => {
                 if (m.role === "user") {

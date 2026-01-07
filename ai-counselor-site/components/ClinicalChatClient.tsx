@@ -13,7 +13,6 @@ import {
   DEFAULT_PHASE_DETAILS,
   DEFAULT_PHASE_HINTS,
   DEFAULT_PHASE_LABELS,
-  getPhaseProgress,
   inferGuidedPhase,
   type GuidedPhase,
 } from "@/components/chat/guidance";
@@ -529,8 +528,6 @@ export function ClinicalChatClient() {
   const phaseLabels = DEFAULT_PHASE_LABELS;
   const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
   const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
-  const phaseProgress = getPhaseProgress(userMessageCount);
-  const phaseProgressPercent = Math.round(phaseProgress * 100);
 
   const showGlobalLoader =
     !isMounted ||
@@ -748,19 +745,6 @@ export function ClinicalChatClient() {
             )}
           </div>
           <div className="flex flex-wrap gap-2" />
-          <div className="flex w-full max-w-xs flex-col">
-            <div className="flex items-center justify-between text-[11px] text-[#1e3a8a]/80">
-              <span>フェーズ進捗</span>
-              <span>{phaseProgressPercent}%</span>
-            </div>
-            <div className="mt-1 h-1.5 rounded-full bg-[#d7e9ff]">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{ width: `${Math.min(phaseProgressPercent, 100)}%`, backgroundColor: "#1d4ed8" }}
-              />
-            </div>
-            <p className="mt-1 text-[11px] font-semibold text-[#1e3a8a]">{phaseDetail.cta}</p>
-          </div>
         </header>
 
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#f4f9ff] to-[#eaf3ff]" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -801,6 +785,7 @@ export function ClinicalChatClient() {
                     <span>{phaseLabels[currentPhase]}</span>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-[#123a66]">{phaseDetail.summary}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#1d4ed8]">{phaseDetail.cta}</p>
                 </div>
                 {messages.map((message) => (
                   <div key={message.id}>

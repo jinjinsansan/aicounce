@@ -12,7 +12,6 @@ import {
   DEFAULT_PHASE_DETAILS,
   DEFAULT_PHASE_HINTS,
   DEFAULT_PHASE_LABELS,
-  getPhaseProgress,
   inferGuidedPhase,
   type GuidedPhase,
 } from "@/components/chat/guidance";
@@ -412,8 +411,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const phaseLabels = config.phaseLabels ?? DEFAULT_PHASE_LABELS;
   const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
   const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
-  const phaseProgress = getPhaseProgress(userMessageCount);
-  const phaseProgressPercent = Math.round(phaseProgress * 100);
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 24, 160);
   const newChatButtonClasses = cn(
     "w-full justify-center gap-2 rounded-3xl border border-transparent px-5 py-4 text-base font-semibold text-white shadow-lg shadow-black/10 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60",
@@ -547,19 +544,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                 </span>
                 <span className="text-emerald-700/80">{phaseHint}</span>
               </div>
-              <div className="mt-3 w-full max-w-xs">
-                <div className="flex items-center justify-between text-[11px] text-emerald-700/80">
-                  <span>フェーズ進捗</span>
-                  <span>{phaseProgressPercent}%</span>
-                </div>
-                <div className="mt-1 h-1.5 rounded-full bg-emerald-100">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{ width: `${Math.min(phaseProgressPercent, 100)}%`, backgroundColor: config.theme.accent }}
-                  />
-                </div>
-                <p className="mt-1 text-[11px] font-semibold text-emerald-700">{phaseDetail.cta}</p>
-              </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -620,6 +604,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                     <span>{phaseLabels[currentPhase]}</span>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-emerald-900">{phaseDetail.summary}</p>
+                  <p className="mt-1 text-xs font-semibold text-emerald-800">{phaseDetail.cta}</p>
                 </div>
               )}
 
