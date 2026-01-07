@@ -11,13 +11,11 @@ import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 import { useChatLayout } from "@/hooks/useChatLayout";
 import { useChatDevice } from "@/hooks/useChatDevice";
 import {
-  DEFAULT_GUIDED_ACTIONS,
   DEFAULT_PHASE_DETAILS,
   DEFAULT_PHASE_HINTS,
   DEFAULT_PHASE_LABELS,
   getPhaseProgress,
   inferGuidedPhase,
-  type GuidedActionPreset,
   type GuidedPhase,
 } from "@/components/chat/guidance";
 
@@ -114,7 +112,6 @@ export function TeamChatClient() {
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
   const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
@@ -134,6 +131,26 @@ export function TeamChatClient() {
       })),
     [],
   );
+
+  const participantLookup = useMemo(() => {
+    const map = new Map<string, (typeof FALLBACK_COUNSELORS)[number]>();
+    FALLBACK_COUNSELORS.forEach((counselor) => map.set(counselor.id, counselor));
+    return map;
+  }, []);
+
+  const activeParticipantDetails = useMemo(() => {
+    const details: (typeof FALLBACK_COUNSELORS)[number][] = [];
+    const seen = new Set<string>();
+    participants.forEach((id) => {
+      if (seen.has(id)) return;
+      const counselor = participantLookup.get(id);
+      if (counselor) {
+        details.push(counselor);
+        seen.add(id);
+      }
+    });
+    return details;
+  }, [participants, participantLookup]);
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
   const userMessageCount = useMemo(() => messages.filter((msg) => msg.role === "user").length, [messages]);
@@ -584,20 +601,6 @@ export function TeamChatClient() {
     }
   };
 
-  const handleGuidedAction = async (action: GuidedActionPreset) => {
-    if (guidedActionLoading === action.id) return;
-    setGuidedActionLoading(action.id);
-    try {
-      await handleSendMessage(action.prompt);
-      if (action.success) {
-        setError(action.success);
-        setTimeout(() => setError(null), 2000);
-      }
-    } finally {
-      setGuidedActionLoading(null);
-    }
-  };
-
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -629,7 +632,6 @@ export function TeamChatClient() {
     );
   }
 
-  const guidedActions = DEFAULT_GUIDED_ACTIONS;
   const phaseLabels = DEFAULT_PHASE_LABELS;
   const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
   const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
@@ -891,20 +893,7 @@ export function TeamChatClient() {
               </Button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {guidedActions.map((action) => (
-              <Button
-                key={action.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => handleGuidedAction(action)}
-                disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
-                className="h-7 rounded-full border border-slate-200 bg-white/80 px-3 text-[11px] text-slate-800 hover:bg-slate-50"
-              >
-                {guidedActionLoading === action.id ? action.loadingLabel ?? "進行中..." : action.label}
-              </Button>
-            ))}
-          </div>
+          <div className="flex flex-wrap gap-2" />
           <div className="flex w-full max-w-xs flex-col">
             <div className="flex items-center justify-between text-[11px] text-slate-600">
               <span>フェーズ進捗</span>
@@ -919,6 +908,36 @@ export function TeamChatClient() {
             <p className="mt-1 text-[11px] font-semibold text-slate-700">{phaseDetail.cta}</p>
           </div>
         </header>
+
+        {activeParticipantDetails.length > 0 && (
+          <section className="border-b border-slate-100 bg-slate-50/70 px-6 py-3">
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {activeParticipantDetails.map((participant) => {
+                const color = COLOR_MAP[participant.id] ?? COLOR_MAP.moderator;
+                return (
+                  <div
+                    key={participant.id}
+                    className={cn(
+                      "flex min-w-[220px] items-center gap-3 rounded-2xl border bg-white/90 px-3 py-2 shadow-sm",
+                      color.border,
+                    )}
+                  >
+                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-white shadow">
+                      <Image src={participant.iconUrl ?? "/images/counselors/michelle.png"} alt={participant.name} fill sizes="40px" className="object-contain" />
+                      <span className="absolute -bottom-1 -right-1 rounded-full bg-slate-900 px-1 text-[9px] font-semibold uppercase tracking-wide text-white">
+                        AI
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900">{participant.name}</p>
+                      <p className="text-xs text-slate-500">{participant.specialty ?? "AIカウンセラー"}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Messages Area */}
         <div

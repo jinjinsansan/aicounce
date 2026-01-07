@@ -10,13 +10,11 @@ import { cn } from "@/lib/utils";
 import { useChatLayout } from "@/hooks/useChatLayout";
 import { useChatDevice } from "@/hooks/useChatDevice";
 import {
-  DEFAULT_GUIDED_ACTIONS,
   DEFAULT_PHASE_DETAILS,
   DEFAULT_PHASE_HINTS,
   DEFAULT_PHASE_LABELS,
   getPhaseProgress,
   inferGuidedPhase,
-  type GuidedActionPreset,
   type GuidedPhase,
 } from "@/components/chat/guidance";
 
@@ -86,7 +84,6 @@ export function SiddharthaChatClient() {
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
 
   const [isOffline, setIsOffline] = useState(false);
-  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
   const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
@@ -505,20 +502,6 @@ export function SiddharthaChatClient() {
     }
   };
 
-  const handleGuidedAction = async (action: GuidedActionPreset) => {
-    if (guidedActionLoading === action.id) return;
-    setGuidedActionLoading(action.id);
-    try {
-      await handleSendMessage(action.prompt);
-      if (action.success) {
-        setError(action.success);
-        setTimeout(() => setError(null), 2000);
-      }
-    } finally {
-      setGuidedActionLoading(null);
-    }
-  };
-
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -556,7 +539,6 @@ export function SiddharthaChatClient() {
     );
   }
 
-  const guidedActions = DEFAULT_GUIDED_ACTIONS;
   const phaseLabels = DEFAULT_PHASE_LABELS;
   const phaseHint = DEFAULT_PHASE_HINTS[currentPhase];
   const phaseDetail = DEFAULT_PHASE_DETAILS[currentPhase];
@@ -778,20 +760,7 @@ export function SiddharthaChatClient() {
               </Button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {guidedActions.map((action) => (
-              <Button
-                key={action.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => handleGuidedAction(action)}
-                disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
-                className="h-7 rounded-full border border-[#fde68a] bg-white/80 px-3 text-[11px] text-[#b45309] hover:bg-[#fefce8]"
-              >
-                {guidedActionLoading === action.id ? action.loadingLabel ?? "進行中..." : action.label}
-              </Button>
-            ))}
-          </div>
+          <div className="flex flex-wrap gap-2" />
           <div className="flex w-full max-w-xs flex-col">
             <div className="flex items-center justify-between text-[11px] text-[#b45309]">
               <span>フェーズ進捗</span>

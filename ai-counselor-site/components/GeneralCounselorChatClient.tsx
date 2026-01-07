@@ -9,13 +9,11 @@ import { cn } from "@/lib/utils";
 import { useChatLayout } from "@/hooks/useChatLayout";
 import { useChatDevice } from "@/hooks/useChatDevice";
 import {
-  DEFAULT_GUIDED_ACTIONS,
   DEFAULT_PHASE_DETAILS,
   DEFAULT_PHASE_HINTS,
   DEFAULT_PHASE_LABELS,
   getPhaseProgress,
   inferGuidedPhase,
-  type GuidedActionPreset,
   type GuidedPhase,
 } from "@/components/chat/guidance";
 
@@ -57,7 +55,6 @@ type ChatConfig = {
   };
   initialPrompts: string[];
   thinkingMessages: string[];
-  guidedActions?: GuidedActionPreset[];
   phaseLabels?: Record<GuidedPhase, string>;
 };
 
@@ -92,7 +89,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
-  const [guidedActionLoading, setGuidedActionLoading] = useState<string | null>(null);
   const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
@@ -296,22 +292,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
       setError("コピーに失敗しました");
     } finally {
       setTimeout(() => setError(null), 1500);
-    }
-  };
-
-  const guidedActions = config.guidedActions ?? DEFAULT_GUIDED_ACTIONS;
-
-  const handleGuidedAction = async (action: GuidedActionPreset) => {
-    if (guidedActionLoading === action.id) return;
-    setGuidedActionLoading(action.id);
-    try {
-      await handleSend(action.prompt);
-      if (action.success) {
-        setError(action.success);
-        setTimeout(() => setError(null), 2000);
-      }
-    } finally {
-      setGuidedActionLoading(null);
     }
   };
 
@@ -567,24 +547,6 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
                 </span>
                 <span className="text-emerald-700/80">{phaseHint}</span>
               </div>
-              {guidedActions.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {guidedActions.map((action) => (
-                    <Button
-                      key={action.id}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleGuidedAction(action)}
-                      disabled={guidedActionLoading !== null || isLoading.sending || hasPendingResponse}
-                      className="h-7 rounded-full border border-emerald-100 bg-white/70 px-3 text-[11px] text-emerald-800 hover:bg-emerald-50"
-                    >
-                      {guidedActionLoading === action.id
-                        ? action.loadingLabel ?? "進行中..."
-                        : action.label}
-                    </Button>
-                  ))}
-                </div>
-              )}
               <div className="mt-3 w-full max-w-xs">
                 <div className="flex items-center justify-between text-[11px] text-emerald-700/80">
                   <span>フェーズ進捗</span>
