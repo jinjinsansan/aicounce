@@ -120,6 +120,7 @@ export function TeamChatClient() {
   const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
   const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
   const hasRestoredSessionRef = useRef(false);
+  const skipNextMessagesLoadRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastRequestTimeRef = useRef<number>(0);
@@ -297,10 +298,15 @@ export function TeamChatClient() {
   }, [activeSessionId]);
 
   useEffect(() => {
-    if (activeSessionId && hasRestoredSessionRef.current) {
-      setHasLoadedMessages(false);
-      loadMessages(activeSessionId);
+    if (!activeSessionId || !hasRestoredSessionRef.current) {
+      return;
     }
+    if (skipNextMessagesLoadRef.current) {
+      skipNextMessagesLoadRef.current = false;
+      return;
+    }
+    setHasLoadedMessages(false);
+    loadMessages(activeSessionId);
   }, [activeSessionId, loadMessages]);
 
   useEffect(() => {
@@ -419,6 +425,7 @@ export function TeamChatClient() {
         const createData = (await createRes.json()) as CreateSessionResponse;
         console.log("[Session] Created session:", createData.session);
         currentSessionId = createData.session.id;
+        skipNextMessagesLoadRef.current = true;
         setActiveSessionId(currentSessionId);
         
         if (currentSessionId) {
@@ -461,7 +468,7 @@ export function TeamChatClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: activeSessionId || undefined,
+          sessionId: currentSessionId || activeSessionId || undefined,
           message: textToSend,
           participants,
         }),
@@ -906,19 +913,19 @@ export function TeamChatClient() {
 
           <div
             ref={composerRef}
-            className="mt-4 border-t border-slate-100/80 bg-white/90 px-4 pt-3"
+            className="mt-4 border-t border-white/50 bg-white/95 px-4 pt-3"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
             <div className="mx-auto max-w-3xl">
               {error && <p className="mb-2 text-xs font-medium text-rose-500">{error}</p>}
-              <div className="flex items-end gap-3 rounded-[30px] border-2 border-[#dbeafe] bg-[#f6f8ff] px-4 py-3 shadow-sm transition focus-within:border-[#c7d2fe] focus-within:ring-2 focus-within:ring-[#e0e7ff]">
+              <div className="flex items-end gap-3">
                 <textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="感じていることを入力してください"
-                  className="min-h-[48px] max-h-32 flex-1 resize-none rounded-2xl border-0 bg-transparent px-0 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                  className="min-h-[48px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-[#dbeafe] bg-[#f6f8ff] px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 transition focus:border-[#c7d2fe] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#c7d2fe]"
                   rows={1}
                   autoComplete="off"
                   autoCorrect="off"
