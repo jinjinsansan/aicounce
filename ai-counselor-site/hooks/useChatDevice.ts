@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type RefObject } from "react";
 
-export function useChatDevice(textareaRef: RefObject<HTMLTextAreaElement>) {
+export function useChatDevice(textareaRef: RefObject<HTMLTextAreaElement | null>) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
