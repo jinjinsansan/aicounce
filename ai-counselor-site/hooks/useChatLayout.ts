@@ -18,7 +18,7 @@ export function useChatLayout(): ChatLayoutRefs {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef(true);
-  const scrollFrameRef = useRef<number>();
+  const scrollFrameRef = useRef<number | undefined>(undefined);
   const [composerHeight, setComposerHeight] = useState(0);
 
   useLayoutEffect(() => {

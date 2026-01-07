@@ -467,13 +467,13 @@ export function TeamChatClient() {
       const data = (await res.json()) as RespondResponse;
 
       // Remove pending message and add all AI responses
-      const aiResponses = (data.responses ?? []).map((r, index) => ({
+      const aiResponses: MessageItem[] = (data.responses ?? []).map((r, index) => ({
         id: `ai-${Date.now()}-${index}`,
         role: "assistant" as const,
         author: r.author,
-        authorId: r.authorId,
+        authorId: r.authorId ?? undefined,
         content: r.content,
-        iconUrl: r.iconUrl,
+        iconUrl: r.iconUrl ?? undefined,
         created_at: new Date().toISOString(),
       }));
 

@@ -117,6 +117,7 @@ export function SiddharthaChatClient() {
         allConversations.map((conversation) => ({
           id: conversation.id,
           title: conversation.title || "新しいチャット",
+          category: "general",
           updated_at: conversation.updated_at,
         })),
       );
