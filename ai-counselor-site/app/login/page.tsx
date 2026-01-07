@@ -193,7 +193,7 @@ function LoginContent() {
               <button
                 type="button"
                 onClick={handlePasswordReset}
-                disabled={isResetting}
+                disabled={isResetting || !email.trim()}
                 className="rounded-2xl bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-70"
               >
                 {isResetting ? "送信中..." : "再設定メールを送信"}
