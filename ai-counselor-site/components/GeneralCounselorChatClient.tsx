@@ -758,7 +758,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
                   onKeyDown={handleKeyDown}
                   placeholder="悩みや状況を入力してください"
                   className={cn(
-                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none",
+                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 px-4 py-3 text-sm text-slate-900 transition focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-transparent",
                     config.theme.inputBorder,
                     config.theme.inputBg,
                     config.theme.inputPlaceholder,
