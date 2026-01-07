@@ -157,8 +157,6 @@ export function TeamChatClient() {
       background:
         "linear-gradient(145deg, rgba(255,247,237,0.95), rgba(255,237,213,0.95), rgba(255,228,230,0.95), rgba(221,231,254,0.95), rgba(226,232,255,0.95))",
       minHeight: "calc(100vh - 4rem)",
-      height: "calc(100vh - 4rem)",
-      maxHeight: "calc(100vh - 4rem)",
     }),
     [],
   );
@@ -339,9 +337,9 @@ export function TeamChatClient() {
 
   const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
   const sessionSkeletonNodes = Array.from({ length: 3 }).map((_, index) => (
-    <div key={index} className="animate-pulse rounded-3xl border border-white/60 bg-white/70 p-4">
-      <div className="h-4 w-1/2 rounded-full bg-slate-200/80" />
-      <div className="mt-2 h-3 w-1/3 rounded-full bg-slate-200/60" />
+    <div key={index} className="animate-pulse rounded-2xl border border-white/60 bg-white/70 p-3">
+      <div className="h-3 w-2/3 rounded-full bg-slate-200/80" />
+      <div className="mt-1 h-2.5 w-1/3 rounded-full bg-slate-200/60" />
     </div>
   ));
 
@@ -669,6 +667,7 @@ export function TeamChatClient() {
   }
 
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 140);
+  const showPromptSection = !isLoading.messages && !isRestoringSession && messages.length === 0;
 
   const renderSidebarContent = (closeOnAction = false) => (
     <div className="flex flex-col gap-5">
@@ -733,14 +732,14 @@ export function TeamChatClient() {
 
       <div className="rounded-3xl border border-slate-100 bg-white/80 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">セッション</p>
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 space-y-1">
           {showSessionSkeleton
             ? sessionSkeletonNodes
             : sessions.map((session) => (
                 <div
                   key={session.id}
                   className={cn(
-                    "rounded-2xl border px-3 py-3 text-sm transition",
+                    "flex w-full items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition",
                     session.id === activeSessionId
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-transparent bg-white text-slate-700 hover:border-slate-200",
@@ -748,30 +747,21 @@ export function TeamChatClient() {
                 >
                   <button
                     type="button"
-                    className="w-full text-left"
+                    className="flex-1 truncate text-left font-semibold"
                     onClick={() => {
                       setActiveSessionId(session.id);
                       if (closeOnAction) setIsSidebarOpen(false);
                     }}
                   >
-                    <p className="font-semibold">{session.title || "チームカウンセリング"}</p>
-                    <p className="text-xs text-white/70 md:text-slate-400 md:text-opacity-100">
-                      {new Date(session.updated_at).toLocaleString()}
-                    </p>
+                    {session.title || "チームカウンセリング"}
                   </button>
-                  <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-white/80 md:text-slate-500 md:text-opacity-100">
-                    {(session.participants ?? []).slice(0, 4).map((p) => (
-                      <span key={p} className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white md:bg-slate-100 md:text-slate-600">
-                        #{p}
-                      </span>
-                    ))}
-                  </div>
                   <button
                     type="button"
                     onClick={(event) => handleDeleteSession(session.id, event)}
-                    className="mt-2 w-full rounded-xl border border-white/40 py-1 text-center text-xs text-white transition hover:bg-white/10 md:border-slate-200 md:text-slate-500 md:hover:bg-slate-50"
+                    className="rounded-full p-1 text-xs text-current opacity-70 transition hover:bg-white/20 hover:opacity-100"
+                    aria-label={`${session.title || "セッション"}を削除`}
                   >
-                    <Trash2 className="mr-1 inline h-3 w-3" /> 削除
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
@@ -786,16 +776,16 @@ export function TeamChatClient() {
   const participantChips = (
     <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
       {activeParticipantDetails.length === 0 ? (
-        <span className="rounded-full border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500">
+        <span className="rounded-2xl border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500">
           参加AIを選択してください
         </span>
       ) : (
         activeParticipantDetails.map((counselor) => (
           <div
             key={counselor.id}
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700"
+            className="flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/85 px-4 py-1 text-xs font-semibold text-slate-700 shadow-sm"
           >
-            <span className="relative h-6 w-6 overflow-hidden rounded-full border border-white">
+            <span className="relative h-6 w-6 overflow-hidden rounded-xl border border-white">
               <Image src={counselor.iconUrl ?? "/images/counselors/placeholder.png"} alt={counselor.name} fill className="object-contain" sizes="24px" />
             </span>
             {counselor.name}
@@ -804,7 +794,7 @@ export function TeamChatClient() {
       )}
       <button
         type="button"
-        className="rounded-full border border-dashed border-slate-300 px-3 py-1 text-xs font-semibold text-slate-500 md:hidden"
+        className="rounded-2xl border border-dashed border-slate-300 px-3 py-1 text-xs font-semibold text-slate-500 md:hidden"
         onClick={() => setIsSidebarOpen(true)}
       >
         参加AIを編集
@@ -820,12 +810,12 @@ export function TeamChatClient() {
         </div>
       )}
 
-      <div className="mx-auto flex h-full max-w-6xl gap-6 px-4 py-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6 lg:px-8">
         <aside className="hidden w-80 rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:flex md:max-h-[calc(100vh-4rem)] md:flex-col md:overflow-y-auto">
           {renderSidebarContent(false)}
         </aside>
 
-        <main className="flex flex-1 flex-col rounded-[34px] border border-white/30 bg-white/90 p-6 shadow-2xl backdrop-blur">
+        <main className="flex w-full flex-col rounded-[34px] border border-white/30 bg-white/90 p-6 shadow-2xl backdrop-blur">
           <header className="rounded-[28px] border border-slate-100 bg-white/80 p-5 shadow-sm">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -855,28 +845,26 @@ export function TeamChatClient() {
             {participantChips}
           </header>
 
-          <section className="mt-4 rounded-[28px] border border-slate-100 bg-white/80 p-5">
-            <p className="text-sm font-semibold text-slate-800">すぐに話したいことを選べます</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {PROMPT_PRESETS.map((prompt) => (
-                <Button
-                  key={prompt}
-                  variant="outline"
-                  className="rounded-full border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
-                  onClick={() => handleSendMessage(prompt)}
-                  disabled={isLoading.sending}
-                >
-                  {prompt}
-                </Button>
-              ))}
-            </div>
-          </section>
+          {showPromptSection && (
+            <section className="mt-4 rounded-[28px] border border-slate-100 bg-white/80 p-5">
+              <p className="text-sm font-semibold text-slate-800">すぐに話したいことを選べます</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {PROMPT_PRESETS.map((prompt) => (
+                  <Button
+                    key={prompt}
+                    variant="outline"
+                    className="rounded-full border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                    onClick={() => handleSendMessage(prompt)}
+                    disabled={isLoading.sending}
+                  >
+                    {prompt}
+                  </Button>
+                ))}
+              </div>
+            </section>
+          )}
 
-          <div
-            ref={scrollContainerRef}
-            className="mt-4 flex-1 overflow-y-auto rounded-[32px] border border-white/50 bg-white/70 px-4 py-6"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
+          <div ref={scrollContainerRef} className="mt-4 rounded-[32px] border border-white/50 bg-white/70 px-4 py-6">
             <div className="mx-auto max-w-3xl space-y-5" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-slate-100 bg-white/80 px-6 py-12 text-center">
@@ -952,14 +940,14 @@ export function TeamChatClient() {
           >
             <div className="mx-auto max-w-3xl">
               {error && <p className="mb-2 text-xs font-medium text-rose-500">{error}</p>}
-              <div className="flex items-end gap-3 rounded-[28px] border-2 border-[#e0e7ff] bg-[#f9f7ff] px-4 py-3 shadow-sm transition focus-within:border-[#c4b5fd]">
+              <div className="flex items-end gap-3 rounded-[30px] border-2 border-[#dbeafe] bg-[#f6f8ff] px-4 py-3 shadow-sm transition focus-within:border-[#c7d2fe] focus-within:ring-2 focus-within:ring-[#e0e7ff]">
                 <textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="感じていることを入力してください"
-                  className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-transparent bg-transparent px-0 py-1 text-sm text-slate-900 transition placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                  className="min-h-[48px] max-h-32 flex-1 resize-none rounded-2xl border-0 bg-transparent px-0 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
                   rows={1}
                   autoComplete="off"
                   autoCorrect="off"
