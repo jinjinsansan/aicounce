@@ -24,7 +24,7 @@ type MessageRow = {
   created_at: string;
 };
 
-type ChatConfig = {
+export type ChatConfig = {
   counselorId: string;
   storageKey: string;
   hero: {
@@ -76,13 +76,13 @@ type ChatConfig = {
   thinkingMessages: string[];
 };
 
-type SessionSummary = {
+export type SessionSummary = {
   id: string;
   title: string;
   updatedAt: string;
 };
 
-type MessageItem = {
+export type MessageItem = {
   id: string;
   role: "user" | "assistant";
   content: string;
@@ -90,11 +90,32 @@ type MessageItem = {
   pending?: boolean;
 };
 
-type GeneralChatProps = {
-  config: ChatConfig;
+type SendMessagePayload = {
+  sessionId: string | null;
+  message: string;
 };
 
-export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
+type SendMessageResult = {
+  sessionId: string | null;
+  content: string;
+};
+
+export type ChatDataSource = {
+  loadSessions: () => Promise<SessionSummary[]>;
+  loadMessages: (sessionId: string) => Promise<MessageItem[]>;
+  sendMessage: (payload: SendMessagePayload) => Promise<SendMessageResult>;
+  deleteSession: (sessionId: string) => Promise<void>;
+};
+
+type GeneralChatProps = {
+  config: ChatConfig;
+  dataSource?: ChatDataSource;
+};
+
+export const AUTH_ERROR_MESSAGE = "AUTH_REQUIRED";
+const isAuthError = (err: unknown) => err instanceof Error && err.message === AUTH_ERROR_MESSAGE;
+
+export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatProps) {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -118,51 +139,66 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
     try {
-      const res = await fetch(`/api/conversations?counselorId=${encodeURIComponent(config.counselorId)}`);
-      if (res.status === 401) {
+      const sessionList = dataSource
+        ? await dataSource.loadSessions()
+        : await (async () => {
+            const res = await fetch(`/api/conversations?counselorId=${encodeURIComponent(config.counselorId)}`);
+            if (res.status === 401) {
+              setNeedsAuth(true);
+              return [] as SessionSummary[];
+            }
+            if (!res.ok) throw new Error("Failed to load conversations");
+            const data = (await res.json()) as { conversations?: ConversationRow[] };
+            return (data.conversations ?? [])
+              .filter((row) => row.counselor_id === config.counselorId)
+              .map((row) => ({
+                id: row.id,
+                title: row.title ?? `${config.hero.name}との相談`,
+                updatedAt: row.updated_at ?? new Date().toISOString(),
+              }));
+          })();
+      setSessions(sessionList);
+    } catch (err) {
+      if (isAuthError(err)) {
         setNeedsAuth(true);
         return;
       }
-      if (!res.ok) throw new Error("Failed to load conversations");
-      const data = (await res.json()) as { conversations?: ConversationRow[] };
-      const filtered = (data.conversations ?? [])
-        .filter((row) => row.counselor_id === config.counselorId)
-        .map((row) => ({
-          id: row.id,
-          title: row.title ?? `${config.hero.name}との相談`,
-          updatedAt: row.updated_at ?? new Date().toISOString(),
-        }));
-      setSessions(filtered);
-    } catch (err) {
       console.error("loadSessions", err);
       setError("セッションの取得に失敗しました");
       setTimeout(() => setError(null), 2000);
     } finally {
       setIsLoading((prev) => ({ ...prev, sessions: false }));
     }
-  }, [config.counselorId, config.hero.name]);
+  }, [config.counselorId, config.hero.name, dataSource]);
 
   const loadMessages = useCallback(
     async (sessionId: string) => {
       setIsLoading((prev) => ({ ...prev, messages: true }));
       try {
-        const res = await fetch(`/api/conversations/${sessionId}/messages`);
-        if (res.status === 401) {
+        const list = dataSource
+          ? await dataSource.loadMessages(sessionId)
+          : await (async () => {
+              const res = await fetch(`/api/conversations/${sessionId}/messages`);
+              if (res.status === 401) {
+                setNeedsAuth(true);
+                return [] as MessageItem[];
+              }
+              if (!res.ok) throw new Error("Failed to load messages");
+              const data = (await res.json()) as { messages?: MessageRow[] };
+              return (data.messages ?? []).map((row) => ({
+                id: row.id,
+                role: row.role,
+                content: row.content,
+                createdAt: row.created_at,
+              }));
+            })();
+        setMessages(list);
+        setHasLoadedMessages(true);
+      } catch (err) {
+        if (isAuthError(err)) {
           setNeedsAuth(true);
           return;
         }
-        if (!res.ok) throw new Error("Failed to load messages");
-        const data = (await res.json()) as { messages?: MessageRow[] };
-        setMessages(
-          (data.messages ?? []).map((row) => ({
-            id: row.id,
-            role: row.role,
-            content: row.content,
-            createdAt: row.created_at,
-          })),
-        );
-        setHasLoadedMessages(true);
-      } catch (err) {
         console.error("loadMessages", err);
         setError("メッセージの取得に失敗しました");
         setTimeout(() => setError(null), 2000);
@@ -170,7 +206,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
         setIsLoading((prev) => ({ ...prev, messages: false }));
       }
     },
-    [],
+    [dataSource],
   );
 
   const handleSend = async (override?: string) => {
@@ -212,45 +248,51 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     setIsLoading((prev) => ({ ...prev, sending: true }));
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          counselorId: config.counselorId,
-          conversationId: activeSessionId ?? undefined,
-          message: text,
-          useRag: true,
-        }),
-      });
+      const result = dataSource
+        ? await dataSource.sendMessage({ sessionId: activeSessionId, message: text })
+        : await (async (): Promise<SendMessageResult> => {
+            const res = await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                counselorId: config.counselorId,
+                conversationId: activeSessionId ?? undefined,
+                message: text,
+                useRag: true,
+              }),
+            });
 
-      if (res.status === 401) {
-        setNeedsAuth(true);
-        throw new Error("ログインが必要です");
-      }
-      if (!res.ok) {
-        const raw = await res.text();
-        throw new Error(raw || "送信に失敗しました");
-      }
+            if (res.status === 401) {
+              setNeedsAuth(true);
+              throw new Error("ログインが必要です");
+            }
+            if (!res.ok) {
+              const raw = await res.text();
+              throw new Error(raw || "送信に失敗しました");
+            }
 
-      const data = (await res.json()) as { conversationId?: string; content?: string };
-      const resolvedConversationId = data.conversationId ?? activeSessionId;
+            const data = (await res.json()) as { conversationId?: string; content?: string };
+            return {
+              sessionId: data.conversationId ?? activeSessionId ?? null,
+              content: data.content ?? "応答を取得できませんでした",
+            };
+          })();
 
       setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === aiTempId
-            ? { ...msg, content: data.content ?? "応答を取得できませんでした", pending: false }
-            : msg,
-        ),
+        prev.map((msg) => (msg.id === aiTempId ? { ...msg, content: result.content, pending: false } : msg)),
       );
 
-      if (!activeSessionId && resolvedConversationId) {
-        setActiveSessionId(resolvedConversationId);
+      if (!activeSessionId && result.sessionId) {
+        setActiveSessionId(result.sessionId);
         if (typeof window !== "undefined") {
-          window.localStorage.setItem(config.storageKey, resolvedConversationId);
+          window.localStorage.setItem(config.storageKey, result.sessionId);
         }
         loadSessions();
       }
     } catch (err) {
+      if (isAuthError(err)) {
+        setNeedsAuth(true);
+      }
       console.error("handleSend", err);
       setMessages((prev) =>
         prev.map((msg) =>
@@ -259,7 +301,9 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
             : msg,
         ),
       );
-      setError(err instanceof Error ? err.message : "送信に失敗しました");
+      const friendlyError =
+        err instanceof Error ? (isAuthError(err) ? "ログインが必要です" : err.message) : "送信に失敗しました";
+      setError(friendlyError);
       setTimeout(() => setError(null), 2000);
     } finally {
       setIsLoading((prev) => ({ ...prev, sending: false }));
@@ -278,13 +322,20 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   const handleDeleteSession = async (sessionId: string) => {
     if (!confirm("このチャット履歴を削除しますか？")) return;
     try {
-      const res = await fetch(`/api/conversations/${sessionId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("削除に失敗しました");
+      if (dataSource) {
+        await dataSource.deleteSession(sessionId);
+      } else {
+        const res = await fetch(`/api/conversations/${sessionId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("削除に失敗しました");
+      }
       await loadSessions();
       if (activeSessionId === sessionId) {
         handleNewChat();
       }
     } catch (err) {
+      if (isAuthError(err)) {
+        setNeedsAuth(true);
+      }
       console.error("delete session", err);
       setError("削除できませんでした");
       setTimeout(() => setError(null), 2000);

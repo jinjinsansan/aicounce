@@ -1,40 +1,34 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
-import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
-import Image from "next/image";
+import {
+  AUTH_ERROR_MESSAGE,
+  GeneralCounselorChatClient,
+  type ChatConfig,
+  type ChatDataSource,
+  type MessageItem,
+} from "@/components/GeneralCounselorChatClient";
 
-import { Button } from "@/components/ui/button";
-import { debugLog } from "@/lib/logger";
-import { cn } from "@/lib/utils";
-import { useChatLayout } from "@/hooks/useChatLayout";
-import { useChatDevice } from "@/hooks/useChatDevice";
-
-type SessionSummary = {
+type ClinicalSessionRow = {
   id: string;
   title: string | null;
-  category: string;
+  category: string | null;
   updated_at: string;
 };
 
-type MessageItem = {
+type ClinicalSessionsResponse = {
+  sessions?: ClinicalSessionRow[];
+};
+
+type ClinicalMessageRow = {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   created_at: string;
-  pending?: boolean;
 };
 
-type MessagesResponse = {
-  session: Pick<SessionSummary, "id" | "title" | "category">;
-  messages: MessageItem[];
+type ClinicalMessagesResponse = {
+  messages?: ClinicalMessageRow[];
 };
-
-type SessionsResponse = {
-  sessions: SessionSummary[];
-};
-
-const ACTIVE_SESSION_STORAGE_KEY = "clinical-psychology-active-session-id";
 
 const initialPrompts = [
   "最近気分が落ち込みがちです",
@@ -50,800 +44,122 @@ const thinkingMessages = [
   "研究知見を確認しています...",
 ];
 
-const THINKING_MESSAGE_INTERVAL_MS = 1400;
+const CLINICAL_CONFIG: ChatConfig = {
+  counselorId: "sato",
+  storageKey: "clinical-psychology-active-session-id",
+  hero: {
+    name: "ドクター・サトウ",
+    subtitle: "臨床心理学 AI カウンセラー",
+    description: "認知行動療法や臨床心理査定の知見をもとに、静かなテンポで伴走します",
+    iconUrl: "/images/counselors/dr_satou.png",
+  },
+  theme: {
+    gradientFrom: "#f7fbff",
+    gradientVia: "#edf5ff",
+    gradientTo: "#dceeff",
+    accent: "#2563eb",
+    accentMuted: "#1e3a8a",
+    cardBorder: "border-blue-100",
+    bubbleUser: "bg-[#dbeafe] text-[#1e3a8a]",
+    bubbleAssistant: "bg-white",
+    assistantText: "text-[#0f2167]",
+    assistantBorder: "border border-[#dbeafe]",
+    activeBackground: "bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#7c3aed]",
+    newChatButton:
+      "bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#7c3aed] focus-visible:ring-blue-200 shadow-blue-300/30",
+    headingText: "text-[#0f2167]",
+    headerSubtitle: "text-[#2563eb]",
+    headerDescription: "text-[#1e3a8a]",
+    badgeBackground: "bg-[#e0f2fe]",
+    badgeText: "text-[#0f2167]",
+    badgeHintText: "text-[#1d4ed8]",
+    statsBadgeBackground: "bg-[#e0f2fe]",
+    statsBadgeText: "text-[#1d4ed8]",
+    sectionBorder: "border-[#dbeafe]",
+    promptBorder: "border-[#c7ddff]",
+    promptText: "text-[#0f2167]",
+    promptHoverBorder: "hover:border-[#93c5fd]",
+    detailBorder: "border-[#dbeafe]",
+    detailBackground: "bg-[#eef6ff]",
+    detailText: "text-[#0f2167]",
+    emptyBorder: "border-[#c7ddff]",
+    emptyText: "text-[#0f2167]",
+    inputBorder: "border-[#dbeafe] focus:border-[#2563eb]",
+    inputBg: "bg-white/95",
+    inputPlaceholder: "placeholder-[#94a3b8]",
+    skeletonBorder: "border-[#dbeafe]",
+    skeletonHighlight: "bg-[#f1f5f9]",
+    skeletonShade: "bg-[#e2e8f0]",
+    deleteButtonText: "text-[#0f2167]",
+    deleteButtonHover: "hover:bg-[#e0f2fe]",
+  },
+  initialPrompts,
+  thinkingMessages,
+};
+
+const clinicalDataSource: ChatDataSource = {
+  loadSessions: async () => {
+    const res = await fetch("/api/clinical/sessions");
+    if (res.status === 401) throw new Error(AUTH_ERROR_MESSAGE);
+    if (res.status === 404) throw new Error("臨床心理カウンセラーは現在ご利用いただけません");
+    if (!res.ok) throw new Error("セッション情報の取得に失敗しました");
+    const data = (await res.json()) as ClinicalSessionsResponse;
+    return (data.sessions ?? []).map((session) => ({
+      id: session.id,
+      title: session.title ?? "臨床心理カウンセリング",
+      updatedAt: session.updated_at ?? new Date().toISOString(),
+    }));
+  },
+  loadMessages: async (sessionId: string) => {
+    const res = await fetch(`/api/clinical/sessions/${sessionId}/messages`);
+    if (res.status === 401) throw new Error(AUTH_ERROR_MESSAGE);
+    if (res.status === 404) throw new Error("セッションが見つかりません");
+    if (!res.ok) throw new Error("メッセージの取得に失敗しました");
+    const data = (await res.json()) as ClinicalMessagesResponse;
+    return (data.messages ?? [])
+      .filter((msg) => msg.role === "user" || msg.role === "assistant")
+      .map((msg) => ({
+        id: msg.id,
+        role: msg.role as MessageItem["role"],
+        content: msg.content,
+        createdAt: msg.created_at,
+      }));
+  },
+  sendMessage: async ({ sessionId, message }) => {
+    const res = await fetch("/api/clinical/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionId ?? undefined,
+        message,
+        category: sessionId ? undefined : "life",
+      }),
+    });
+
+    if (res.status === 401) throw new Error(AUTH_ERROR_MESSAGE);
+    if (!res.ok) {
+      const raw = await res.text();
+      try {
+        const parsed = JSON.parse(raw) as { error?: string };
+        const fallback = raw || "送信に失敗しました";
+        throw new Error(parsed.error ?? fallback);
+      } catch {
+        throw new Error(raw || "送信に失敗しました");
+      }
+    }
+
+    const data = (await res.json()) as { sessionId: string; message: string };
+    return { sessionId: data.sessionId ?? sessionId ?? null, content: data.message };
+  },
+  deleteSession: async (sessionId: string) => {
+    const res = await fetch(`/api/clinical/sessions/${sessionId}`, { method: "DELETE" });
+    if (res.status === 401) throw new Error(AUTH_ERROR_MESSAGE);
+    if (!res.ok) throw new Error("削除に失敗しました");
+  },
+};
 
 export function ClinicalChatClient() {
-  const [sessions, setSessions] = useState<SessionSummary[]>([]);
-  const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [input, setInput] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState({ sessions: false, messages: false, sending: false });
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
-  const [isMounted, setIsMounted] = useState(false);
-  const [isRestoringSession, setIsRestoringSession] = useState(true);
-  const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
-  const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const { composerRef, scrollContainerRef, messagesEndRef, scheduleScroll, composerHeight } = useChatLayout();
-  const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
-  const hasRestoredSessionRef = useRef(false);
-  const lastRequestTimeRef = useRef<number>(0);
-
-  const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
-    sessions,
-    activeSessionId,
-  ]);
-  const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
-
-  const loadSessions = useCallback(async () => {
-    setIsLoading((prev) => ({ ...prev, sessions: true }));
-    try {
-      const res = await fetch("/api/clinical/sessions");
-      if (res.status === 401) {
-        setNeedsAuth(true);
-        return;
-      }
-      if (res.status === 404) {
-        setError("臨床心理カウンセラーは現在ご利用いただけません");
-        return;
-      }
-      if (!res.ok) {
-        console.error("Failed to load clinical sessions", res.status);
-        setError("セッション情報の取得に失敗しました");
-        return;
-      }
-      const data = (await res.json()) as SessionsResponse;
-      setSessions(data.sessions ?? []);
-    } catch (err) {
-      console.error("loadSessions error", err);
-      setError("セッション情報の取得に失敗しました");
-    } finally {
-      setIsLoading((prev) => ({ ...prev, sessions: false }));
-      setHasInitializedSessions(true);
-    }
-  }, []);
-
-  const loadMessages = useCallback(
-    async (sessionId: string) => {
-      debugLog("[loadMessages] Starting to load messages for session:", sessionId);
-      setIsLoading((prev) => ({ ...prev, messages: true }));
-      try {
-        const res = await fetch(`/api/clinical/sessions/${sessionId}/messages`);
-        debugLog("[loadMessages] Response status:", res.status);
-
-        if (res.status === 401) {
-          debugLog("[loadMessages] Unauthorized - setting needsAuth");
-          setNeedsAuth(true);
-          setHasLoadedMessages(true);
-          return;
-        }
-        if (res.status === 404) {
-          debugLog("[loadMessages] Session not found - clearing activeSessionId");
-          console.warn("Clinical session not found", sessionId);
-          setActiveSessionId(null);
-          setHasLoadedMessages(true);
-          return;
-        }
-        if (!res.ok) {
-          console.error("Failed to load clinical messages", res.status);
-          setError("メッセージの取得に失敗しました");
-          setHasLoadedMessages(true);
-          return;
-        }
-
-        const data = (await res.json()) as MessagesResponse;
-        debugLog("[loadMessages] Received data:", {
-          sessionId: data.session?.id,
-          messagesCount: data.messages?.length ?? 0,
-          firstMessage: data.messages?.[0]?.content?.substring(0, 50),
-        });
-
-        setMessages(data.messages ?? []);
-        setHasLoadedMessages(true);
-        debugLog("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
-      } catch (err) {
-        console.error("[loadMessages] Error loading messages:", err);
-        setError("ネットワークエラーが発生しました");
-        setHasLoadedMessages(true);
-      } finally {
-        setIsLoading((prev) => ({ ...prev, messages: false }));
-        debugLog("[loadMessages] Loading complete");
-      }
-    },
-    [],
-  );
-
-  useEffect(() => {
-    debugLog("[Mount] Component mounted");
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const updateStatus = () => {
-      if (typeof navigator === "undefined") return;
-      setIsOffline(!navigator.onLine);
-    };
-    updateStatus();
-    window.addEventListener("online", updateStatus);
-    window.addEventListener("offline", updateStatus);
-    return () => {
-      window.removeEventListener("online", updateStatus);
-      window.removeEventListener("offline", updateStatus);
-    };
-  }, []);
-
-  useEffect(() => {
-    debugLog("[Sessions] Loading sessions...");
-    loadSessions();
-  }, [loadSessions]);
-
-  useEffect(() => {
-    debugLog(
-      "[Session Restore] Effect triggered - isMounted:",
-      isMounted,
-      "hasRestored:",
-      hasRestoredSessionRef.current,
-      "sessions.length:",
-      sessions.length,
-      "initialized:",
-      hasInitializedSessions,
-    );
-
-    if (!isMounted) {
-      debugLog("[Session Restore] Skipped - not mounted yet");
-      return;
-    }
-    if (hasRestoredSessionRef.current) {
-      debugLog("[Session Restore] Skipped - already restored");
-      return;
-    }
-    if (!hasInitializedSessions) {
-      debugLog("[Session Restore] Skipped - sessions not initialized yet");
-      return;
-    }
-    if (sessions.length === 0) {
-      debugLog("[Session Restore] No sessions available - finishing restore state");
-      hasRestoredSessionRef.current = true;
-      setIsRestoringSession(false);
-      return;
-    }
-
-    try {
-      const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
-      debugLog("[Session Restore] Stored ID:", storedSessionId, "Sessions count:", sessions.length);
-
-      if (storedSessionId) {
-        const exists = sessions.some((s) => s.id === storedSessionId);
-        debugLog("[Session Restore] Session exists:", exists);
-
-        if (exists) {
-          debugLog("[Session Restore] Restoring session:", storedSessionId);
-          setActiveSessionId(storedSessionId);
-        } else {
-          debugLog("[Session Restore] Session not found in sessions array");
-        }
-      } else {
-        debugLog("[Session Restore] No stored session ID found");
-      }
-    } catch (error) {
-      console.error("[Session Restore] Failed to restore session:", error);
-    }
-
-    hasRestoredSessionRef.current = true;
-    setIsRestoringSession(false);
-    debugLog("[Session Restore] Flag set to true, restoration complete");
-  }, [isMounted, sessions, hasInitializedSessions]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
-    }
-  }, [input]);
-
-  useEffect(() => {
-    debugLog("[Save Session] Effect triggered - isMounted:", isMounted, "activeSessionId:", activeSessionId);
-
-    if (!isMounted) {
-      debugLog("[Save Session] Skipped - not mounted yet");
-      return;
-    }
-
-    if (!activeSessionId) {
-      debugLog("[Save Session] Skipped - activeSessionId is null (keeping existing localStorage)");
-      return;
-    }
-
-    try {
-      debugLog("[Save Session] Saving to localStorage:", activeSessionId);
-      window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
-      debugLog("[Save Session] Saved successfully");
-    } catch (error) {
-      console.error("[Save Session] Failed to save session:", error);
-    }
-  }, [isMounted, activeSessionId]);
-
-  useEffect(() => {
-    if (isLoading.sending) return;
-
-    debugLog("[Load Messages] activeSessionId:", activeSessionId);
-
-    if (activeSessionId) {
-      setHasLoadedMessages(false);
-      debugLog("[Load Messages] Loading messages for:", activeSessionId);
-      loadMessages(activeSessionId);
-    } else {
-      debugLog("[Load Messages] Clearing messages (no active session)");
-      setMessages([]);
-      setHasLoadedMessages(true);
-    }
-  }, [activeSessionId, isLoading.sending, loadMessages]);
-
-  useLayoutEffect(() => {
-    if (messages.length === 0) return;
-    scheduleScroll();
-  }, [messages.length, scheduleScroll]);
-
-  useEffect(() => {
-    if (!hasPendingResponse) return;
-    const interval = setInterval(() => {
-      setCurrentThinkingIndex((prev) => (prev + 1) % thinkingMessages.length);
-    }, THINKING_MESSAGE_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [hasPendingResponse]);
-
-  const handleNewChat = () => {
-    debugLog("[User Action] New chat clicked - clearing session");
-    setActiveSessionId(null);
-    setMessages([]);
-    setError(null);
-    setHasLoadedMessages(true);
-    hasRestoredSessionRef.current = false;
-
-    try {
-      window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
-      debugLog("[User Action] localStorage cleared for new chat");
-    } catch (error) {
-      console.error("[User Action] Failed to clear localStorage:", error);
-    }
-
-    if (!isMobile) {
-      textareaRef.current?.focus();
-    }
-  };
-
-  const handleSendMessage = async (overrideText?: string) => {
-    const textToSend = overrideText ? overrideText.trim() : input.trim();
-
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTimeRef.current;
-    const MIN_REQUEST_INTERVAL = 3000;
-
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL && lastRequestTimeRef.current > 0) {
-      const remainingTime = Math.ceil((MIN_REQUEST_INTERVAL - timeSinceLastRequest) / 1000);
-      setError(`${remainingTime}秒お待ちください...`);
-      setTimeout(() => setError(null), 1000);
-      return;
-    }
-
-    if (!textToSend || isLoading.sending) {
-      return;
-    }
-
-    if (hasPendingResponse) {
-      debugLog("[Send] Blocked - AI is still responding");
-      setError("前の応答を待っています...");
-      setTimeout(() => setError(null), 1000);
-      return;
-    }
-
-    lastRequestTimeRef.current = now;
-
-    if (!overrideText) {
-      setInput("");
-    }
-    setError(null);
-
-    if (isMobile && textareaRef.current) {
-      textareaRef.current.blur();
-    }
-
-    const tempUserId = `user-${Date.now()}`;
-    const tempAiId = `ai-${Date.now()}`;
-    const timestamp = new Date().toISOString();
-
-    setMessages((prev) => [
-      ...prev,
-      { id: tempUserId, role: "user", content: textToSend, created_at: timestamp },
-      { id: tempAiId, role: "assistant", content: "", created_at: timestamp, pending: true },
-    ]);
-
-    setIsLoading((prev) => ({ ...prev, sending: true }));
-
-    let hasError = false;
-
-    try {
-      const res = await fetch("/api/clinical/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: activeSessionId ?? undefined,
-          message: textToSend,
-          category: !activeSessionId ? "life" : undefined,
-        }),
-      });
-
-      if (!res.ok) {
-        let serverMessage = "ネットワークエラーが発生しました";
-        try {
-          const raw = await res.text();
-          if (raw) {
-            try {
-              const parsed = JSON.parse(raw) as { error?: string };
-              serverMessage = parsed.error ?? raw;
-            } catch {
-              serverMessage = raw;
-            }
-          }
-        } catch (parseError) {
-          console.error("Failed to read error response", parseError);
-        }
-        throw new Error(serverMessage);
-      }
-
-      const data = (await res.json()) as { sessionId: string; message: string };
-      const aiContent = data.message;
-
-      if (data.sessionId && !activeSessionId) {
-        setActiveSessionId(data.sessionId);
-        loadSessions();
-      }
-
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === tempAiId ? { ...msg, content: aiContent, pending: false } : msg)),
-      );
-
-      if (!activeSessionId && data.sessionId) {
-        setActiveSessionId(data.sessionId);
-      }
-    } catch (err) {
-      hasError = true;
-      const friendlyError = err instanceof Error ? err.message : "送信に失敗しました";
-      setError(friendlyError);
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempAiId
-            ? { ...msg, content: "申し訳ありません。もう一度送ってみてください。", pending: false }
-            : msg,
-        ),
-      );
-    } finally {
-      if (hasError) {
-        setIsLoading((prev) => ({ ...prev, sending: false }));
-      } else {
-        setTimeout(() => {
-          setIsLoading((prev) => ({ ...prev, sending: false }));
-        }, 100);
-      }
-    }
-  };
-
-  const handleDeleteSession = async (sessionId: string, event?: MouseEvent) => {
-    event?.stopPropagation();
-    if (!confirm("このチャット履歴を削除しますか？\n削除後は復元できません。")) return;
-
-    const wasActive = activeSessionId === sessionId;
-
-    try {
-      const res = await fetch(`/api/clinical/sessions/${sessionId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete session");
-
-      setSessions((prev) => prev.filter((session) => session.id !== sessionId));
-
-      if (wasActive) {
-        handleNewChat();
-        if (isMobile) {
-          setIsSidebarOpen(false);
-        }
-      }
-    } catch (err) {
-      console.error("[Delete] Failed to delete session:", err);
-      setError("削除に失敗しました。もう一度お試しください。");
-      setTimeout(() => setError(null), 1000);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!messages.length) return;
-    const text = messages
-      .map((m) => `${m.role === "user" ? "あなた" : "ドクター・サトウ"}: ${m.content}`)
-      .join("\n\n");
-
-    try {
-      await navigator.clipboard.writeText(text);
-      setError("✓ 会話内容をコピーしました");
-      setTimeout(() => setError(null), 1000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-      setError("コピーに失敗しました");
-      setTimeout(() => setError(null), 1000);
-    }
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault();
-      if (!hasPendingResponse) {
-        handleSendMessage();
-      }
-    }
-  };
-
-  const cleanContent = (content: string) => {
-    let cleaned = content.replace(/【\d+:\d+†.*?】/g, "");
-    cleaned = cleaned.replace(/【参考[：:][^】]*】/g, "");
-    return cleaned;
-  };
-
-  const handleRetryLoad = useCallback(() => {
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      return;
-    }
-    loadSessions();
-    if (activeSessionId) {
-      setHasLoadedMessages(false);
-      loadMessages(activeSessionId);
-    }
-  }, [activeSessionId, loadMessages, loadSessions]);
-
-  if (needsAuth) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200 bg-gradient-to-br from-[#f7fbff] via-[#edf5ff] to-[#dceeff]">
-        <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
-          <p className="text-lg font-semibold text-[#1d4ed8]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#1e3a8a]">臨床心理AIカウンセラー（ドクター・サトウ）をご利用いただくにはログインしてください。</p>
-        </div>
-      </div>
-    );
-  }
-
-
-  const showGlobalLoader =
-    !isMounted ||
-    isRestoringSession ||
-    (messages.length === 0 &&
-      !hasLoadedMessages &&
-      (isLoading.messages || (isLoading.sessions && sessions.length === 0)));
-
-  if (showGlobalLoader) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center border-t border-slate-200 bg-gradient-to-br from-[#f7fbff] via-[#e4f2ff] to-[#cfe4ff]">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#38bdf8]" />
-        </div>
-      </div>
-    );
-  }
-
-  const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 128);
-  const showSessionSkeleton = isLoading.sessions && sessions.length === 0;
-  const showMessagesSkeleton = isLoading.messages && activeSessionId && messages.length === 0;
-  const sessionSkeletonNodes = Array.from({ length: 4 }).map((_, idx) => (
-    <div key={`session-skeleton-${idx}`} className="mb-2 h-12 animate-pulse rounded-2xl bg-[#e6f3ff]" />
-  ));
-  const messageSkeletonNodes = (
-    <div className="mx-auto max-w-3xl space-y-4" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
-      {Array.from({ length: 3 }).map((_, idx) => (
-        <div key={`message-skeleton-${idx}`} className="flex gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#d7e9ff]/60" />
-          <div className="h-20 flex-1 rounded-2xl bg-white/70 shadow-inner animate-pulse" />
-        </div>
-      ))}
-    </div>
-  );
-  const newChatButtonBase =
-    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-[#2563eb]/30 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#c7d2fe] hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
-
-  return (
-    <div
-      className="relative flex w-full flex-1 items-stretch border-t border-slate-200 bg-gradient-to-br from-[#f7fbff] via-[#edf5ff] to-[#dceeff] text-[#123a66]"
-      style={{
-        minHeight: "calc(100vh - 4rem)",
-        height: "calc(100vh - 4rem)",
-        maxHeight: "calc(100vh - 4rem)",
-      }}
-    >
-      {isOffline && (
-        <div className="pointer-events-auto absolute left-1/2 top-4 z-50 w-[90%] max-w-md -translate-x-1/2 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-2 text-xs font-semibold text-yellow-800 shadow-lg">
-          <div className="flex items-center justify-between gap-4">
-            <span>オフラインです。接続が戻り次第自動で再同期します。</span>
-            <Button variant="ghost" size="sm" className="text-yellow-800" onClick={handleRetryLoad}>
-              再読み込み
-            </Button>
-          </div>
-        </div>
-      )}
-      <aside
-        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#d7e9ff] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
-        style={{ height: "calc(100vh - 4rem)" }}
-      >
-        <Button
-          variant="default"
-          onClick={handleNewChat}
-          disabled={isLoading.sending}
-          className={cn("mb-6 border border-transparent", newChatButtonBase)}
-        >
-          <Plus className="h-4 w-4" /> 新しいチャット
-        </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#38bdf8]">チャット</p>
-        <div className="flex-1 overflow-y-auto">
-          {showSessionSkeleton ? (
-            <div>{sessionSkeletonNodes}</div>
-          ) : (
-            sessions.map((session) => (
-              <div
-                key={session.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  debugLog("[User Action] Desktop: Clicked on session:", session.id);
-                  setActiveSessionId(session.id);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setActiveSessionId(session.id);
-                  }
-                }}
-                className={cn(
-                  "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
-                  session.id === activeSessionId
-                    ? "border-[#c4ddff] bg-[#f0f7ff] text-[#1e40af]"
-                    : "border-transparent bg-transparent text-[#1e3a8a] hover:border-[#d7e9ff] hover:bg-[#f8fbff]",
-                )}
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  <div className="min-w-0">
-                    <span className="block truncate">{session.title || "新しいチャット"}</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={(event) => handleDeleteSession(session.id, event)}
-                  className="rounded-full p-1 text-[#93c5fd] opacity-0 transition group-hover:opacity-100 hover:bg-white"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))
-          )}
-          {sessions.length === 0 && !isLoading.sessions && (
-            <p className="text-center text-xs text-[#60a5fa]">まだチャット履歴がありません。</p>
-          )}
-        </div>
-      </aside>
-
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#d7e9ff] bg-white/95 px-4 py-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-semibold text-[#1d4ed8]">履歴</span>
-              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <Button
-              variant="default"
-              onClick={handleNewChat}
-              disabled={isLoading.sending}
-              className={cn("mb-4 border border-transparent", newChatButtonBase)}
-            >
-              <Plus className="h-4 w-4" /> 新しいチャット
-            </Button>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#38bdf8]">チャット</p>
-            <div className="flex-1 overflow-y-auto">
-              {showSessionSkeleton ? (
-                <div>{sessionSkeletonNodes}</div>
-              ) : (
-                sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      debugLog("[User Action] Mobile: Clicked on session:", session.id);
-                      setActiveSessionId(session.id);
-                      setIsSidebarOpen(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setActiveSessionId(session.id);
-                        setIsSidebarOpen(false);
-                      }
-                    }}
-                    className={cn(
-                      "group mb-2 flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
-                      session.id === activeSessionId
-                        ? "border-[#c4ddff] bg-[#f0f7ff] text-[#1e40af]"
-                        : "border-transparent bg-transparent text-[#1e3a8a] hover:border-[#d7e9ff] hover:bg-[#f8fbff]",
-                    )}
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      <div className="min-w-0">
-                        <span className="block truncate">{session.title || "新しいチャット"}</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(event) => handleDeleteSession(session.id, event)}
-                      className="rounded-full p-1 text-[#93c5fd] transition hover:bg-white"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))
-              )}
-              {sessions.length === 0 && !isLoading.sessions && (
-                <p className="text-center text-xs text-[#60a5fa]">まだチャット履歴がありません。</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
-        <header className="flex flex-col gap-3 border-b border-[#dbeeff] px-4 py-3 text-sm text-[#1e3a8a] md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full border border-[#d7e9ff] bg-white text-[#38bdf8] hover:bg-[#f8fbff] md:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <span className="font-semibold text-[#1d4ed8]">{activeSession?.title || "臨床心理AI（ドクター・サトウ）"}</span>
-            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#93c5fd]" />}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {messages.length > 0 && (
-              <Button variant="ghost" size="sm" className="text-[#1e3a8a]" onClick={handleShare}>
-                <Share2 className="mr-2 h-4 w-4" /> 共有
-              </Button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2" />
-        </header>
-
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#f4f9ff] to-[#eaf3ff]" style={{ WebkitOverflowScrolling: "touch" }}>
-          <div className="px-4 pt-4">
-            {showMessagesSkeleton ? (
-              messageSkeletonNodes
-            ) : messages.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-8">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="relative h-32 w-32 overflow-hidden rounded-full bg-white shadow-lg">
-                      <Image src="/images/counselors/dr_satou.png" alt="Dr. Sato" fill className="object-cover" />
-                    </div>
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold text-[#1d4ed8]">こんにちは、ドクター・サトウです</h2>
-                      <p className="mt-2 text-sm text-[#1e3a8a]">感情の揺れや不安があるときは、安心できるペースでお話しください。</p>
-                      <p className="mt-1 text-sm text-[#1e3a8a]">臨床心理の視点で、整理とセルフケアのヒントを一緒に探します。</p>
-                    </div>
-                  </div>
-
-                <div className="grid w-full max-w-xl grid-cols-2 gap-3 px-4 md:grid-cols-4">
-                  {initialPrompts.map((prompt) => (
-                    <button
-                      key={prompt}
-                      onClick={() => handleSendMessage(prompt)}
-                      disabled={isLoading.sending}
-                      className="rounded-xl border border-[#d7e9ff] bg-white px-6 py-4 text-center text-sm text-[#123a66] shadow-sm transition-all hover:bg-[#f8fbff] hover:shadow-md disabled:opacity-50"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="mx-auto max-w-3xl space-y-6" style={{ paddingBottom: `${messagePaddingBottom}px` }}>
-                {messages.map((message) => (
-                  <div key={message.id}>
-                    <div className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
-                    >
-                      {message.role === "assistant" && (
-                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-white shadow">
-                          <Image src="/images/counselors/dr_satou.png" alt="Dr. Sato" fill className="object-cover" />
-                        </div>
-                      )}
-                      <div
-                        className={cn(
-                          "max-w-[80%] rounded-2xl px-5 py-3 shadow-sm",
-                          message.role === "user"
-                            ? "bg-[#8ab4ff] text-white"
-                            : "bg-white border border-[#d7e9ff] text-[#123a66]",
-                        )}
-                      >
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                          {message.pending ? "" : cleanContent(message.content)}
-                        </p>
-                        {message.pending && (
-                          <div className="flex items-center gap-2">
-                            <div className="flex gap-1">
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#38bdf8] [animation-delay:-0.3s]" />
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#38bdf8] [animation-delay:-0.15s]" />
-                              <div className="h-2 w-2 animate-bounce rounded-full bg-[#38bdf8]" />
-                            </div>
-                            <p className="text-xs text-[#2563eb]">{thinkingMessages[currentThinkingIndex]}</p>
-                          </div>
-                        )}
-                      </div>
-                      {message.role === "user" && (
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#1d4ed8] shadow">
-                          <User className="h-5 w-5 text-white" />
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div
-          ref={composerRef}
-          className="sticky bottom-0 left-0 right-0 border-t border-[#dbeeff] bg-white/95 px-4 pt-2 z-50"
-          style={{
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)",
-          }}
-        >
-          <div className="mx-auto max-w-3xl">
-            {error && <p className="mb-2 text-xs font-medium text-[#1d4ed8]">{error}</p>}
-            <div className="flex items-end gap-3 rounded-3xl border border-[#dbeeff] bg-white/90 px-4 py-3 shadow-sm">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onFocus={scrollIntoViewOnFocus}
-                placeholder="ドクター・サトウに話しかける..."
-                enterKeyHint="send"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                disabled={isLoading.sending}
-                className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#123a66] placeholder:text-[#5a78ff] focus:outline-none disabled:opacity-60 md:text-sm"
-                rows={1}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  void handleSendMessage();
-                }}
-                disabled={isLoading.sending || !input.trim() || hasPendingResponse}
-                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#38bdf8] to-[#0ea5e9] text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
-            </div>
-            <p className="mt-2 text-center text-xs text-[#2563eb]">ドクター・サトウAIは誤った情報を生成する場合があります。</p>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+  return <GeneralCounselorChatClient config={CLINICAL_CONFIG} dataSource={clinicalDataSource} />;
 }
 
 export default ClinicalChatClient;
