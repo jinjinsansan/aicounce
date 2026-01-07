@@ -6,6 +6,7 @@ export default function MultiCounselingSection() {
     { name: "Michelle", image: "/images/counselors/michelle.png" },
     { name: "Dr. Sato", image: "/images/counselors/dr_satou.png" },
     { name: "Dale", image: "/dale.png" },
+    { name: "Mirai", image: "/mirai.png" },
     { name: "Nana", image: "/images/counselors/nana.png" },
   ];
 
@@ -102,6 +103,12 @@ export default function MultiCounselingSection() {
                   <Image src="/dale.png" alt="Dale" fill className="object-contain" />
                 </div>
                 <div className="rounded-lg bg-white px-3 py-2 shadow-sm">実践的なアプローチは</div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="relative h-7 w-7 overflow-hidden rounded-md bg-white">
+                  <Image src="/mirai.png" alt="Mirai" fill className="object-contain" />
+                </div>
+                <div className="rounded-lg bg-white px-3 py-2 shadow-sm">未来ノートからヒントを出すね</div>
               </div>
             </div>
 

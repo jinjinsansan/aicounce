@@ -1300,6 +1300,68 @@ const DALE_CONFIG: ChatConfig = {
   ],
 };
 
+const MIRAI_CONFIG: ChatConfig = {
+  counselorId: "mirai",
+  storageKey: "mirai-future-chat-session",
+  hero: {
+    name: "ミライ",
+    subtitle: "未来型ロボットカウンセラー",
+    description: "未来ノート（RAG）で前向きな一歩を一緒に作る、猫型ロボット風の相棒。",
+    iconUrl: "/mirai.png",
+  },
+  theme: {
+    gradientFrom: "#e0f2fe",
+    gradientVia: "#dbeafe",
+    gradientTo: "#e0f7fa",
+    accent: "#0ea5e9",
+    accentMuted: "#2563eb",
+    cardBorder: "border-sky-100",
+    bubbleUser: "bg-[#e0f2fe] text-[#0f172a]",
+    bubbleAssistant: "bg-white",
+    assistantText: "text-[#0f172a]",
+    assistantBorder: "border border-sky-100",
+    activeBackground: "bg-gradient-to-r from-[#0ea5e9] via-[#2563eb] to-[#22d3ee]",
+    newChatButton:
+      "bg-gradient-to-r from-[#0ea5e9] via-[#2563eb] to-[#22d3ee] focus-visible:ring-sky-200 shadow-sky-300/40",
+    headingText: "text-[#0f172a]",
+    headerSubtitle: "text-[#0ea5e9]",
+    headerDescription: "text-[#1e293b]",
+    badgeBackground: "bg-[#e0f2fe]",
+    badgeText: "text-[#0f172a]",
+    badgeHintText: "text-[#2563eb]",
+    statsBadgeBackground: "bg-[#e0f2fe]",
+    statsBadgeText: "text-[#0f172a]",
+    sectionBorder: "border-sky-100",
+    promptBorder: "border-sky-100",
+    promptText: "text-[#0f172a]",
+    promptHoverBorder: "hover:border-sky-300",
+    detailBorder: "border-sky-100",
+    detailBackground: "bg-[#f8fbff]",
+    detailText: "text-[#0f172a]",
+    emptyBorder: "border-sky-100",
+    emptyText: "text-[#1e293b]",
+    inputBorder: "border-sky-100 focus:border-sky-300 focus:ring-sky-200",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-sky-300",
+    skeletonBorder: "border-sky-100",
+    skeletonHighlight: "bg-sky-100",
+    skeletonShade: "bg-sky-50",
+    deleteButtonText: "text-[#0f172a]",
+    deleteButtonHover: "hover:bg-sky-50",
+  },
+  initialPrompts: [
+    "未来が不安で一歩出せません",
+    "自信が持てないときの考え方を教えて",
+    "習慣化のコツが知りたい",
+    "優しい相棒として伴走してほしい",
+  ],
+  thinkingMessages: [
+    "未来ノートをめくっています...",
+    "行動のヒントを探しています...",
+    "優しい言葉を整えています...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
@@ -1308,3 +1370,4 @@ export const NazareChatClient = () => <GeneralCounselorChatClient config={NAZARE
 export const NanaChatClient = () => <GeneralCounselorChatClient config={NANA_CONFIG} />;
 export const SaitoChatClient = () => <GeneralCounselorChatClient config={SAITO_CONFIG} />;
 export const DaleChatClient = () => <GeneralCounselorChatClient config={DALE_CONFIG} />;
+export const MiraiChatClient = () => <GeneralCounselorChatClient config={MIRAI_CONFIG} />;

@@ -12,6 +12,7 @@ import { NAZARE_SYSTEM_PROMPT } from "@/lib/team/prompts/nazare";
 import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
 import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
+import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -106,6 +107,10 @@ const AI_ROLES = {
     greeting: "デールです。『道は開ける』の原則で不安をほどいていきましょう。",
     role: "デール・カーネギーの実践原則で心配を行動ステップに変える",
   },
+  mirai: {
+    greeting: "ミライだよ。未来ノートのヒントを使って、一緒に前向きな一歩を見つけよう。",
+    role: "未来から来た猫型ロボット風カウンセラーとして、優しく行動に落とす",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -187,6 +192,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["最悪を受け入れる", "今日一日", "レモネード", "行動ステップ", "不安対処"],
     systemPrompt: DALE_SYSTEM_PROMPT,
     negativeInstruction: "説教臭くせず、短く実践的に。抽象論のみで終わらず必ず行動を添えてください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  mirai: {
+    name: "未来型ロボットカウンセリング",
+    terms: ["未来", "行動", "習慣化", "優しいロボット", "前向き"],
+    systemPrompt: MIRAI_SYSTEM_PROMPT,
+    negativeInstruction: "抽象論だけで終わらず、RAGから1〜2件引用しつつ今日の行動を添えてください。説教口調は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
   },

@@ -17,6 +17,7 @@ import SiddharthaDetailPage from "@/components/SiddharthaDetailPage";
 import NanaDetailPage from "@/components/NanaDetailPage";
 import SaitoDetailPage from "@/components/SaitoDetailPage";
 import DaleDetailPage from "@/components/DaleDetailPage";
+import MiraiDetailPage from "@/components/MiraiDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -179,6 +180,10 @@ export default function CounselorDetailPage({
 
   if (counselorId === "dale") {
     return <DaleDetailPage />;
+  }
+
+  if (counselorId === "mirai") {
+    return <MiraiDetailPage />;
   }
 
   if (counselorId === "adam") {

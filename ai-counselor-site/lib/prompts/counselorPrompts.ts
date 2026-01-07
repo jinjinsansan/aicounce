@@ -7,6 +7,7 @@ import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 import { NANA_SYSTEM_PROMPT } from "@/lib/team/prompts/nana";
 import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
 import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
+import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
 
 export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
   adam: ADAM_SYSTEM_PROMPT,
@@ -18,6 +19,7 @@ export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
   nana: NANA_SYSTEM_PROMPT,
   saito: SAITO_SYSTEM_PROMPT,
   dale: DALE_SYSTEM_PROMPT,
+  mirai: MIRAI_SYSTEM_PROMPT,
 };
 
 export function getDefaultCounselorPrompt(counselorId: string | null | undefined) {
@@ -35,4 +37,5 @@ export {
   NANA_SYSTEM_PROMPT,
   SAITO_SYSTEM_PROMPT,
   DALE_SYSTEM_PROMPT,
+  MIRAI_SYSTEM_PROMPT,
 };
