@@ -64,7 +64,12 @@ type RespondResponse = {
 };
 
 const ACTIVE_SESSION_STORAGE_KEY = "team-counseling-active-session-id";
-const DEFAULT_PARTICIPANTS = ["michele", "sato"];
+const NON_COMING_SOON_PARTICIPANTS = FALLBACK_COUNSELORS.filter((c) => !c.comingSoon);
+const DEFAULT_PARTICIPANTS =
+  NON_COMING_SOON_PARTICIPANTS.length > 0
+    ? NON_COMING_SOON_PARTICIPANTS.map((c) => c.id)
+    : ["michele", "sato"];
+const TEAM_CHAT_LOGO_SRC = "/images/logo/logo_square.png";
 
 const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
   michele: { bubble: "bg-[#fff3f8]", text: "text-[#7b364d]", border: "border-[#ffd4e3]" },
@@ -136,19 +141,10 @@ export function TeamChatClient() {
     return map;
   }, []);
 
-  const activeParticipantDetails = useMemo(() => {
-    const details: (typeof FALLBACK_COUNSELORS)[number][] = [];
-    const seen = new Set<string>();
-    participants.forEach((id) => {
-      if (seen.has(id)) return;
-      const counselor = participantLookup.get(id);
-      if (counselor) {
-        details.push(counselor);
-        seen.add(id);
-      }
-    });
-    return details;
-  }, [participants, participantLookup]);
+  const selectableParticipants = useMemo(
+    () => availableParticipants.filter((participant) => !participant.comingSoon),
+    [availableParticipants],
+  );
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
 
@@ -668,6 +664,7 @@ export function TeamChatClient() {
 
   const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 140);
   const showPromptSection = !isLoading.messages && !isRestoringSession && messages.length === 0;
+  const showParticipantSelector = !activeSessionId && selectableParticipants.length > 0;
 
   const renderSidebarContent = (closeOnAction = false) => (
     <div className="flex flex-col gap-5">
@@ -690,44 +687,6 @@ export function TeamChatClient() {
         >
           <Share2 className="mr-2 h-4 w-4" /> 会話をコピー
         </Button>
-      </div>
-
-      <div className="rounded-3xl border border-slate-100 bg-white/80 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">参加AI</p>
-        <div className="mt-3 space-y-2">
-          {availableParticipants.map((participant) => {
-            const isSelected = participants.includes(participant.id);
-            return (
-              <button
-                key={participant.id}
-                type="button"
-                disabled={participant.comingSoon}
-                onClick={() => toggleParticipant(participant.id)}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm transition",
-                  participant.comingSoon && "cursor-not-allowed opacity-50",
-                  isSelected
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
-                )}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="relative h-7 w-7 overflow-hidden rounded-xl border border-slate-100 bg-white">
-                    <Image
-                      src={participant.iconUrl || "/images/counselors/placeholder.png"}
-                      alt={participant.name}
-                      fill
-                      className="object-contain"
-                      sizes="28px"
-                    />
-                  </span>
-                  {participant.name}
-                </span>
-                {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       <div className="rounded-3xl border border-slate-100 bg-white/80 p-4">
@@ -773,35 +732,6 @@ export function TeamChatClient() {
     </div>
   );
 
-  const participantChips = (
-    <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-      {activeParticipantDetails.length === 0 ? (
-        <span className="rounded-2xl border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500">
-          参加AIを選択してください
-        </span>
-      ) : (
-        activeParticipantDetails.map((counselor) => (
-          <div
-            key={counselor.id}
-            className="flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/85 px-4 py-1 text-xs font-semibold text-slate-700 shadow-sm"
-          >
-            <span className="relative h-6 w-6 overflow-hidden rounded-xl border border-white">
-              <Image src={counselor.iconUrl ?? "/images/counselors/placeholder.png"} alt={counselor.name} fill className="object-contain" sizes="24px" />
-            </span>
-            {counselor.name}
-          </div>
-        ))
-      )}
-      <button
-        type="button"
-        className="rounded-2xl border border-dashed border-slate-300 px-3 py-1 text-xs font-semibold text-slate-500 md:hidden"
-        onClick={() => setIsSidebarOpen(true)}
-      >
-        参加AIを編集
-      </button>
-    </div>
-  );
-
   return (
     <div className="relative w-full border-t border-slate-200 text-slate-900" style={gradientStyle}>
       {isOffline && (
@@ -816,34 +746,75 @@ export function TeamChatClient() {
         </aside>
 
         <main className="flex w-full flex-col rounded-[34px] border border-white/30 bg-white/90 p-6 shadow-2xl backdrop-blur">
-          <header className="rounded-[28px] border border-slate-100 bg-white/80 p-5 shadow-sm">
+          <header className="rounded-[32px] border border-white/40 bg-white/90 p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">集合カウンセリング</p>
-                <h1 className="mt-2 text-2xl font-bold text-slate-900">Team Counseling</h1>
-                <p className="mt-1 text-sm text-slate-600">複数AIの異なる専門性で、あなたのテーマを多角的に整理します。</p>
-              </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-3">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full border border-slate-200 text-slate-600 md:hidden"
+                  className="mt-1 rounded-full border border-slate-200 text-slate-600 md:hidden"
                   onClick={() => setIsSidebarOpen(true)}
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
-                <Button
-                  variant="outline"
-                  className="border border-slate-200 text-slate-700"
-                  onClick={handleShare}
-                  disabled={!messages.length}
-                >
-                  <Share2 className="mr-2 h-4 w-4" /> 会話をコピー
-                </Button>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">集合カウンセリング</p>
+                  <h1 className="mt-2 text-2xl font-bold text-slate-900">Team Counseling</h1>
+                  <p className="mt-1 text-sm text-slate-600">複数AIの異なる専門性で、あなたのテーマを多角的に整理します。</p>
+                </div>
+              </div>
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow">
+                <Image src={TEAM_CHAT_LOGO_SRC} alt="Mental AI Team" fill className="object-cover" sizes="56px" />
               </div>
             </div>
-            {participantChips}
           </header>
+
+          {showParticipantSelector && (
+            <section className="mt-4 rounded-[28px] border border-slate-100 bg-white/90 p-5 shadow-sm">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">参加AIを選択</p>
+                  <p className="text-xs text-slate-500">準備中以外のAIはデフォルトで選択されています</p>
+                </div>
+                <p className="text-xs font-semibold text-slate-500">
+                  {participants.length} / {selectableParticipants.length}
+                </p>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {selectableParticipants.map((participant) => {
+                  const isSelected = participants.includes(participant.id);
+                  return (
+                    <button
+                      key={participant.id}
+                      type="button"
+                      onClick={() => toggleParticipant(participant.id)}
+                      className={cn(
+                        "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition",
+                        isSelected
+                          ? "border-slate-900 bg-slate-900 text-white shadow"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="relative h-7 w-7 overflow-hidden rounded-xl border border-slate-100 bg-white">
+                          <Image
+                            src={participant.iconUrl || "/images/counselors/placeholder.png"}
+                            alt={participant.name}
+                            fill
+                            className="object-contain"
+                            sizes="28px"
+                          />
+                        </span>
+                        {participant.name}
+                      </span>
+                      {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-xs text-slate-500">参加AIが多いほど応答に時間がかかります。</p>
+            </section>
+          )}
 
           {showPromptSection && (
             <section className="mt-4 rounded-[28px] border border-slate-100 bg-white/80 p-5">
@@ -979,7 +950,7 @@ export function TeamChatClient() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">セッション &amp; 参加AI</p>
+              <p className="text-sm font-semibold text-slate-900">セッション</p>
               <button
                 type="button"
                 onClick={() => setIsSidebarOpen(false)}
