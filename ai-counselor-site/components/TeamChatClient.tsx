@@ -455,7 +455,7 @@ export function TeamChatClient() {
     setMessages((prev) => [
       ...prev,
       { id: tempUserId, role: "user", content: textToSend, created_at: new Date().toISOString() },
-      { id: tempAiId, role: "assistant", content: thinkingMessages[0], pending: true, created_at: new Date().toISOString() },
+      { id: tempAiId, role: "assistant", content: thinkingMessages[0], pending: true, created_at: new Date().toISOString(), iconUrl: TEAM_CHAT_LOGO_SRC },
     ]);
 
     setIsLoading((prev) => ({ ...prev, sending: true }));
