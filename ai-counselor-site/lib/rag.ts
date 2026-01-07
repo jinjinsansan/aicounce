@@ -1,5 +1,5 @@
-import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
-import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { getSupabaseClient, hasSupabaseConfig } from "./supabase.ts";
+import { getServiceSupabase, hasServiceRole } from "./supabase-server.ts";
 
 async function createEmbedding(text: string) {
   if (!process.env.OPENAI_API_KEY) {

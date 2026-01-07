@@ -1052,6 +1052,68 @@ const DEEP_CONFIG: ChatConfig = {
   ],
 };
 
+const NANA_CONFIG: ChatConfig = {
+  counselorId: "nana",
+  storageKey: "nana-mhsw-chat-session",
+  hero: {
+    name: "ナナ",
+    subtitle: "精神保健福祉 AI",
+    description: "優しく支援的に、暮らしの安全と伴走を整えます",
+    iconUrl: "/images/counselors/nana.png",
+  },
+  theme: {
+    gradientFrom: "#fff7f3",
+    gradientVia: "#fff1f2",
+    gradientTo: "#fef9ef",
+    accent: "#f97316",
+    accentMuted: "#b45309",
+    cardBorder: "border-amber-100",
+    bubbleUser: "bg-[#fde68a] text-[#92400e]",
+    bubbleAssistant: "bg-[#fff8f0]",
+    assistantText: "text-[#9a3412]",
+    assistantBorder: "border border-amber-100",
+    activeBackground: "bg-gradient-to-r from-[#fb923c] via-[#f97316] to-[#f59e0b]",
+    newChatButton:
+      "bg-gradient-to-r from-[#fb923c] via-[#f97316] to-[#f59e0b] focus-visible:ring-orange-200 shadow-orange-200/60",
+    headingText: "text-[#7c2d12]",
+    headerSubtitle: "text-[#f97316]",
+    headerDescription: "text-[#9a3412]",
+    badgeBackground: "bg-[#fff4ed]",
+    badgeText: "text-[#b45309]",
+    badgeHintText: "text-[#c2410c]",
+    statsBadgeBackground: "bg-[#fff7ed]",
+    statsBadgeText: "text-[#b45309]",
+    sectionBorder: "border-amber-50",
+    promptBorder: "border-amber-100",
+    promptText: "text-[#b45309]",
+    promptHoverBorder: "hover:border-amber-300",
+    detailBorder: "border-amber-100",
+    detailBackground: "bg-[#fff7ed]",
+    detailText: "text-[#92400e]",
+    emptyBorder: "border-amber-200",
+    emptyText: "text-[#b45309]",
+    inputBorder: "border-[#fed7aa] focus:border-[#fb923c] focus:ring-orange-100",
+    inputBg: "bg-[#fffaf5]",
+    inputPlaceholder: "placeholder-[#f59e0b]/70",
+    skeletonBorder: "border-amber-50",
+    skeletonHighlight: "bg-amber-100/70",
+    skeletonShade: "bg-amber-50",
+    deleteButtonText: "text-[#b45309]",
+    deleteButtonHover: "hover:bg-[#fff4ed]",
+  },
+  initialPrompts: [
+    "親がお酒を飲むと荒れて怖いです",
+    "自分のせいだと思ってしまいます",
+    "助けを求めるのが苦手で孤立しています",
+    "子育てと仕事の両立で限界です",
+  ],
+  thinkingMessages: [
+    "福祉の支援策を探しています...",
+    "安心できる言葉を整えています...",
+    "小さな一歩を一緒に考えています...",
+  ],
+};
+
 const NAZARE_CONFIG: ChatConfig = {
   counselorId: "nazare",
   storageKey: "nazare-bible-chat-session",
@@ -1120,3 +1182,4 @@ export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
 export const DeepChatClient = () => <GeneralCounselorChatClient config={DEEP_CONFIG} />;
 export const NazareChatClient = () => <GeneralCounselorChatClient config={NAZARE_CONFIG} />;
+export const NanaChatClient = () => <GeneralCounselorChatClient config={NANA_CONFIG} />;

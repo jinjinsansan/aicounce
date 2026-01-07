@@ -15,6 +15,7 @@ import {
   ClaudeChatClient,
   DeepChatClient,
   NazareChatClient,
+  NanaChatClient,
 } from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
@@ -254,6 +255,10 @@ export default function ChatPage({
 
   if (counselorId === "siddhartha") {
     return <SiddharthaChatClient />;
+  }
+
+  if (counselorId === "nana") {
+    return <NanaChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;
