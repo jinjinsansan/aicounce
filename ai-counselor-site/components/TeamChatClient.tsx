@@ -79,8 +79,9 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   claude: { bubble: "bg-[#f8fafc]", text: "text-[#1f2937]", border: "border-[#e2e8f0]" },
   deep: { bubble: "bg-[#ecfeff]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
   nazare: { bubble: "bg-[#ede9fe]", text: "text-[#5b21b6]", border: "border-[#d8b4fe]" },
-  siddhartha: { bubble: "bg-[#fffbeb]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
-  saito: { bubble: "bg-[#fff7ed]", text: "text-[#92400e]", border: "border-[#fed7aa]" },
+  siddhartha: { bubble: "bg-[#f0fdf4]", text: "text-[#166534]", border: "border-[#bbf7d0]" },
+  saito: { bubble: "bg-[#fffbea]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
+  nana: { bubble: "bg-[#fff1f5]", text: "text-[#be123c]", border: "border-[#fecdd3]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };
 
