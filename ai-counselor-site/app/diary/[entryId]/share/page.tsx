@@ -6,6 +6,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
+import { getDiaryEntry } from "@/lib/diary";
+
 import { buildDiaryShareText } from "@/lib/diary-share";
 import { DiaryShareButton } from "@/components/DiaryShareButton";
 
@@ -21,15 +23,14 @@ const clippedPreview = (value: string) => {
   return trimmed.length > 120 ? `${trimmed.slice(0, 120)}…` : trimmed;
 };
 
-async function fetchDiary(entryId: string) {
-  const res = await fetch(`${appUrl}/api/diary/${entryId}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  const data = await res.json().catch(() => null);
-  return data?.entry ?? null;
-}
+const resolveParams = async (params: { entryId: string } | Promise<{ entryId: string }>) => {
+  const resolved = await Promise.resolve(params);
+  return resolved.entryId;
+};
 
 export async function generateMetadata({ params }: SharePageProps): Promise<Metadata> {
-  const entry = await fetchDiary(params.entryId);
+  const entryId = await resolveParams(params);
+  const entry = await getDiaryEntry(entryId);
   if (!entry || entry.is_shareable === false) {
     return {
       title: "日記が見つかりません",
@@ -37,8 +38,8 @@ export async function generateMetadata({ params }: SharePageProps): Promise<Meta
     };
   }
 
-  const ogImageUrl = `${appUrl}/api/diary/${params.entryId}/og-image`;
-  const shareUrl = `${appUrl}/diary/${params.entryId}/share`;
+  const ogImageUrl = `${appUrl}/api/diary/${entryId}/og-image`;
+  const shareUrl = `${appUrl}/diary/${entryId}/share`;
   const description = clippedPreview(entry.content.replace(/\s+/g, " "));
   const title = `${entry.author_name}の朝のひとこと`;
 
@@ -69,7 +70,8 @@ export async function generateMetadata({ params }: SharePageProps): Promise<Meta
 }
 
 export default async function DiarySharePage({ params }: SharePageProps) {
-  const entry = await fetchDiary(params.entryId);
+  const entryId = await resolveParams(params);
+  const entry = await getDiaryEntry(entryId);
   if (!entry || entry.is_shareable === false) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-0">
