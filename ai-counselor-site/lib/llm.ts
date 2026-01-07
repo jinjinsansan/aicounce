@@ -24,18 +24,28 @@ type CallOptions = {
 };
 
 function injectRagContext(messages: ChatMessage[], ragContext?: string) {
-  if (!ragContext) return messages;
+  if (!ragContext?.trim()) return messages;
+  const formattedContext = ragContext
+    .trim()
+    .replace(/\s+$/u, "");
+  const preface = [
+    "【参考情報（RAG）】",
+    "以下の専門知識は最新の検索結果です。内容を必ず読み、要点を整理してから回答してください。",
+    formattedContext,
+    "【参考情報ここまで】",
+    "上記を踏まえてユーザーのメッセージに答えてください。",
+  ].join("\n");
   const cloned = messages.map((message) => ({ ...message }));
   for (let i = cloned.length - 1; i >= 0; i -= 1) {
     if (cloned[i].role === "user") {
       cloned[i] = {
         ...cloned[i],
-        content: `${ragContext}\n\n${cloned[i].content}`,
+        content: `${preface}\n\n${cloned[i].content}`,
       };
       return cloned;
     }
   }
-  cloned.push({ role: "user", content: ragContext });
+  cloned.push({ role: "user", content: preface });
   return cloned;
 }
 

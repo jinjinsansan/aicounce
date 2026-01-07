@@ -143,15 +143,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt =
+    const baseSystemPrompt =
       getDefaultCounselorPrompt(counselor.id) ??
       counselor.systemPrompt ??
       "You are a supportive counselor who responds in Japanese with empathy and actionable advice.";
 
+    const finalSystemPrompt = ragContext
+      ? `${baseSystemPrompt}
+
+[RAG活用ルール]
+- 直近で提供された参考情報を必ず読み、要約や言い換えを交えて回答してください
+- 参考情報に含まれる支援策や表現を優先的に取り入れ、ユーザーの状況に合わせて説明してください
+- 参考情報と質問がずれている場合は、その旨を一言添えたうえで一般的な助言も補ってください
+- 参考情報をそのまま読み上げず、会話調で温かく伝えてください`
+      : baseSystemPrompt;
+
     const { content, tokensUsed } = await callLLM(
       counselor.modelType ?? "openai",
       counselor.modelName ?? "gpt-4o-mini",
-      systemPrompt,
+      finalSystemPrompt,
       message,
       ragContext,
     );

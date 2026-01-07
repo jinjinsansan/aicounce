@@ -264,15 +264,16 @@ export async function POST(req: Request) {
         "- ユーザーに直接話しかける",
         "- 150〜300文字程度",
         "- 専門用語を適切に使用",
+        "- 参考情報（RAG）が提供された場合は必ず少なくとも1つの要素を取り入れ、出典をにおわせる形で触れる",
       ].join("\n");
 
       // RAGコンテキストの追加
-      const ragContext = context
-        ? `\n\n## 参考情報（RAG検索結果）\n以下の専門知識を活用して回答してください：\n${context}`
+      const ragSection = context
+        ? `\n\n## 参考情報（RAG検索結果）\n以下の専門知識を活用して回答してください。内容をそのまま読むのではなく、要点をユーザーの状況に合わせて言い換えてください。\n${context}`
         : "";
 
       // 完全なシステムプロンプト
-      const system = p.systemPrompt + teamInstructions + ragContext;
+      const system = p.systemPrompt + teamInstructions + ragSection;
       const historyMessages: ChatMessage[] = previousMessages.slice(-6).map((m) => ({
         role: m.role,
         content: m.content,
@@ -285,6 +286,7 @@ export async function POST(req: Request) {
         p.model,
         system,
         historyMessages,
+        context || undefined,
       );
 
       const sanitized = sanitizeContent(content ?? "", p.name);
