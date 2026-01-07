@@ -821,7 +821,7 @@ export function TeamChatClient() {
       )}
 
       <div className="mx-auto flex h-full max-w-6xl gap-6 px-4 py-6 lg:px-8">
-        <aside className="hidden w-80 rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:flex md:flex-col">
+        <aside className="hidden w-80 rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:flex md:max-h-[calc(100vh-4rem)] md:flex-col md:overflow-y-auto">
           {renderSidebarContent(false)}
         </aside>
 
@@ -862,7 +862,7 @@ export function TeamChatClient() {
                 <Button
                   key={prompt}
                   variant="outline"
-                  className="rounded-full border-slate-200 bg-white px-4 py-2 text-sm text-slate-700"
+                  className="rounded-full border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
                   onClick={() => handleSendMessage(prompt)}
                   disabled={isLoading.sending}
                 >
@@ -947,19 +947,19 @@ export function TeamChatClient() {
 
           <div
             ref={composerRef}
-            className="mt-4 border-t border-slate-100 bg-white/90 px-4 pt-3"
+            className="mt-4 border-t border-slate-100/80 bg-white/90 px-4 pt-3"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
             <div className="mx-auto max-w-3xl">
               {error && <p className="mb-2 text-xs font-medium text-rose-500">{error}</p>}
-              <div className="flex items-end gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <div className="flex items-end gap-3 rounded-[28px] border-2 border-[#e0e7ff] bg-[#f9f7ff] px-4 py-3 shadow-sm transition focus-within:border-[#c4b5fd]">
                 <textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="感じていることを入力してください"
-                  className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-900 transition placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                  className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-transparent bg-transparent px-0 py-1 text-sm text-slate-900 transition placeholder:text-slate-400 focus:outline-none focus:ring-0"
                   rows={1}
                   autoComplete="off"
                   autoCorrect="off"
