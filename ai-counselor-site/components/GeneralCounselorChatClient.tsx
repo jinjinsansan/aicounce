@@ -42,8 +42,10 @@ type ChatConfig = {
   };
   theme: {
     gradientFrom: string;
+    gradientVia?: string;
     gradientTo: string;
     accent: string;
+    accentMuted?: string;
     cardBorder: string;
     bubbleUser: string;
     bubbleAssistant: string;
@@ -385,12 +387,37 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
     return () => clearInterval(interval);
   }, [hasPendingResponse, config.thinkingMessages.length]);
 
+  const gradientStops = useMemo(() => {
+    const stops = [config.theme.gradientFrom];
+    if (config.theme.gradientVia) {
+      stops.push(config.theme.gradientVia);
+    }
+    stops.push(config.theme.gradientTo);
+    return stops;
+  }, [config.theme.gradientFrom, config.theme.gradientVia, config.theme.gradientTo]);
+
+  const gradientStyle = useMemo(
+    () => ({
+      background: `linear-gradient(135deg, ${gradientStops.join(", ")})`,
+      minHeight: "calc(100vh - 4rem)",
+      height: "calc(100vh - 4rem)",
+      maxHeight: "calc(100vh - 4rem)",
+    }),
+    [gradientStops],
+  );
+  const accentColor = config.theme.accent;
+  const accentMuted = config.theme.accentMuted ?? config.theme.accent;
+
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-[#ecfdf5] to-[#d1fae5]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center" style={gradientStyle}>
         <div className="rounded-3xl bg-white/90 px-10 py-12 text-center shadow-2xl">
-          <p className="text-lg font-semibold text-[#0f766e]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#115e59]">{config.hero.name}と話すにはサインインしてください。</p>
+          <p className="text-lg font-semibold" style={{ color: accentColor }}>
+            ログインが必要です
+          </p>
+          <p className="mt-4 text-sm" style={{ color: accentMuted }}>
+            {config.hero.name}と話すにはサインインしてください。
+          </p>
         </div>
       </div>
     );
@@ -402,8 +429,8 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
 
   if (showLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-[#ecfdf5] to-[#d1fae5]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0f766e]" />
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center" style={gradientStyle}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: accentColor }} />
       </div>
     );
   }
@@ -504,15 +531,7 @@ export function GeneralCounselorChatClient({ config }: GeneralChatProps) {
   );
 
   return (
-    <div
-      className="relative w-full"
-      style={{
-        background: `linear-gradient(135deg, ${config.theme.gradientFrom}, ${config.theme.gradientTo})`,
-        minHeight: "calc(100vh - 4rem)",
-        height: "calc(100vh - 4rem)",
-        maxHeight: "calc(100vh - 4rem)",
-      }}
-    >
+    <div className="relative w-full" style={gradientStyle}>
       {isOffline && (
         <div className="pointer-events-none absolute left-1/2 top-4 z-10 w-[90%] max-w-md -translate-x-1/2 rounded-2xl border border-yellow-200 bg-yellow-50/95 px-4 py-2 text-xs font-semibold text-yellow-900 shadow-lg">
           オフラインです。接続が戻り次第自動で再同期します。
@@ -743,9 +762,11 @@ const ADAM_CONFIG: ChatConfig = {
     iconUrl: "/images/counselors/adam.png",
   },
   theme: {
-    gradientFrom: "#f0fdfa",
-    gradientTo: "#d1fae5",
+    gradientFrom: "#f7fff9",
+    gradientVia: "#effef6",
+    gradientTo: "#ecfdf5",
     accent: "#0f766e",
+    accentMuted: "#0a4f43",
     cardBorder: "border-emerald-100",
     bubbleUser: "bg-[#fef2f2] text-[#7c2d12]",
     bubbleAssistant: "bg-[#ecfdf5]",
@@ -768,9 +789,11 @@ const GEMINI_CONFIG: ChatConfig = {
     iconUrl: "/images/counselors/gemini.png",
   },
   theme: {
-    gradientFrom: "#fdf4ff",
-    gradientTo: "#fae8ff",
+    gradientFrom: "#faf5ff",
+    gradientVia: "#fbe8ff",
+    gradientTo: "#f3ddff",
     accent: "#9333ea",
+    accentMuted: "#6b21a8",
     cardBorder: "border-purple-100",
     bubbleUser: "bg-[#fdf2f8] text-[#9f1239]",
     bubbleAssistant: "bg-[#f9f5ff]",
@@ -802,8 +825,10 @@ const CLAUDE_CONFIG: ChatConfig = {
   },
   theme: {
     gradientFrom: "#f8fafc",
-    gradientTo: "#e4e4e7",
+    gradientVia: "#f1f3f7",
+    gradientTo: "#e7e9ee",
     accent: "#312e81",
+    accentMuted: "#1e1b4b",
     cardBorder: "border-slate-200",
     bubbleUser: "bg-[#f8fafc] text-[#1f2937]",
     bubbleAssistant: "bg-[#f4f4f5]",
@@ -835,8 +860,10 @@ const DEEP_CONFIG: ChatConfig = {
   },
   theme: {
     gradientFrom: "#ecfeff",
+    gradientVia: "#dafcf5",
     gradientTo: "#ccfbf1",
     accent: "#0d9488",
+    accentMuted: "#0f766e",
     cardBorder: "border-teal-100",
     bubbleUser: "bg-[#fefce8] text-[#713f12]",
     bubbleAssistant: "bg-[#eefdfd]",
@@ -867,9 +894,11 @@ const NAZARE_CONFIG: ChatConfig = {
     iconUrl: "/images/counselors/nazare.png",
   },
   theme: {
-    gradientFrom: "#faf5ff",
-    gradientTo: "#ede9fe",
+    gradientFrom: "#fffaf5",
+    gradientVia: "#f8f4ff",
+    gradientTo: "#f0f4ff",
     accent: "#7c3aed",
+    accentMuted: "#6d28d9",
     cardBorder: "border-purple-100",
     bubbleUser: "bg-[#fef3c7] text-[#78350f]",
     bubbleAssistant: "bg-[#f5f3ff]",

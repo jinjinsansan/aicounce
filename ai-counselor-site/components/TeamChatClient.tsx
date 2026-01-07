@@ -76,11 +76,11 @@ const DEFAULT_PARTICIPANTS = ["michele", "sato"];
 const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }> = {
   michele: { bubble: "bg-[#fff3f8]", text: "text-[#7b364d]", border: "border-[#ffd4e3]" },
   sato: { bubble: "bg-[#eef4ff]", text: "text-[#1d3a8a]", border: "border-[#d7e9ff]" },
-  adam: { bubble: "bg-[#ecfdf5]", text: "text-[#065f46]", border: "border-[#a7f3d0]" },
-  gemini: { bubble: "bg-[#fdf2ff]", text: "text-[#6b21a8]", border: "border-[#f3e8ff]" },
-  claude: { bubble: "bg-[#f4f4f5]", text: "text-[#3f3f46]", border: "border-[#e4e4e7]" },
-  deep: { bubble: "bg-[#eefdfd]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
-  nazare: { bubble: "bg-[#ede9fe]", text: "text-[#6d28d9]", border: "border-[#e9d5ff]" },
+  adam: { bubble: "bg-[#f3fff7]", text: "text-[#065f46]", border: "border-[#c1f5dc]" },
+  gemini: { bubble: "bg-[#f9efff]", text: "text-[#6b21a8]", border: "border-[#ead8ff]" },
+  claude: { bubble: "bg-[#f8fafc]", text: "text-[#1f2937]", border: "border-[#e2e8f0]" },
+  deep: { bubble: "bg-[#ecfeff]", text: "text-[#0f766e]", border: "border-[#c5f6f2]" },
+  nazare: { bubble: "bg-[#fff7ed]", text: "text-[#7c4a1d]", border: "border-[#fcd34d]" },
   siddhartha: { bubble: "bg-[#fffbeb]", text: "text-[#92400e]", border: "border-[#fef3c7]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
 };

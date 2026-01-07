@@ -690,10 +690,12 @@ export function MichelleChatClient() {
       ))}
     </div>
   );
+  const newChatButtonBase =
+    "w-full justify-center gap-2 rounded-3xl border border-transparent bg-gradient-to-r from-[#fb923c] via-[#f472b6] to-[#fb7185] px-5 py-4 text-base font-semibold text-white shadow-lg shadow-[#f472b6]/40 transition-all focus:ring-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#fed7e2] hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div
-      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff4f7] via-[#ffe9f1] to-[#ffdfe8] text-[#7b364d]"
+      className="relative flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fffdfa] via-[#fff1f5] to-[#ffe3ed] text-[#7b364d]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -718,7 +720,7 @@ export function MichelleChatClient() {
           variant="ghost"
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
+          className={cn("mb-6", newChatButtonBase)}
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -788,7 +790,7 @@ export function MichelleChatClient() {
             setIsSidebarOpen(false);
           }}
           disabled={isLoading.sending}
-          className="mb-4 w-full justify-center gap-2 rounded-2xl border border-black/15 bg-white text-[#a34264] font-semibold shadow-sm transition hover:bg-[#fff5f9]"
+          className={cn("mb-4", newChatButtonBase)}
         >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
