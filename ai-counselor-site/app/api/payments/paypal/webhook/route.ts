@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-server";
 import { assertPlanSlug, PLAN_DEFINITIONS, monthsFromNow } from "@/lib/plans";
 import { getPayPalAccessToken } from "@/lib/paypal";
+import { sendPaymentConfirmationEmail } from "@/lib/email/resend";
 
 const PAYPAL_API_BASE =
   process.env.PAYPAL_ENV === "live"
@@ -116,4 +117,18 @@ async function handleCapture(payload: PayPalWebhookPayload) {
     body: `${PLAN_DEFINITIONS[planSlug].priceYen.toLocaleString()}円の決済を受領しました。ご利用ありがとうございます。`,
     channel: "inbox",
   });
+
+  const { data: user } = await adminSupabase
+    .from("users")
+    .select("email")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (user?.email) {
+    try {
+      await sendPaymentConfirmationEmail(user.email, planSlug, PLAN_DEFINITIONS[planSlug].priceYen);
+    } catch (error) {
+      console.error("Failed to send payment confirmation email", error);
+    }
+  }
 }

@@ -169,6 +169,7 @@ export default function AdminDashboardPage() {
         error={campaignError}
         onCreate={handleCreateCampaign}
       />
+      <NewsletterBroadcast />
     </div>
   );
 }
@@ -530,6 +531,195 @@ function CampaignManager({ campaigns, loading, error, onCreate }: CampaignManage
                 <p className="mt-1 text-xs text-slate-400">
                   {campaign.valid_from ? `開始: ${new Date(campaign.valid_from).toLocaleString("ja-JP")}` : "開始: 指定なし"} / {campaign.valid_to ? `終了: ${new Date(campaign.valid_to).toLocaleString("ja-JP")}` : "終了: 指定なし"}
                 </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function NewsletterBroadcast() {
+  const [subject, setSubject] = useState("");
+  const [htmlContent, setHtmlContent] = useState("");
+  const [recipientType, setRecipientType] = useState<"all" | "custom">("all");
+  const [customEmails, setCustomEmails] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [history, setHistory] = useState<Array<{
+    id: string;
+    subject: string;
+    recipient_count: number;
+    success_count: number;
+    failed_count: number;
+    sent_at: string;
+  }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await fetch("/api/admin/newsletter/history");
+      if (!response.ok) throw new Error("failed");
+      const data = await response.json();
+      setHistory(data.broadcasts ?? []);
+    } catch (error) {
+      console.error("Failed to load newsletter history", error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setStatus(null);
+
+    try {
+      const emails = recipientType === "custom" ? customEmails.split(/[,\n]/).map((e) => e.trim()).filter(Boolean) : [];
+
+      const response = await fetch("/api/admin/newsletter/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject,
+          htmlContent,
+          recipientType,
+          customEmails: emails,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setStatus({ type: "error", message: data.error ?? "送信に失敗しました" });
+      } else {
+        setStatus({
+          type: "success",
+          message: `送信完了: ${data.sent}件成功 / ${data.failed}件失敗`,
+        });
+        setSubject("");
+        setHtmlContent("");
+        setCustomEmails("");
+        loadHistory();
+      }
+    } catch (error) {
+      console.error("newsletter send error", error);
+      setStatus({ type: "error", message: "送信に失敗しました" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="space-y-6 rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900">メルマガ配信</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          ニュースレター登録者または個別のメールアドレスに一斉配信できます。
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="text-sm font-semibold text-slate-700">件名</label>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="メールの件名"
+            required
+            className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold text-slate-700">本文（HTML）</label>
+          <textarea
+            value={htmlContent}
+            onChange={(e) => setHtmlContent(e.target.value)}
+            placeholder="<div>メール本文をHTMLで記述</div>"
+            required
+            rows={8}
+            className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-slate-400 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold text-slate-700">配信先</label>
+          <div className="mt-2 space-y-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="recipientType"
+                value="all"
+                checked={recipientType === "all"}
+                onChange={() => setRecipientType("all")}
+              />
+              全ニュースレター登録者
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="recipientType"
+                value="custom"
+                checked={recipientType === "custom"}
+                onChange={() => setRecipientType("custom")}
+              />
+              個別指定（カンマまたは改行区切り）
+            </label>
+          </div>
+        </div>
+
+        {recipientType === "custom" && (
+          <div>
+            <label className="text-sm font-semibold text-slate-700">メールアドレス</label>
+            <textarea
+              value={customEmails}
+              onChange={(e) => setCustomEmails(e.target.value)}
+              placeholder="user@example.com, user2@example.com"
+              rows={4}
+              className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-slate-400 focus:outline-none"
+            />
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-60"
+        >
+          {loading ? "送信中..." : "メルマガを送信"}
+        </button>
+
+        {status && (
+          <div className={`text-sm ${status.type === "success" ? "text-emerald-600" : "text-red-500"}`}>
+            {status.message}
+          </div>
+        )}
+      </form>
+
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-slate-900">配信履歴</h3>
+        {historyLoading ? (
+          <p className="text-sm text-slate-500">読み込み中...</p>
+        ) : history.length === 0 ? (
+          <p className="text-sm text-slate-500">まだ配信履歴はありません。</p>
+        ) : (
+          <div className="space-y-2">
+            {history.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <p className="text-sm font-semibold text-slate-900">{item.subject}</p>
+                <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
+                  <span>配信: {item.recipient_count}件</span>
+                  <span className="text-emerald-600">成功: {item.success_count}</span>
+                  {item.failed_count > 0 && <span className="text-red-500">失敗: {item.failed_count}</span>}
+                  <span>{new Date(item.sent_at).toLocaleString("ja-JP")}</span>
+                </div>
               </div>
             ))}
           </div>

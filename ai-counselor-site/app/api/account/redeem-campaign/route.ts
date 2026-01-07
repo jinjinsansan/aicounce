@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase } from "@/lib/supabase-server";
+import { sendCampaignRedemptionEmail } from "@/lib/email/resend";
 
 type CampaignCodeRow = {
   id: string;
@@ -99,6 +100,14 @@ export async function POST(request: Request) {
       .eq("id", campaignRecord.id);
 
     if (updateError) throw updateError;
+
+    if (session.user.email) {
+      try {
+        await sendCampaignRedemptionEmail(session.user.email, normalized, expiresAt);
+      } catch (error) {
+        console.error("Failed to send campaign redemption email", error);
+      }
+    }
 
     return NextResponse.json({ success: true, expiresAt, code: normalized });
   } catch (error) {

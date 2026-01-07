@@ -90,3 +90,73 @@ export async function sendNewsletterWelcomeEmail(to: string) {
     }),
   });
 }
+
+export async function sendPaymentConfirmationEmail(to: string, plan: "basic" | "premium", amount: number) {
+  const resend = getResend();
+  const planName = plan === "basic" ? "ベーシックプラン" : "プレミアムプラン";
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "【Mental AI Team】ご契約ありがとうございます",
+    html: buildEmailLayout({
+      title: "ご契約が完了しました",
+      body: `${planName}のご契約が完了しました。\n月額${amount.toLocaleString()}円で、心のケアをサポートいたします。\n\nマイページからいつでも契約内容を確認いただけます。`,
+      actionLabel: "マイページを開く",
+      actionUrl: "https://www.mentalai.team/account",
+    }),
+  });
+}
+
+export async function sendCampaignRedemptionEmail(to: string, code: string, expiresAt: string) {
+  const resend = getResend();
+  const date = new Date(expiresAt).toLocaleDateString("ja-JP");
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "【Mental AI Team】キャンペーンコードが適用されました",
+    html: buildEmailLayout({
+      title: "キャンペーンコードの適用完了",
+      body: `キャンペーンコード「${code}」が正常に適用されました。\n有効期限: ${date}\n\n期限までプレミアムプランの全機能をお楽しみいただけます。`,
+      actionLabel: "今すぐ利用する",
+      actionUrl: "https://www.mentalai.team",
+    }),
+  });
+}
+
+export async function sendTrialExpiryNotificationEmail(to: string, expiresAt: string) {
+  const resend = getResend();
+  const date = new Date(expiresAt).toLocaleDateString("ja-JP");
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "【Mental AI Team】無料トライアル終了のお知らせ",
+    html: buildEmailLayout({
+      title: "無料トライアルが間もなく終了します",
+      body: `無料トライアル期間が ${date} に終了します。\n\n引き続きご利用いただくには、ベーシックプランまたはプレミアムプランへのご登録をお願いいたします。`,
+      actionLabel: "プランを確認する",
+      actionUrl: "https://www.mentalai.team/account",
+      footer: "トライアル終了後も、アカウント情報は保持されます。",
+    }),
+  });
+}
+
+export async function sendNewsletterBroadcast(to: string | string[], subject: string, htmlContent: string) {
+  const resend = getResend();
+  const recipients = Array.isArray(to) ? to : [to];
+  
+  const results = await Promise.allSettled(
+    recipients.map((email) =>
+      resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: `【Mental AI Team】${subject}`,
+        html: htmlContent,
+      })
+    )
+  );
+  
+  const succeeded = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+  
+  return { succeeded, failed, total: recipients.length };
+}
