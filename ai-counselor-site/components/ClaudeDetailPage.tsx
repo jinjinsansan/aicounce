@@ -173,7 +173,7 @@ export default function ClaudeDetailPage() {
             onClick={() => router.push("/counselor/chat/claude")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-slate-900 px-10 py-4 font-shippori text-lg font-bold text-white shadow-2xl transition hover:scale-105"
           >
-            無料で相談を始める
+            相談を始める
             <ArrowRight size={20} />
           </button>
           <p className="mt-4 text-sm text-slate-500">ログイン後にすぐご利用いただけます</p>

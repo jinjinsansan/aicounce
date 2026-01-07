@@ -252,7 +252,7 @@ export default function SatoDetailPage() {
             onClick={() => router.push("/counselor/chat/sato")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-10 py-4 font-shippori text-lg font-bold text-white shadow-2xl transition hover:scale-105"
           >
-            無料で相談を始める
+            相談を始める
             <ArrowRight size={20} />
           </button>
           <p className="mt-4 text-sm text-slate-500">ログイン後すぐにご利用いただけます</p>

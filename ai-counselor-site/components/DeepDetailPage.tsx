@@ -173,7 +173,7 @@ export default function DeepDetailPage() {
             onClick={() => router.push("/counselor/chat/deep")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 px-10 py-4 font-shippori text-lg font-bold text-white shadow-2xl transition hover:scale-105"
           >
-            無料で相談を始める
+            相談を始める
             <ArrowRight size={20} />
           </button>
           <p className="mt-4 text-sm text-teal-600">ログイン後、即利用できます</p>
