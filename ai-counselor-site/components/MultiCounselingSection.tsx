@@ -5,7 +5,7 @@ export default function MultiCounselingSection() {
   const counselorIcons = [
     { name: "Michelle", image: "/images/counselors/michelle.png" },
     { name: "Dr. Sato", image: "/images/counselors/dr_satou.png" },
-    { name: "Alex", image: "/images/counselors/alex.png" },
+    { name: "Dale", image: "/dale.png" },
     { name: "Nana", image: "/images/counselors/nana.png" },
   ];
 
@@ -99,7 +99,7 @@ export default function MultiCounselingSection() {
               </div>
               <div className="flex items-start gap-2">
                 <div className="relative h-7 w-7 overflow-hidden rounded-md bg-white">
-                  <Image src="/images/counselors/alex.png" alt="Alex" fill className="object-contain" />
+                  <Image src="/dale.png" alt="Dale" fill className="object-contain" />
                 </div>
                 <div className="rounded-lg bg-white px-3 py-2 shadow-sm">実践的なアプローチは</div>
               </div>

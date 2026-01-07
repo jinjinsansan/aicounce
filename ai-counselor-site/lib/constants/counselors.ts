@@ -3,15 +3,15 @@ import { COUNSELOR_SYSTEM_PROMPTS } from "@/lib/prompts/counselorPrompts";
 
 export const FALLBACK_COUNSELORS: Counselor[] = [
   {
-    id: "michele",
-    name: "ミシェル",
-    specialty: "テープ式心理学",
-    description: "温かく、包括的なアプローチで、あなたの感情テープを解きほぐします。",
-    iconUrl: "/images/counselors/michelle.png",
+    id: "dale",
+    name: "デール",
+    specialty: "自己啓発カウンセラー",
+    description: "『道は開ける』の実践原則で、悩みを具体的な行動ステップに変えます。",
+    iconUrl: "/dale.png",
     modelType: "openai",
     modelName: "gpt-4o-mini",
     ragEnabled: true,
-    tags: ["自己理解", "温厚", "テープ式"],
+    tags: ["自己啓発", "行動習慣", "不安対処"],
     responseTime: "即時",
     sessionCount: 0,
   },
