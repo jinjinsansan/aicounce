@@ -36,7 +36,7 @@ export default function ProblemSolutionSection() {
             <p className="text-sm font-semibold text-slate-500">AIができること</p>
             <h3 className="text-2xl font-bold text-slate-900">気遣いゼロで、すぐに相談。</h3>
             <ul className="space-y-3 text-sm text-slate-700">
-              {["批判も評価もしない、100%心理的安全性","待ち時間0秒、24時間365日即レス","専門知識を学んだ10人が月額1,980円で伴走"].map((item) => (
+              {["批判も評価もしない、100%心理的安全性","待ち時間0秒、24時間365日即レス","専門知識を学んだ10人が月額500円〜で伴走"].map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-slate-900" />
                   <span>{item}</span>

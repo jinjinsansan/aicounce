@@ -218,14 +218,14 @@ export default function AccountPage() {
               <PlanCard
                 plan="basic"
                 title="ベーシックプラン"
-                price={1980}
+                price={500}
                 description="個別カウンセリングチャット"
                 active={currentPlan === "basic"}
               />
               <PlanCard
                 plan="premium"
                 title="プレミアムプラン"
-                price={3980}
+                price={1500}
                 description="個別 + チームカウンセリング"
                 active={currentPlan === "premium"}
               />
