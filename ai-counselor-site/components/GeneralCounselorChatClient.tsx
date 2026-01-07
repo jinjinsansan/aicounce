@@ -230,7 +230,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
     }
     lastSendRef.current = now;
 
-    if (!override) setInput("");
+    setInput("");
     if (isMobile && textareaRef.current) {
       textareaRef.current.blur();
     }
@@ -371,10 +371,12 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
   };
 
   const handlePromptClick = (prompt: string) => {
-    setInput(prompt);
-    if (!isLoading.sending && !hasPendingResponse) {
-      void handleSend(prompt);
+    if (isLoading.sending || hasPendingResponse) {
+      setInput(prompt);
+      return;
     }
+    setInput("");
+    void handleSend(prompt);
   };
 
   useEffect(() => {
@@ -487,7 +489,9 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
 
   const showLoader =
     isRestoringSession ||
-    (!hasLoadedMessages && (isLoading.messages || (isLoading.sessions && sessions.length === 0)));
+    (messages.length === 0 &&
+      !hasLoadedMessages &&
+      (isLoading.messages || (isLoading.sessions && sessions.length === 0)));
 
   if (showLoader) {
     return (
