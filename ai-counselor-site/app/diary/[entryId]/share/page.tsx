@@ -62,7 +62,20 @@ export async function generateMetadata({ params }: SharePageProps): Promise<Meta
 export default async function DiarySharePage({ params }: SharePageProps) {
   const entry = await getDiaryEntry(params.entryId);
   if (!entry || entry.is_shareable === false) {
-    notFound();
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-0">
+        <div className="mx-auto max-w-2xl space-y-6 rounded-[32px] border border-slate-200 bg-white/95 p-6 text-center shadow-sm">
+          <h1 className="text-2xl font-bold text-slate-900">日記が見つかりませんでした</h1>
+          <p className="text-sm text-slate-600">URLが無効か、公開されていない可能性があります。</p>
+          <Link
+            href="/diary"
+            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-800 hover:bg-slate-50"
+          >
+            日記一覧に戻る
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   const shareTemplate = buildDiaryShareText({

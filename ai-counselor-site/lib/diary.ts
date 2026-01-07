@@ -1,12 +1,13 @@
 import { searchRagContext } from "@/lib/rag";
 import { getServiceSupabase } from "@/lib/supabase-server";
-import { callOpenAI } from "@/lib/llm";
+import { callLLM } from "@/lib/llm";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 
 type DiaryConfig = {
   id: string;
   name: string;
   avatarUrl: string | null;
+  provider: string;
   model: string;
 };
 
@@ -18,6 +19,7 @@ const COUNSELOR_DIARY_CONFIGS: DiaryConfig[] = FALLBACK_COUNSELORS.filter(
   id: counselor.id,
   name: counselor.name,
   avatarUrl: counselor.iconUrl ?? null,
+  provider: counselor.modelType ?? "openai",
   model: counselor.modelName ?? "gpt-4o-mini",
 }));
 
@@ -90,17 +92,13 @@ async function generateDiaryBody(config: DiaryConfig) {
 - 挨拶・箇条書き記号・番号・絵文字は禁止
 - RAGの内容のみを要約し、実践的なヒントを示す`;
 
-  const result = await callOpenAI({
+  const result = await callLLM(
+    config.provider,
+    config.model,
     systemPrompt,
-    model: config.model,
-    ragContext: context,
-    messages: [
-      {
-        role: "user",
-        content: "朝のショートメッセージを出力フォーマット通りに作ってください。",
-      },
-    ],
-  });
+    "朝のショートメッセージを出力フォーマット通りに作ってください。",
+    context,
+  );
 
   const normalized = normalizeDiaryContent(result.content || "");
   const metadataSources = (sources ?? []).slice(0, 3).map((src) => ({
