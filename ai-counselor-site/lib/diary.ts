@@ -1,5 +1,6 @@
 import { searchRagContext } from "@/lib/rag";
-import { getServiceSupabase } from "@/lib/supabase-server";
+import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
+import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase";
 import { callLLM } from "@/lib/llm";
 import { FALLBACK_COUNSELORS } from "@/lib/constants/counselors";
 
@@ -12,6 +13,12 @@ type DiaryConfig = {
 };
 
 const DAILY_POST_HOUR_JST = 8;
+
+const getReadableSupabase = () => {
+  if (hasServiceRole()) return getServiceSupabase();
+  if (hasSupabaseConfig()) return getSupabaseClient();
+  throw new Error("Supabase credentials are not configured");
+};
 
 const COUNSELOR_DIARY_CONFIGS: DiaryConfig[] = FALLBACK_COUNSELORS.filter(
   (counselor) => !counselor.comingSoon,
@@ -92,16 +99,17 @@ async function generateDiaryBody(config: DiaryConfig) {
 - 挨拶・箇条書き記号・番号・絵文字は禁止
 - RAGの内容のみを要約し、実践的なヒントを示す`;
 
-  const provider =
+  const providerMissingKey =
     (config.provider === "gemini" && !process.env.GEMINI_API_KEY) ||
     (config.provider === "claude" && !process.env.ANTHROPIC_API_KEY) ||
-    (config.provider === "deepseek" && !process.env.DEEPSEEK_API_KEY)
-      ? "openai"
-      : config.provider;
+    (config.provider === "deepseek" && !process.env.DEEPSEEK_API_KEY);
+
+  const provider = providerMissingKey ? "openai" : config.provider;
+  const model = providerMissingKey ? "gpt-4o-mini" : config.model;
 
   const result = await callLLM(
     provider,
-    config.model,
+    model,
     systemPrompt,
     "朝のショートメッセージを出力フォーマット通りに作ってください。",
     context,
@@ -211,7 +219,7 @@ export async function runDailyDiaries(options: { force?: boolean; now?: Date } =
 
 export async function listDiaryEntries(limit = 20, cursor?: string | null) {
   try {
-    const supabase = getServiceSupabase();
+    const supabase = getReadableSupabase();
     let query = supabase
       .from("diary_entries")
       .select("id, author_id, author_name, author_avatar_url, title, content, published_at, journal_date, share_count")
@@ -238,7 +246,7 @@ export async function listDiaryEntries(limit = 20, cursor?: string | null) {
 
 export async function getDiaryEntry(entryId: string) {
   try {
-    const supabase = getServiceSupabase();
+    const supabase = getReadableSupabase();
     const { data, error } = await supabase
       .from("diary_entries")
       .select("id, author_id, author_name, author_avatar_url, title, content, published_at, journal_date, share_count, is_shareable")
