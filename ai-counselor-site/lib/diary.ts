@@ -92,8 +92,15 @@ async function generateDiaryBody(config: DiaryConfig) {
 - 挨拶・箇条書き記号・番号・絵文字は禁止
 - RAGの内容のみを要約し、実践的なヒントを示す`;
 
+  const provider =
+    (config.provider === "gemini" && !process.env.GEMINI_API_KEY) ||
+    (config.provider === "claude" && !process.env.ANTHROPIC_API_KEY) ||
+    (config.provider === "deepseek" && !process.env.DEEPSEEK_API_KEY)
+      ? "openai"
+      : config.provider;
+
   const result = await callLLM(
-    config.provider,
+    provider,
     config.model,
     systemPrompt,
     "朝のショートメッセージを出力フォーマット通りに作ってください。",
