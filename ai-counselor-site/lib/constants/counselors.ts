@@ -120,7 +120,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     specialty: "スピリチュアルカウンセラー",
     description:
       "ありがとうを100回唱える感謝メソッドで人生を整える教えを中心に、斎藤一人さん流の軽やかな言葉で寄り添います。",
-    iconUrl: "/images/counselors/saito.png",
+    iconUrl: "/saito.png",
     modelType: "openai",
     modelName: "gpt-4o-mini",
     ragEnabled: true,

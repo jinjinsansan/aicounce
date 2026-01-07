@@ -1187,7 +1187,7 @@ const SAITO_CONFIG: ChatConfig = {
     name: "サイトウ",
     subtitle: "感謝と言霊カウンセラー",
     description: "斎藤一人さん流の軽やかな言葉で、感謝と天国言葉を呼び水に核心を伝えます。",
-    iconUrl: "/images/counselors/saito.png",
+    iconUrl: "/saito.png",
   },
   theme: {
     gradientFrom: "#fff8e6",

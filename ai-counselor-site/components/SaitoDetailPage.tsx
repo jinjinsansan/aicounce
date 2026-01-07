@@ -44,7 +44,7 @@ export default function SaitoDetailPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-10 lg:flex-row lg:items-end">
           <div className="relative h-56 w-56 flex-shrink-0">
             <Image
-              src="/images/counselors/saito.png"
+              src="/saito.png"
               alt="サイトウ"
               fill
               priority
