@@ -13,7 +13,7 @@ type DiaryConfig = {
 const DAILY_POST_HOUR_JST = 8;
 
 const COUNSELOR_DIARY_CONFIGS: DiaryConfig[] = FALLBACK_COUNSELORS.filter(
-  (counselor) => counselor.ragEnabled && !counselor.comingSoon,
+  (counselor) => !counselor.comingSoon,
 ).map((counselor) => ({
   id: counselor.id,
   name: counselor.name,
