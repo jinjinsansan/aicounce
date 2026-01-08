@@ -78,13 +78,48 @@ function buildRagContextFromSources(sources: { chunk_text: string; similarity?: 
     .join("\n\n");
 }
 
+function buildForcedInterviewReply(params: {
+  counselorId: "mitsu" | "kenji";
+  stage: 1 | 2;
+  historyMessages: ChatMessage[];
+}) {
+  const { counselorId, stage, historyMessages } = params;
+  const recentUserFacts = historyMessages
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-2)
+    .map((m) => m.content.trim())
+    .join(" / ")
+    .slice(0, 120);
+
+  const summary = recentUserFacts ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+
+  if (counselorId === "mitsu") {
+    if (stage === 1) {
+      return `${summary}\n叱られたのは何について？（注文/対応/態度/遅れのどれ？）`;
+    }
+    return `${summary}\nいちばん苦しいのは、叱られた言い方？ミスの罪悪感？クビの不安？`;
+  }
+
+  if (stage === 1) {
+    return `${summary}\nどの場面で、どんなふうに叱られたの？`;
+  }
+  return `${summary}\nいちばん苦しいのは、どんな気持ち？`;
+}
+
 const MITSU_ANCHORS = [
   /相田みつを/,
   /にんげんだもの/,
   /つまづいたっていいじゃないか/,
 ] as const;
 
-const MITSU_FORBIDDEN_PHRASES = [/柔道/, /受身/, /一生勉強/, /一生青春/] as const;
+const MITSU_FORBIDDEN_PHRASES = [
+  /柔道/,
+  /受身/,
+  /一生勉強/,
+  /一生青春/,
+  /おれだもの/,
+  /じゃねんだな/,
+] as const;
 
 function hasMitsuAnchor(text: string) {
   return MITSU_ANCHORS.some((re) => re.test(text));
@@ -188,6 +223,10 @@ function buildStageGuard(params: {
   const { counselorId, historyMessages, userMessage } = params;
   const managed = counselorId === "mitsu" || counselorId === "kenji";
   if (!managed) return { stage: 0 as const, guard: "" };
+
+  if (isGreetingOnly(userMessage)) {
+    return { stage: 0 as const, guard: "" };
+  }
 
   const priorNonGreetingUserCount = historyMessages.filter(
     (m) => m.role === "user" && !isGreetingOnly(m.content),
@@ -313,7 +352,7 @@ function buildForcedManagedReply(params: {
     .slice(0, 140);
 
   const raw = String(ragContext ?? "");
-  const cleanedRagRaw = raw
+  const candidates = raw
     .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
     .replace(/\(score:[^)]+\)/g, "")
     .replace(/^#+\s+.*$/gmu, "")
@@ -321,13 +360,15 @@ function buildForcedManagedReply(params: {
     .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .split(/\n\n+/)
     .map((s) => s.trim())
-    .filter(Boolean)[0]
-    ?.slice(0, 90);
+    .filter(Boolean);
 
-  const cleanedRag =
-    counselorId === "kenji" && cleanedRagRaw && containsKenjiForbidden(cleanedRagRaw)
-      ? undefined
-      : cleanedRagRaw;
+  const cleanedRagRaw = candidates.find((c) => {
+    if (counselorId === "kenji") return !containsKenjiForbidden(c);
+    if (counselorId === "mitsu") return !containsMitsuForbidden(c);
+    return true;
+  });
+
+  const cleanedRag = cleanedRagRaw?.slice(0, 90);
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
@@ -518,7 +559,9 @@ export async function POST(request: NextRequest) {
       }
 
       if (counselor.id === "mitsu" && ragSources.length > 0) {
-        const filtered = ragSources.filter((s) => hasMitsuAnchor(s.chunk_text));
+        const filtered = ragSources.filter(
+          (s) => hasMitsuAnchor(s.chunk_text) && !containsMitsuForbidden(s.chunk_text),
+        );
         if (filtered.length > 0) {
           ragSources = filtered.slice(0, 5);
           ragContext = buildRagContextFromSources(ragSources);
@@ -695,11 +738,19 @@ export async function POST(request: NextRequest) {
       mitsForbidden ||
       mustHaveRealQuote
     ) {
-      finalContent = buildForcedManagedReply({
-        counselorId: counselor.id as "mitsu" | "kenji",
-        historyMessages,
-        ragContext,
-      });
+      if (managed && (stage === 1 || stage === 2)) {
+        finalContent = buildForcedInterviewReply({
+          counselorId: counselor.id as "mitsu" | "kenji",
+          stage,
+          historyMessages,
+        });
+      } else {
+        finalContent = buildForcedManagedReply({
+          counselorId: counselor.id as "mitsu" | "kenji",
+          historyMessages,
+          ragContext,
+        });
+      }
     }
 
     const mustUseRag = shouldUseRagThisTurn;

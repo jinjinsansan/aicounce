@@ -136,13 +136,48 @@ function buildRagContextFromSources(sources: { chunk_text: string; similarity?: 
     .join("\n\n");
 }
 
+function buildForcedInterviewReply(params: {
+  counselorId: "mitsu" | "kenji";
+  stage: 1 | 2;
+  scopedHistory: HistoryMessage[];
+}) {
+  const { counselorId, stage, scopedHistory } = params;
+  const recentUserFacts = scopedHistory
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-2)
+    .map((m) => m.content.trim())
+    .join(" / ")
+    .slice(0, 120);
+
+  const summary = recentUserFacts ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+
+  if (counselorId === "mitsu") {
+    if (stage === 1) {
+      return `${summary}\n叱られたのは何について？（注文/対応/態度/遅れのどれ？）`;
+    }
+    return `${summary}\nいちばん苦しいのは、叱られた言い方？ミスの罪悪感？クビの不安？`;
+  }
+
+  if (stage === 1) {
+    return `${summary}\nどの場面で、どんなふうに叱られたの？`;
+  }
+  return `${summary}\nいちばん苦しいのは、どんな気持ち？`;
+}
+
 const MITSU_ANCHORS = [
   /相田みつを/,
   /にんげんだもの/,
   /つまづいたっていいじゃないか/,
 ] as const;
 
-const MITSU_FORBIDDEN_PHRASES = [/柔道/, /受身/, /一生勉強/, /一生青春/] as const;
+const MITSU_FORBIDDEN_PHRASES = [
+  /柔道/,
+  /受身/,
+  /一生勉強/,
+  /一生青春/,
+  /おれだもの/,
+  /じゃねんだな/,
+] as const;
 
 function hasMitsuAnchor(text: string) {
   return MITSU_ANCHORS.some((re) => re.test(text));
@@ -245,6 +280,10 @@ function buildStageGuard(params: {
   const { counselorId, scopedHistory, userMessage, loopDetected } = params;
   const managed = counselorId === "mitsu" || counselorId === "kenji";
   if (!managed) return { stage: 0 as const, guard: "" };
+
+  if (isGreetingOnly(userMessage)) {
+    return { stage: 0 as const, guard: "" };
+  }
 
   const priorNonGreetingUserCount = scopedHistory.filter(
     (m) => m.role === "user" && !isGreetingOnly(m.content),
@@ -374,7 +413,7 @@ function buildForcedManagedReply(params: {
     .slice(0, 140);
 
   const raw = String(ragContext ?? "");
-  const cleanedRagRaw = raw
+  const candidates = raw
     .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
     .replace(/\(score:[^)]+\)/g, "")
     .replace(/^#+\s+.*$/gmu, "")
@@ -382,13 +421,15 @@ function buildForcedManagedReply(params: {
     .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .split(/\n\n+/)
     .map((s) => s.trim())
-    .filter(Boolean)[0]
-    ?.slice(0, 90);
+    .filter(Boolean);
 
-  const cleanedRag =
-    counselorId === "kenji" && cleanedRagRaw && containsKenjiForbidden(cleanedRagRaw)
-      ? undefined
-      : cleanedRagRaw;
+  const cleanedRagRaw = candidates.find((c) => {
+    if (counselorId === "kenji") return !containsKenjiForbidden(c);
+    if (counselorId === "mitsu") return !containsMitsuForbidden(c);
+    return true;
+  });
+
+  const cleanedRag = cleanedRagRaw?.slice(0, 90);
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
@@ -807,7 +848,9 @@ export async function POST(req: Request) {
           }
         }
         if (p.id.toLowerCase() === "mitsu") {
-          const filtered = ragResult.sources.filter((s: { chunk_text: string }) => hasMitsuAnchor(s.chunk_text));
+          const filtered = ragResult.sources.filter(
+            (s: { chunk_text: string }) => hasMitsuAnchor(s.chunk_text) && !containsMitsuForbidden(s.chunk_text),
+          );
           if (filtered.length > 0) {
             context = buildRagContextFromSources(filtered.slice(0, 5));
           }
@@ -1046,11 +1089,19 @@ export async function POST(req: Request) {
 
         if (mustFallback) {
           if (p.id.toLowerCase() === "kenji" || p.id.toLowerCase() === "mitsu") {
-            final = buildForcedManagedReply({
-              counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
-              scopedHistory,
-              ragContext: context || undefined,
-            });
+            if (isManaged && (stage === 1 || stage === 2)) {
+              final = buildForcedInterviewReply({
+                counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
+                stage,
+                scopedHistory,
+              });
+            } else {
+              final = buildForcedManagedReply({
+                counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
+                scopedHistory,
+                ragContext: context || undefined,
+              });
+            }
           }
         }
       }
