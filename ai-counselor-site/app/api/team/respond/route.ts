@@ -86,12 +86,25 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
     .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .trim();
 
-  const first = cleaned
+  const isBadStart = (s: string) => /^[、。！？?!]/.test(s) || /^(に|を|が|は|で|と|へ|も|や|の)/.test(s);
+
+  const sentenceMatches = cleaned.match(/[^\n。！？?!]{6,}[。！？?!]/g) ?? [];
+  const sentenceCandidates = sentenceMatches
+    .map((s) => cleanRagSnippetForQuote(s))
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 10)
+    .filter((s) => !isBadStart(s));
+
+  const firstSentence = sentenceCandidates[0];
+  if (firstSentence) return firstSentence.slice(0, maxLen);
+
+  const firstPara = cleaned
     .split(/\n\n+/)
+    .map((s) => cleanRagSnippetForQuote(s))
     .map((s) => s.trim())
     .filter(Boolean)[0];
 
-  return (first ?? "").slice(0, maxLen);
+  return (firstPara ?? "").slice(0, maxLen);
 }
 
 function cleanRagText(ragContext?: string) {
@@ -296,21 +309,15 @@ function buildForcedInterviewReply(params: {
     .join(" / ")
     .slice(0, 120);
 
-  const t = recentUserFacts;
-  const summary =
-    counselorId === "mitsu"
-      ? stage === 2 && /言い方/.test(t)
-        ? "叱られた言い方がきつかったんだね。"
-        : "上司に𠮟られて胸が苦しいんだね。"
-      : recentUserFacts
-        ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
-        : "いま胸が苦しいんだね。";
+  const summary = recentUserFacts
+    ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
+    : "いま胸が苦しいんだね。";
 
   if (counselorId === "mirai") {
     if (stage === 1) {
-      return `${summary}\n何がきっかけで𠮟られたのか、教えてくれる？`;
+      return `${summary}\n何が起きたのか、1行で教えてくれる？`;
     }
-    return `${summary}\nいちばん苦しいのは、叱られた言い方？ミスの不安？クビの不安？`;
+    return `${summary}\nいちばん苦しいのは、どんな気持ち？（不安/焦り/怒り/悲しみ など）`;
   }
 
   if (counselorId === "nana") {
@@ -323,13 +330,13 @@ function buildForcedInterviewReply(params: {
 
   if (counselorId === "mitsu") {
     if (stage === 1) {
-      return `${summary}\n叱られたのは何について？（注文/対応/態度/遅れのどれ？）`;
+      return `${summary}\nいま何が起きていて、何が一番気になってる？`;
     }
-    return `${summary}\nいちばん苦しいのは、叱られた言い方？ミスの罪悪感？クビの不安？`;
+    return `${summary}\nいちばん苦しいのは、どんな気持ち？`;
   }
 
   if (stage === 1) {
-    return `${summary}\nどの場面で、どんなふうに叱られたの？`;
+    return `${summary}\nどんなことがあったの？`;
   }
   return `${summary}\nいちばん苦しいのは、どんな気持ち？`;
 }
@@ -376,7 +383,9 @@ function hasWorkDetail(text: string) {
 }
 
 function isMitsuFactQuestion(text: string) {
-  return /(何について|何を|何と言われ|どの場面|ミス|注文|対応|態度|遅れ|クレーム|忘れ)/.test(text);
+  return /(何が起き|どんなこと|状況|きっかけ|何について|何を|何と言われ|どの場面|何が気にな|どんな点|ミス|注文|対応|態度|遅れ|クレーム|忘れ)/.test(
+    text,
+  );
 }
 
 function isMitsuFeelingQuestion(text: string) {
@@ -384,7 +393,9 @@ function isMitsuFeelingQuestion(text: string) {
 }
 
 function isKenjiFactQuestion(text: string) {
-  return /(何について|どんなことで|原因|なぜ|ミス|注文|対応|態度|遅れ|クレーム|忘れ|失念)/.test(text);
+  return /(何が起き|どんなこと|状況|きっかけ|何について|どんなことで|原因|なぜ|何が気にな|どんな点|ミス|注文|対応|態度|遅れ|クレーム|忘れ|失念)/.test(
+    text,
+  );
 }
 
 function isKenjiFeelingQuestion(text: string) {
@@ -503,7 +514,7 @@ function buildStageGuard(params: {
       guard: [
       "【進行（強制）】いまはステップ1（インタビュー）。",
         counselorId === "mitsu"
-          ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何について叱られた？など）"
+          ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何が起きた？など）"
           : counselorId === "mirai"
             ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ"
           : "- 返答は短く：共感1行 + 質問1つだけ",
@@ -560,10 +571,10 @@ function buildStageGuard(params: {
       ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。同じ引用の繰り返し禁止"
       : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
     counselorId === "mitsu"
-      ? "- 追加の聞き直しは原則しない。ただし助言に必要なら、選択肢式の確認質問を1つだけ（例：『ミス/態度/遅れのどれ？』）"
+      ? "- 追加の聞き直しは原則しない。ただし助言に必要なら、確認質問を1つだけ（例：『いま一番気がかりなのは何？』）"
       : "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
     counselorId === "mitsu" && isAdviceRequest(userMessage) && !detailKnown
-      ? "- まだ状況が足りない場合は、最初に選択式で1問だけ確認してから提案する（例：『注文/対応/態度/遅れのどれ？』）"
+      ? "- まだ状況が足りない場合は、最初に確認質問を1問だけしてから提案する（例：『何が一番困ってる？』）"
       : "",
     counselorId === "mitsu" && isMoreAdviceRequest(userMessage)
       ? "- 直前と同じ言い回し/同じ提案を繰り返さない（別の観点で）"
@@ -624,10 +635,21 @@ function summarizeMitsuFromHistory(history: HistoryMessage[]) {
     .map((m) => m.content)
     .join("\n");
 
+  if (!isWorkTopic(t)) {
+    const recent = t
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(-2)
+      .join(" / ")
+      .slice(0, 80);
+    return recent ? `いまは「${recent}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+  }
+
   if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
   if (/(注文|失念|忘れ)/.test(t)) return "注文のことで叱られて、胸が苦しいんだね。";
   if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
-  return "上司に𠮟られて胸が苦しいんだね。";
+  return "いま、そのことで胸が苦しいんだね。";
 }
 
 function summarizeKenjiFromHistory(history: HistoryMessage[]) {
@@ -637,10 +659,21 @@ function summarizeKenjiFromHistory(history: HistoryMessage[]) {
     .map((m) => m.content)
     .join("\n");
 
+  if (!isWorkTopic(t)) {
+    const recent = t
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(-2)
+      .join(" / ")
+      .slice(0, 80);
+    return recent ? `いまは「${recent}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+  }
+
   if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
   if (/(注文|失念|忘れ)/.test(t)) return "注文を忘れて叱られて、胸が苦しいんだね。";
   if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
-  return "上司に𠮟られて胸が苦しいんだね。";
+  return "いま、そのことで胸が苦しいんだね。";
 }
 
 function summarizeMiraiFromHistory(history: HistoryMessage[]) {
@@ -650,9 +683,22 @@ function summarizeMiraiFromHistory(history: HistoryMessage[]) {
     .map((m) => m.content)
     .join("\n");
 
+  if (!isWorkTopic(t)) {
+    const recent = t
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(-2)
+      .join(" / ")
+      .slice(0, 80);
+    return recent
+      ? `いまは「${recent}」のことで苦しいんだね。`
+      : "いま、少し苦しいんだね。";
+  }
+
   if (/言い方/.test(t)) return "叱られた言い方がきつくて、苦しいんだね。";
   if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安で、胸が苦しいんだね。";
-  return "上司に𠮟られて、胸が苦しいんだね。";
+  return "いま、そのことで胸が苦しいんだね。";
 }
 
 function summarizeNanaFromHistory(history: HistoryMessage[]) {
@@ -752,7 +798,7 @@ function buildForcedManagedReply(params: {
       counselorId === "kenji"
         ? "その言葉のどこが、いまのきみに一番刺さる？"
         : counselorId === "mirai"
-          ? "いま一番こわいのは、クビ？評価？それとも上司の目？"
+          ? "いま一番こわいのは、何が起きること？"
         : counselorId === "nana"
           ? "この言葉のどこが、いまの不安と一番つながっていますか？"
         : "この言葉のどこが、いまのきみに一番重なる？";
@@ -762,12 +808,16 @@ function buildForcedManagedReply(params: {
   const workTopic = isWorkTopic(recentUserFacts);
   const action =
     counselorId === "kenji"
-      ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
+      ? workTopic
+        ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
+        : "3分だけ、深呼吸を3回してから『いまの事実→いまの気持ち→小さな一歩』を1行ずつ書いてみよう。"
       : counselorId === "mirai"
-        ? "3分だけでいいよ。上司に確認する一文を下書きしてみよう：『ご指摘の点は○○と理解しました。今後は△△で防ぎます。優先順位だけ確認させてください』。"
+        ? workTopic
+          ? "3分だけでいいよ。上司に確認する一文を下書きしてみよう：『ご指摘の点は○○と理解しました。今後は△△で防ぎます。優先順位だけ確認させてください』。"
+          : "3分だけでいいよ。紙に『いまの状況→不安な点→次にできる一手』を1行ずつ書いて、最後に一つだけ選ぼう。"
         : counselorId === "nana"
           ? "3分だけで大丈夫です。紙に1行ずつ『起きた事実』『いまの気持ち』『次にしたいこと1つ』を書いて、最後に1つだけ選びましょう。"
-      : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
+        : "3分だけ、次の一手をメモしてみない？『いまの事実→いまの気持ち→小さな一歩1つ』。";
 
   const questionSeed = `${counselorId}|${recentUserFacts}|${cleanedRag ?? ""}`;
   return `${summary}\n${ragLine}\n${action}\n${pickManagedCheckInQuestion(counselorId, questionSeed)}`;
@@ -1085,6 +1135,7 @@ export async function POST(req: Request) {
         .select("role, content, author, author_id, created_at")
         .eq("team_session_id", sessionId)
         .order("created_at", { ascending: false })
+        .order("role", { ascending: true })
         .limit(40);
 
       if (error) {
@@ -1327,7 +1378,7 @@ export async function POST(req: Request) {
               ? [
                   "- いまはステップ1（インタビュー）：共感1行 + 質問1つだけ",
                   isMitsu
-                    ? "- 質問は事実確認の1つだけ（例：『叱られたのは何について？（注文/対応/態度/遅れのどれ？）』）"
+                    ? "- 質問は事実確認の1つだけ（例：『いま何が起きたの？』）"
                     : "",
                   "- 助言/解決策/行動提案は禁止",
                   "- RAG引用（『』）は禁止",
@@ -1335,7 +1386,7 @@ export async function POST(req: Request) {
               : [
                   "- いまはステップ2（展開＆掘り下げ）：事実の要約1行 + 感情/影響の質問1つ",
                   isMitsu
-                    ? "- 質問は『いちばん苦しいのは？（叱られた言い方/罪悪感/クビの不安 など）』のように感情/影響を聞く"
+                    ? "- 質問は『いちばん苦しいのは、どんな気持ち？』のように感情/影響を聞く"
                     : "",
                   "- 事実の聞き直し（『どんなことがあった』等）は禁止",
                   "- 助言/解決策/行動提案は禁止",

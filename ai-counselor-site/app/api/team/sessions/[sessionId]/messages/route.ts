@@ -42,7 +42,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ sessionI
     .from("team_messages")
     .select("id, role, content, author, author_id, icon_url, created_at")
     .eq("team_session_id", sessionId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("role", { ascending: false });
 
   if (error) {
     console.error("Failed to fetch team messages", error);
