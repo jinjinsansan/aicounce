@@ -134,6 +134,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
   const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
   const hasRestoredRef = useRef(false);
   const lastSendRef = useRef<number>(0);
+  const skipNextMessagesLoadRef = useRef(false);
 
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
 
@@ -286,6 +287,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
       );
 
       if (!activeSessionId && result.sessionId) {
+        skipNextMessagesLoadRef.current = true;
         setActiveSessionId(result.sessionId);
         if (typeof window !== "undefined") {
           window.localStorage.setItem(config.storageKey, result.sessionId);
@@ -424,6 +426,11 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
   useEffect(() => {
     if (!activeSessionId) {
       setMessages([]);
+      setHasLoadedMessages(true);
+      return;
+    }
+    if (skipNextMessagesLoadRef.current) {
+      skipNextMessagesLoadRef.current = false;
       setHasLoadedMessages(true);
       return;
     }
