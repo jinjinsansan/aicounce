@@ -761,7 +761,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
                   onKeyDown={handleKeyDown}
                   placeholder="悩みや状況を入力してください"
                   className={cn(
-                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 px-4 py-3 text-sm text-slate-900 transition focus:outline-none focus:ring-2 focus:ring-offset-0",
+                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 px-4 py-3 text-base leading-relaxed text-slate-900 transition focus:outline-none focus:ring-2 focus:ring-offset-0 md:text-sm",
                     config.theme.inputBorder,
                     config.theme.inputBg,
                     config.theme.inputPlaceholder,
@@ -769,6 +769,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
                   rows={1}
                   autoComplete="off"
                   autoCorrect="off"
+                  autoCapitalize="off"
                   enterKeyHint="send"
                   onFocus={scrollIntoViewOnFocus}
                 />
@@ -1253,11 +1254,11 @@ const DALE_CONFIG: ChatConfig = {
     gradientTo: "#0f2744",
     accent: "#38bdf8",
     accentMuted: "#2563eb",
-    cardBorder: "border-sky-900/40",
+    cardBorder: "border-[#1e3a8a]",
     bubbleUser: "bg-[#0f172a] text-[#cbd5f5]",
-    bubbleAssistant: "bg-[#0b1224]",
-    assistantText: "text-[#e0f2fe]",
-    assistantBorder: "border border-sky-900/40",
+    bubbleAssistant: "bg-[#0f172a]",
+    assistantText: "text-[#e2e8f0]",
+    assistantBorder: "border border-[#1e3a8a]",
     activeBackground: "bg-gradient-to-r from-[#0ea5e9] via-[#2563eb] to-[#1d4ed8]",
     newChatButton:
       "bg-gradient-to-r from-[#38bdf8] via-[#2563eb] to-[#0ea5e9] focus-visible:ring-sky-200 shadow-sky-400/40",
@@ -1269,23 +1270,23 @@ const DALE_CONFIG: ChatConfig = {
     badgeHintText: "text-[#bfdbfe]",
     statsBadgeBackground: "bg-[#0f172a]",
     statsBadgeText: "text-[#e0f2fe]",
-    sectionBorder: "border-sky-900/50",
-    promptBorder: "border-sky-900/50",
+    sectionBorder: "border-[#1e3a8a]",
+    promptBorder: "border-[#1e3a8a]",
     promptText: "text-[#bfdbfe]",
     promptHoverBorder: "hover:border-sky-400",
-    detailBorder: "border-sky-900/50",
-    detailBackground: "bg-[#0b1224]",
-    detailText: "text-[#e0f2fe]",
-    emptyBorder: "border-sky-900/40",
+    detailBorder: "border-[#1e3a8a]",
+    detailBackground: "bg-[#0f172a]",
+    detailText: "text-[#e2e8f0]",
+    emptyBorder: "border-[#1e3a8a]",
     emptyText: "text-[#bfdbfe]",
-    inputBorder: "border-sky-900/50 focus:border-sky-400 focus:ring-sky-200/40",
+    inputBorder: "border-[#1e3a8a] focus:border-sky-400 focus:ring-sky-200/40",
     inputBg: "bg-[#0f172a]",
     inputPlaceholder: "placeholder:text-sky-200/70",
-    skeletonBorder: "border-sky-900/40",
+    skeletonBorder: "border-[#1e3a8a]",
     skeletonHighlight: "#1d2b4a",
     skeletonShade: "#0f172a",
-    deleteButtonText: "text-[#e0f2fe]",
-    deleteButtonHover: "hover:bg-[#0f172a]",
+    deleteButtonText: "text-[#e2e8f0]",
+    deleteButtonHover: "hover:bg-[#0b1224]",
   },
   initialPrompts: [
     "最悪を想像して受け入れる方法を知りたい",

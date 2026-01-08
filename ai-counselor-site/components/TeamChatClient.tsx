@@ -452,6 +452,9 @@ export function TeamChatClient() {
     if (!overrideText) {
       setInput("");
     }
+    if (isMobile && textareaRef.current) {
+      textareaRef.current.blur();
+    }
     setError(null);
     const tempUserId = `temp-user-${Date.now()}`;
     const tempAiId = `temp-ai-${Date.now()}`;
@@ -942,10 +945,11 @@ export function TeamChatClient() {
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="悩みや状況を入力してください"
-                className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-[#dbeafe] bg-[#f6f8ff] px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 transition focus:border-[#c7d2fe] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#c7d2fe] focus:ring-offset-0"
+                className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 border-[#dbeafe] bg-[#f6f8ff] px-4 py-3 text-base leading-relaxed text-slate-900 placeholder:text-slate-500 transition focus:border-[#c7d2fe] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#c7d2fe] focus:ring-offset-0 md:text-sm"
                 rows={1}
                 autoComplete="off"
                 autoCorrect="off"
+                autoCapitalize="off"
                 enterKeyHint="send"
                 onFocus={scrollIntoViewOnFocus}
               />

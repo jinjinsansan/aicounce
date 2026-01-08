@@ -48,13 +48,17 @@ export default function ChatInterface({
           value={input}
           onChange={handleInputChange}
           placeholder="今の気持ちや相談内容を入力してください..."
-          className="min-h-[64px] flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none"
+          className="min-h-[64px] flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-base leading-relaxed focus:border-blue-500 focus:outline-none md:text-sm"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          enterKeyHint="send"
         />
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isSending || !input.trim()}
-          className="h-12 min-w-[120px] rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="h-12 min-w-[120px] rounded-2xl bg-blue-600 px-4 text-base font-semibold text-white shadow-lg transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-300 md:text-sm"
         >
           {isSending ? "送信中..." : "送信"}
         </button>
