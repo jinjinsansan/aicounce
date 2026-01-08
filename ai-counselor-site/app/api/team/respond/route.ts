@@ -13,6 +13,7 @@ import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
 import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
 import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
+import { PINA_SYSTEM_PROMPT } from "@/lib/team/prompts/pina";
 import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
@@ -112,6 +113,10 @@ const AI_ROLES = {
     greeting: "ミライだよ。未来ノートのヒントを使って、一緒に前向きな一歩を見つけよう。",
     role: "未来から来た猫型ロボット風カウンセラーとして、優しく行動に落とす",
   },
+  pina: {
+    greeting: "ピーナだよ。配られたカードで一緒に考えよう、今日の一歩を見つけよう。",
+    role: "名言チャンクをもとに視点を変え、軽やかに行動を提案する",
+  },
   yuki: {
     greeting: "ユウキだよ。課題を分けて、勇気づけながら次の一歩を考えよう。",
     role: "アドラー心理学の目的論と勇気づけで、具体的な行動に導く",
@@ -206,6 +211,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: MIRAI_SYSTEM_PROMPT,
     negativeInstruction:
       "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。「RAGの教えによれば」などの前置きは使わない。抽象論だけや説教口調は禁止。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  pina: {
+    name: "名言カウンセリング",
+    terms: ["名言", "友情", "希望", "自分らしさ", "今日を生きる", "配られたカード"],
+    systemPrompt: PINA_SYSTEM_PROMPT,
+    negativeInstruction: "説教せず、友達として対等に。RAGチャンクを1〜2件必ず要約し、短く具体的な一歩を添えてください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },

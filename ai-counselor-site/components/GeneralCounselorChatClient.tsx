@@ -1373,6 +1373,68 @@ const MIRAI_CONFIG: ChatConfig = {
   ],
 };
 
+const PINA_CONFIG: ChatConfig = {
+  counselorId: "pina",
+  storageKey: "pina-quote-chat-session",
+  hero: {
+    name: "ピーナ",
+    subtitle: "名言カウンセリング",
+    description: "気楽で哲学的な友達として、名言から今日の一歩を届けます",
+    iconUrl: "/images/counselors/pina.png",
+  },
+  theme: {
+    gradientFrom: "#f0fdfa",
+    gradientVia: "#e0f2fe",
+    gradientTo: "#f3e8ff",
+    accent: "#8b5cf6",
+    accentMuted: "#10b981",
+    cardBorder: "border-indigo-100",
+    bubbleUser: "bg-[#eef2ff] text-[#312e81]",
+    bubbleAssistant: "bg-[#ecfeff]",
+    assistantText: "text-[#0f172a]",
+    assistantBorder: "border border-indigo-100",
+    activeBackground: "bg-gradient-to-r from-[#8b5cf6] via-[#10b981] to-[#38bdf8]",
+    newChatButton:
+      "bg-gradient-to-r from-[#8b5cf6] via-[#10b981] to-[#38bdf8] focus-visible:ring-indigo-200 shadow-indigo-300/50",
+    headingText: "text-[#312e81]",
+    headerSubtitle: "text-[#8b5cf6]",
+    headerDescription: "text-[#0f172a]",
+    badgeBackground: "bg-[#eef2ff]",
+    badgeText: "text-[#312e81]",
+    badgeHintText: "text-[#0f172a]",
+    statsBadgeBackground: "bg-[#f0fdfa]",
+    statsBadgeText: "text-[#0f172a]",
+    sectionBorder: "border-indigo-50",
+    promptBorder: "border-indigo-100",
+    promptText: "text-[#312e81]",
+    promptHoverBorder: "hover:border-indigo-300",
+    detailBorder: "border-indigo-100",
+    detailBackground: "bg-[#f0fdfa]",
+    detailText: "text-[#0f172a]",
+    emptyBorder: "border-indigo-100",
+    emptyText: "text-[#312e81]",
+    inputBorder: "border-indigo-100 focus:border-indigo-300 focus:ring-indigo-100",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-indigo-300",
+    skeletonBorder: "border-indigo-50",
+    skeletonHighlight: "bg-indigo-100",
+    skeletonShade: "bg-indigo-50",
+    deleteButtonText: "text-[#312e81]",
+    deleteButtonHover: "hover:bg-indigo-50",
+  },
+  initialPrompts: [
+    "配られたカードで勝負できない気がする",
+    "毎日がつまらない、何か色を変えたい",
+    "人と比べてばかりで疲れる",
+    "落ち込んだときの一言がほしい",
+  ],
+  thinkingMessages: [
+    "名言チャンクを探しています...",
+    "視点を少し変えています...",
+    "今日の一歩を考えています...",
+  ],
+};
+
 const YUKI_CONFIG: ChatConfig = {
   counselorId: "yuki",
   storageKey: "yuki-adler-chat-session",
@@ -1444,4 +1506,5 @@ export const NanaChatClient = () => <GeneralCounselorChatClient config={NANA_CON
 export const SaitoChatClient = () => <GeneralCounselorChatClient config={SAITO_CONFIG} />;
 export const DaleChatClient = () => <GeneralCounselorChatClient config={DALE_CONFIG} />;
 export const MiraiChatClient = () => <GeneralCounselorChatClient config={MIRAI_CONFIG} />;
+export const PinaChatClient = () => <GeneralCounselorChatClient config={PINA_CONFIG} />;
 export const YukiChatClient = () => <GeneralCounselorChatClient config={YUKI_CONFIG} />;

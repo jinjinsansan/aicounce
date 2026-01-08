@@ -7,6 +7,7 @@ export default function MultiCounselingSection() {
     { name: "Dr. Sato", image: "/images/counselors/dr_satou.png" },
     { name: "Dale", image: "/dale.png" },
     { name: "Mirai", image: "/mirai.png" },
+    { name: "Pina", image: "/images/counselors/pina.png" },
     { name: "Yuki", image: "/images/counselors/yuki.png" },
     { name: "Nana", image: "/images/counselors/nana.png" },
   ];

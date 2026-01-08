@@ -19,6 +19,7 @@ import {
   SaitoChatClient,
   DaleChatClient,
   MiraiChatClient,
+  PinaChatClient,
   YukiChatClient,
 } from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
@@ -279,6 +280,10 @@ export default function ChatPage({
 
   if (counselorId === "yuki") {
     return <YukiChatClient />;
+  }
+
+  if (counselorId === "pina") {
+    return <PinaChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;
