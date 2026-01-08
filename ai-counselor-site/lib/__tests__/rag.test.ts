@@ -7,13 +7,20 @@ jest.mock("@/lib/supabase", () => ({
   hasSupabaseConfig: jest.fn(),
 }));
 
+jest.mock("@/lib/supabase-server", () => ({
+  hasServiceRole: jest.fn(),
+  getServiceSupabase: jest.fn(),
+}));
+
 const { getSupabaseClient, hasSupabaseConfig } = jest.requireMock("@/lib/supabase");
+const { hasServiceRole } = jest.requireMock("@/lib/supabase-server");
 
 describe("searchRagContext", () => {
   beforeEach(() => {
     jest.resetAllMocks();
     process.env.OPENAI_API_KEY = "test";
     global.fetch = jest.fn();
+    hasServiceRole.mockReturnValue(false);
   });
 
   it("returns formatted context when matches are found", async () => {

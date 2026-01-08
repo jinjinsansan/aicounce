@@ -2,13 +2,164 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { fetchCounselorById } from "@/lib/counselors";
-import { callLLM } from "@/lib/llm";
+import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 import { searchRagContext } from "@/lib/rag";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
 import { incrementCounselorSessionCount } from "@/lib/counselor-stats";
+
+function normalizeForMatch(value?: string) {
+  return String(value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\u3000]+/g, "")
+    .replace(/[、。！？!?:：\-–—…「」『』（）()【】\[\]<>]/g, "");
+}
+
+function isGreetingOnly(message: string): boolean {
+  const greetings = [
+    "こんにちは",
+    "こんばんは",
+    "おはよう",
+    "はじめまして",
+    "よろしく",
+    "hello",
+    "hi",
+    "hey",
+  ];
+  const normalized = message.toLowerCase().trim().replace(/[、。！？!?\s]/g, "");
+  return greetings.some((g) => normalized === g || normalized === g + "ございます");
+}
+
+const CLARIFICATION_PHRASES = [
+  "どんなことがあった",
+  "具体的に教えて",
+  "教えてくれる",
+  "話してみて",
+  "詳しく教えて",
+  "もう少し教えて",
+] as const;
+
+function containsClarificationPrompt(text: string) {
+  const norm = normalizeForMatch(text);
+  return CLARIFICATION_PHRASES.some((p) => norm.includes(normalizeForMatch(p)));
+}
+
+function isAdviceRequest(message: string) {
+  const norm = normalizeForMatch(message);
+  return ["どうしたら", "どうすれば", "助けて", "アドバイス", "解決", "対処"].some((p) =>
+    norm.includes(normalizeForMatch(p)),
+  );
+}
+
+function buildStageGuard(params: {
+  counselorId: string;
+  historyMessages: ChatMessage[];
+  userMessage: string;
+}) {
+  const { counselorId, historyMessages, userMessage } = params;
+  const managed = counselorId === "mitsu" || counselorId === "kenji";
+  if (!managed) return { stage: 0 as const, guard: "" };
+
+  const priorNonGreetingUserCount = historyMessages.filter(
+    (m) => m.role === "user" && !isGreetingOnly(m.content),
+  ).length;
+  const currentNonGreetingUserCount = priorNonGreetingUserCount + 1;
+
+  let stage = Math.min(4, Math.max(1, currentNonGreetingUserCount));
+  if (isAdviceRequest(userMessage)) stage = 4;
+
+  if (stage === 1) {
+    return {
+      stage,
+      guard: [
+        "【進行（強制）】いまはステップ1（インタビュー）。",
+        "- 返答は短く：共感1行 + 質問1つだけ",
+        "- ここでは助言/解決策/RAG引用は禁止",
+        "- 同じ聞き直しは禁止",
+      ].join("\n"),
+    };
+  }
+
+  if (stage === 2) {
+    return {
+      stage,
+      guard: [
+        "【進行（強制）】いまはステップ2（展開＆掘り下げ）。",
+        "- 既に聞いた事実を1行で要約してから進める",
+        "- 『どんなことがあった』等の事実の聞き直しは禁止",
+        "- 感情/影響/背景をたずねる質問は1つだけ",
+      ].join("\n"),
+    };
+  }
+
+  if (stage === 3) {
+    return {
+      stage,
+      guard: [
+        "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
+        "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
+        "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+        "- 質問は1つだけ",
+      ].join("\n"),
+    };
+  }
+
+  return {
+    stage,
+    guard: [
+      "【進行（強制）】いまはステップ4（ゴール）。",
+      "- 解決策/希望/光を示す（断定せず提案）",
+      "- 3分でできる一歩を1つだけ",
+      "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+      "- 質問は『これ、できそう？』の1つだけ",
+    ].join("\n"),
+  };
+}
+
+function buildForcedManagedReply(params: {
+  counselorId: "mitsu" | "kenji";
+  historyMessages: ChatMessage[];
+  ragContext?: string;
+}) {
+  const { counselorId, historyMessages, ragContext } = params;
+  const recentUserFacts = historyMessages
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-3)
+    .map((m) => m.content.trim())
+    .join(" / ")
+    .slice(0, 140);
+
+  const raw = String(ragContext ?? "");
+  const cleanedRag = raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean)[0]
+    ?.slice(0, 90);
+
+  const ragLine = cleanedRag
+    ? counselorId === "kenji"
+      ? `物語の中でも、迷いの中で一歩を選び直していく場面があるんだ。${cleanedRag}`
+      : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
+    : counselorId === "kenji"
+      ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
+      : "『つまづいたっていいじゃないか、にんげんだもの』って言葉があるんだよ。";
+
+  const summary = recentUserFacts
+    ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
+    : "いま胸が苦しいんだね。";
+
+  const action =
+    counselorId === "kenji"
+      ? "3分だけ、(1)ミスの事実(2)次に防ぐ工夫1つ(3)いま連絡すべき相手、をメモしてみよう。"
+      : "3分だけ、(1)起きたこと(2)次に同じミスを減らす工夫1つ、をメモしてみない？";
+
+  return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -119,16 +270,43 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
+    let historyMessages: ChatMessage[] = [{ role: "user", content: message }];
+    if (activeConversationId) {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("role, content, created_at")
+        .eq("conversation_id", activeConversationId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        historyMessages = data
+          .slice()
+          .reverse()
+          .map((m: { role: "user" | "assistant"; content: string }) => ({
+            role: m.role,
+            content: m.content,
+          }));
+      }
+    }
+
     let ragContext: string | undefined;
     let ragSources: { id: string; chunk_text: string; similarity: number }[] = [];
     let ragDurationMs: number | null = null;
+
+    const ragQuery = historyMessages
+      .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+      .slice(-3)
+      .map((m) => m.content)
+      .join("\n")
+      .trim() || message;
 
     if (useRag && counselor.ragEnabled) {
       const ragStart =
         typeof performance !== "undefined" && typeof performance.now === "function"
           ? performance.now()
           : Date.now();
-      const ragResult = await searchRagContext(counselorId, message);
+      const ragResult = await searchRagContext(counselorId, ragQuery);
       ragContext = ragResult.context || undefined;
       ragSources = ragResult.sources;
       const ragEnd =
@@ -158,13 +336,34 @@ export async function POST(request: NextRequest) {
 - 参考情報をそのまま読み上げず、会話調で温かく伝えてください`
       : baseSystemPrompt;
 
-    const { content, tokensUsed } = await callLLM(
+    const { stage, guard: stageGuard } = buildStageGuard({
+      counselorId: String(counselor.id),
+      historyMessages,
+      userMessage: message,
+    });
+
+    const guardedSystemPrompt = stageGuard
+      ? [stageGuard, finalSystemPrompt].join("\n\n")
+      : finalSystemPrompt;
+
+    const { content, tokensUsed } = await callLLMWithHistory(
       counselor.modelType ?? "openai",
       counselor.modelName ?? "gpt-4o-mini",
-      finalSystemPrompt,
-      message,
+      guardedSystemPrompt,
+      historyMessages,
       ragContext,
     );
+
+    let finalContent = content;
+    const managed = counselor.id === "mitsu" || counselor.id === "kenji";
+    const mustNotClarify = managed && (stage >= 2 || isAdviceRequest(message));
+    if (mustNotClarify && containsClarificationPrompt(finalContent)) {
+      finalContent = buildForcedManagedReply({
+        counselorId: counselor.id as "mitsu" | "kenji",
+        historyMessages,
+        ragContext,
+      });
+    }
 
     if (activeConversationId) {
       const { data: assistantRows, error: assistantError } = await supabase
@@ -173,7 +372,7 @@ export async function POST(request: NextRequest) {
           {
             conversation_id: activeConversationId,
             role: "assistant",
-            content,
+            content: finalContent,
             tokens_used: tokensUsed ?? null,
           },
         ])
@@ -198,7 +397,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       conversationId: activeConversationId ?? counselorId,
       counselorId,
-      content,
+      content: finalContent,
       tokensUsed: tokensUsed ?? 0,
       ragSources,
       ragDurationMs: ragDurationMs ?? 0,

@@ -8,7 +8,7 @@ jest.mock("@/lib/counselors", () => ({
 }));
 
 jest.mock("@/lib/llm", () => ({
-  callLLM: jest.fn(),
+  callLLMWithHistory: jest.fn(),
 }));
 
 jest.mock("@/lib/rag", () => ({
@@ -24,6 +24,15 @@ jest.mock("@/lib/supabase-clients", () => ({
   createSupabaseRouteClient: jest.fn(),
 }));
 
+jest.mock("@/lib/access-control", () => ({
+  assertAccess: jest.fn().mockResolvedValue(undefined),
+  parseAccessError: jest.fn(() => ({ status: 403, message: "Access denied" })),
+}));
+
+jest.mock("@/lib/counselor-stats", () => ({
+  incrementCounselorSessionCount: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock("next/headers", () => ({
   cookies: jest.fn(() => ({
     getAll: () => [],
@@ -31,7 +40,7 @@ jest.mock("next/headers", () => ({
 }));
 
 const { fetchCounselorById } = jest.requireMock("@/lib/counselors");
-const { callLLM } = jest.requireMock("@/lib/llm");
+const { callLLMWithHistory } = jest.requireMock("@/lib/llm");
 const { searchRagContext } = jest.requireMock("@/lib/rag");
 const { hasServiceRole, getServiceSupabase } = jest.requireMock(
   "@/lib/supabase-server",
@@ -52,6 +61,7 @@ function createRequest(body: Record<string, unknown>) {
 
 function setupAuthedSupabase(conversationId = "conv-1") {
   const capturedMessages: unknown[] = [];
+  const storedMessages: { role: "user" | "assistant"; content: string; created_at: string }[] = [];
   const client = {
     auth: {
       getSession: jest.fn().mockResolvedValue({
@@ -85,6 +95,14 @@ function setupAuthedSupabase(conversationId = "conv-1") {
         return {
           insert: jest.fn((payload: unknown) => {
             capturedMessages.push(payload);
+            const rows = Array.isArray(payload) ? payload : [payload];
+            for (const row of rows as Array<{ role: "user" | "assistant"; content: string }>) {
+              storedMessages.push({
+                role: row.role,
+                content: row.content,
+                created_at: new Date().toISOString(),
+              });
+            }
             return {
               select: () => ({
                 single: () =>
@@ -95,6 +113,13 @@ function setupAuthedSupabase(conversationId = "conv-1") {
               }),
             };
           }),
+          select: jest.fn(() => ({
+            eq: () => ({
+              order: () => ({
+                limit: () => Promise.resolve({ data: storedMessages, error: null }),
+              }),
+            }),
+          })),
         };
       }
       return {
@@ -165,7 +190,7 @@ describe("POST /api/chat", () => {
       sources: [{ id: "chunk-1", chunk_text: "text", similarity: 0.9 }],
     });
 
-    callLLM.mockResolvedValue({ content: "回答", tokensUsed: 33 });
+    callLLMWithHistory.mockResolvedValue({ content: "回答", tokensUsed: 33 });
 
     const response = await POST(
       createRequest({ message: "こんにちは", counselorId: "michele", useRag: true }),
@@ -179,11 +204,11 @@ describe("POST /api/chat", () => {
       tokensUsed: 33,
     });
     expect(fetchCounselorById).toHaveBeenCalledWith("michele");
-    expect(callLLM).toHaveBeenCalledWith(
+    expect(callLLMWithHistory).toHaveBeenCalledWith(
       "openai",
       "gpt-4o-mini",
-      "system",
-      "こんにちは",
+      expect.stringContaining("system"),
+      [{ role: "user", content: "こんにちは" }],
       "参考",
     );
     expect(capturedMessages).toHaveLength(2);
@@ -229,7 +254,7 @@ describe("POST /api/chat", () => {
       modelName: "gpt-4o-mini",
     });
 
-    callLLM.mockResolvedValue({ content: "回答", tokensUsed: 10 });
+    callLLMWithHistory.mockResolvedValue({ content: "回答", tokensUsed: 10 });
 
     const response = await POST(
       createRequest({ message: "hi", counselorId: "gpt", useRag: true }),
