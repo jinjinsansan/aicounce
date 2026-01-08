@@ -208,6 +208,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
       "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。「RAGの教えによれば」などの前置きは使わない。抽象論だけや説教口調は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
+  },
   yuki: {
     name: "アドラー心理学",
     terms: ["目的論", "課題の分離", "共同体感覚", "勇気づけ", "自己決定", "劣等感", "所属感"],
@@ -216,8 +217,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     provider: "openai",
     model: "gpt-4o-mini",
   },
-  },
-};
+} as const;
 
 export async function POST(req: Request) {
   try {
