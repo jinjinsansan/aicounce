@@ -51,6 +51,36 @@ function extractQuotedPhrases(output: string) {
   return Array.from(output.matchAll(/『([^』]{6,})』/g)).map((m) => m[1]);
 }
 
+function pickRagSnippetAvoidingRepeat(params: {
+  ragContext?: string;
+  maxLen?: number;
+  avoidQuote?: string | null;
+}) {
+  const { ragContext, maxLen = 90, avoidQuote } = params;
+  const raw = String(ragContext ?? "");
+  if (!raw.trim()) return "";
+
+  const candidates = raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const avoidNorm = avoidQuote ? normalizeForMatch(avoidQuote).slice(0, 18) : "";
+  const picked =
+    candidates.find((c) => {
+      if (!avoidNorm) return true;
+      const candNorm = normalizeForMatch(c).slice(0, 18);
+      return candNorm && candNorm !== avoidNorm;
+    }) ?? candidates[0];
+
+  return (picked ?? "").slice(0, maxLen);
+}
+
 const KENJI_FORBIDDEN_PHRASES = [
   /雨ニモマケズ/,
   /南に死にそうな人あれば/,
@@ -320,7 +350,7 @@ function buildStageGuard(params: {
         "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
         "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
         counselorId === "mirai"
-          ? "- RAGの要点を短く言い換えて1つ入れる（『』引用は任意。直前と同じ引用/同じフレーズは繰り返さない）"
+          ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。直前と同じ引用/同じフレーズは繰り返さない"
           : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
         "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
         "- ここでは行動提案はせず、問いで終える",
@@ -339,7 +369,7 @@ function buildStageGuard(params: {
         : "- 3分でできる一歩を1つだけ",
       "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
       counselorId === "mirai"
-        ? "- 必要ならRAGの要点を短く言い換えて入れる（同じ引用の繰り返し禁止。引用は必須ではない）"
+        ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。同じ引用の繰り返し禁止"
         : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       counselorId === "mitsu"
         ? "- 追加の聞き直しは原則しない。ただし助言に必要なら、選択肢式の確認質問を1つだけ（例：『ミス/態度/遅れのどれ？』）"
@@ -444,21 +474,13 @@ function buildForcedManagedReply(params: {
     .join(" / ")
     .slice(0, 140);
 
-  const raw = String(ragContext ?? "");
-  const candidates = raw
-    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
-    .replace(/\(score:[^)]+\)/g, "")
-    .replace(/^#+\s+.*$/gmu, "")
-    .replace(/^##\s*キーワード.*$/gmu, "")
-    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
-    .split(/\n\n+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
+  const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
 
-  const cleanedRagRaw = candidates.find((c) => {
-    if (counselorId === "kenji") return !containsKenjiForbidden(c);
-    if (counselorId === "mitsu") return !containsMitsuForbidden(c);
-    return true;
+  const cleanedRagRaw = pickRagSnippetAvoidingRepeat({
+    ragContext,
+    maxLen: 90,
+    avoidQuote,
   });
 
   const cleanedRag = cleanedRagRaw?.slice(0, 90);
@@ -467,7 +489,7 @@ function buildForcedManagedReply(params: {
     ? counselorId === "kenji"
       ? `『${cleanedRag}』──ジョバンニみたいに、いまは一歩を選び直すときなんだ。`
       : counselorId === "mirai"
-        ? `ヒントとしてね：${cleanedRag}`
+        ? `『${cleanedRag}』`
         : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
@@ -951,9 +973,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const mustUseRag = shouldUseRagThisTurn && !(counselor.id === "mirai" && stage >= 4);
+    const mustUseRag = shouldUseRagThisTurn;
     if (mustUseRag && !seemsToUseRag(finalContent, ragContext)) {
-      const snippet = extractRagSnippet(ragContext, 90);
+      const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
+      const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
+      const snippet =
+        counselor.id === "mirai"
+          ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuote })
+          : extractRagSnippet(ragContext, 90);
       if (snippet) {
         const repairSystem = [
           guardedSystemPrompt,
