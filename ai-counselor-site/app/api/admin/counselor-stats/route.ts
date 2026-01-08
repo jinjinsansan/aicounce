@@ -23,12 +23,9 @@ export async function GET() {
 
     if (statsError) throw statsError;
 
-    // Get counselor details
-    const { data: counselors, error: counselorsError } = await supabase
-      .from("counselors")
-      .select("id, name, specialty, icon_url, rag_enabled");
-
-    if (counselorsError) throw counselorsError;
+    // Load counselor data from constants (as counselors are defined in code, not DB)
+    const { loadCounselors } = await import("@/lib/client-counselors");
+    const counselors = await loadCounselors();
 
     // Merge stats with counselor info
     const counselorMap = new Map(counselors.map((c) => [c.id, c]));
@@ -39,8 +36,8 @@ export async function GET() {
         id: stat.counselor_id,
         name: counselor?.name ?? "Unknown",
         specialty: counselor?.specialty ?? "",
-        iconUrl: counselor?.icon_url ?? "",
-        ragEnabled: counselor?.rag_enabled ?? false,
+        iconUrl: counselor?.iconUrl ?? "",
+        ragEnabled: counselor?.ragEnabled ?? false,
         sessionCount: stat.session_count,
       };
     });
@@ -52,8 +49,8 @@ export async function GET() {
           id: counselor.id,
           name: counselor.name,
           specialty: counselor.specialty,
-          iconUrl: counselor.icon_url ?? "",
-          ragEnabled: counselor.rag_enabled ?? false,
+          iconUrl: counselor.iconUrl ?? "",
+          ragEnabled: counselor.ragEnabled ?? false,
           sessionCount: 0,
         });
       }
