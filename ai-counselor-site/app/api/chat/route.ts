@@ -202,9 +202,37 @@ function buildStageGuard(params: {
       "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
       "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
-      "- 質問は『これ、できそう？』の1つだけ",
+      "- 質問は短い確認質問を1つだけ（例：『これ、できそう？』）",
     ].join("\n"),
   };
+}
+
+function hashString(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji", seed: string) {
+  const options =
+    counselorId === "mitsu"
+      ? [
+          "ここまでなら、できそう？",
+          "まず一つだけ、やってみる？",
+          "どれがいちばんやりやすそう？",
+          "今日これだけなら、試せそう？",
+        ]
+      : [
+          "これ、できそう？",
+          "まず一歩だけ、選べそう？",
+          "この一文、書けそう？",
+          "ここから、進めそう？",
+        ];
+
+  const index = hashString(seed || String(Date.now())) % options.length;
+  return options[index];
 }
 
 function buildForcedManagedReply(params: {
@@ -254,7 +282,8 @@ function buildForcedManagedReply(params: {
       ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
-  return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
+  const questionSeed = `${counselorId}|${recentUserFacts}|${cleanedRag ?? ""}`;
+  return `${summary}${ragLine}\n${action}\n${pickManagedCheckInQuestion(counselorId, questionSeed)}`;
 }
 
 export async function POST(request: NextRequest) {
