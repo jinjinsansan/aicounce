@@ -149,7 +149,15 @@ function buildForcedInterviewReply(params: {
     .join(" / ")
     .slice(0, 120);
 
-  const summary = recentUserFacts ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+  const t = recentUserFacts;
+  const summary =
+    counselorId === "mitsu"
+      ? stage === 2 && /言い方/.test(t)
+        ? "叱られた言い方がきつかったんだね。"
+        : "上司に𠮟られて胸が苦しいんだね。"
+      : recentUserFacts
+        ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
+        : "いま胸が苦しいんだね。";
 
   if (counselorId === "mitsu") {
     if (stage === 1) {
@@ -288,7 +296,13 @@ function buildStageGuard(params: {
   const priorNonGreetingUserCount = scopedHistory.filter(
     (m) => m.role === "user" && !isGreetingOnly(m.content),
   ).length;
-  const currentNonGreetingUserCount = priorNonGreetingUserCount + 1;
+
+  const last = scopedHistory[scopedHistory.length - 1];
+  const alreadyIncludesCurrent =
+    last?.role === "user" && normalizeForMatch(last.content) === normalizeForMatch(userMessage);
+  const currentNonGreetingUserCount = alreadyIncludesCurrent
+    ? priorNonGreetingUserCount
+    : priorNonGreetingUserCount + 1;
 
   const historyUserText = scopedHistory
     .filter((m) => m.role === "user")
@@ -398,12 +412,26 @@ function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji", seed: string
   return options[index];
 }
 
+function summarizeMitsuFromHistory(history: HistoryMessage[]) {
+  const t = history
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-4)
+    .map((m) => m.content)
+    .join("\n");
+
+  if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
+  if (/(注文|失念|忘れ)/.test(t)) return "注文のことで叱られて、胸が苦しいんだね。";
+  if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
+  return "上司に𠮟られて胸が苦しいんだね。";
+}
+
 function buildForcedManagedReply(params: {
   counselorId: "mitsu" | "kenji";
+  stage: 3 | 4;
   scopedHistory: HistoryMessage[];
   ragContext?: string;
 }) {
-  const { counselorId, scopedHistory, ragContext } = params;
+  const { counselorId, stage, scopedHistory, ragContext } = params;
 
   const recentUserFacts = scopedHistory
     .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
@@ -439,9 +467,20 @@ function buildForcedManagedReply(params: {
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
       : "きみの今のしんどさも、にんげんらしさの一部なんだよ。";
 
-  const summary = recentUserFacts
-    ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
-    : "いま胸が苦しいんだね。";
+  const summary =
+    counselorId === "mitsu"
+      ? summarizeMitsuFromHistory(scopedHistory)
+      : recentUserFacts
+        ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
+        : "いま胸が苦しいんだね。";
+
+  if (stage === 3) {
+    const question =
+      counselorId === "kenji"
+        ? "その言葉のどこが、いまのきみに一番刺さる？"
+        : "この言葉のどこが、いまのきみに一番重なる？";
+    return `${summary}\n${ragLine}\n${question}`;
+  }
 
   const action =
     counselorId === "kenji"
@@ -449,7 +488,7 @@ function buildForcedManagedReply(params: {
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   const questionSeed = `${counselorId}|${recentUserFacts}|${cleanedRag ?? ""}`;
-  return `${summary}${ragLine}\n${action}\n${pickManagedCheckInQuestion(counselorId, questionSeed)}`;
+  return `${summary}\n${ragLine}\n${action}\n${pickManagedCheckInQuestion(counselorId, questionSeed)}`;
 }
 
 // ユーザーメッセージが挨拶のみかどうか判定
@@ -1098,6 +1137,7 @@ export async function POST(req: Request) {
             } else {
               final = buildForcedManagedReply({
                 counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
+                stage: stage === 3 ? 3 : 4,
                 scopedHistory,
                 ragContext: context || undefined,
               });
