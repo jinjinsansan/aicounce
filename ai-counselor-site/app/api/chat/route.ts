@@ -51,6 +51,17 @@ function extractQuotedPhrases(output: string) {
   return Array.from(output.matchAll(/『([^』]{6,})』/g)).map((m) => m[1]);
 }
 
+function cleanRagSnippetForQuote(value: string) {
+  return String(value)
+    .replace(/^\s*\d+\.\s*/g, "")
+    .replace(/^\s*[-•・]+\s*/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/[`]/g, "")
+    .replace(/[\s\u3000]+/g, " ")
+    .trim();
+}
+
 function pickRagSnippetAvoidingRepeat(params: {
   ragContext?: string;
   maxLen?: number;
@@ -70,15 +81,36 @@ function pickRagSnippetAvoidingRepeat(params: {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const avoidNorm = avoidQuote ? normalizeForMatch(avoidQuote).slice(0, 18) : "";
-  const picked =
-    candidates.find((c) => {
-      if (!avoidNorm) return true;
-      const candNorm = normalizeForMatch(c).slice(0, 18);
-      return candNorm && candNorm !== avoidNorm;
-    }) ?? candidates[0];
+  const cleanedCandidates = candidates
+    .map((c) => cleanRagSnippetForQuote(c))
+    .filter((c) => c.length >= 10);
 
-  return (picked ?? "").slice(0, maxLen);
+  const avoidNorm = avoidQuote ? normalizeForMatch(cleanRagSnippetForQuote(avoidQuote)).slice(0, 18) : "";
+  const pickFrom = cleanedCandidates.length > 0 ? cleanedCandidates : candidates.map((c) => cleanRagSnippetForQuote(c));
+
+  const notRepeat = (c: string) => {
+    if (!avoidNorm) return true;
+    const candNorm = normalizeForMatch(c).slice(0, 18);
+    return candNorm && candNorm !== avoidNorm;
+  };
+
+  const sentenceLike = pickFrom.filter((c) => /[。！？?!]/.test(c));
+  const picked = sentenceLike.find(notRepeat) ?? pickFrom.find(notRepeat) ?? pickFrom[0] ?? "";
+
+  return String(picked).slice(0, maxLen);
+}
+
+function seemsToUseRagByQuote(output: string, ragContext?: string) {
+  if (!ragContext?.trim()) return true;
+  const ragNorm = normalizeForMatch(cleanRagText(ragContext));
+  if (!ragNorm) return true;
+
+  const quoted = extractQuotedPhrases(output)
+    .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)))
+    .filter((q) => q.length >= 10);
+
+  if (quoted.length === 0) return false;
+  return quoted.some((q) => ragNorm.includes(q.slice(0, 16)));
 }
 
 const KENJI_FORBIDDEN_PHRASES = [
@@ -503,7 +535,7 @@ function buildForcedManagedReply(params: {
     ? counselorId === "kenji"
       ? `『${cleanedRag}』──ジョバンニみたいに、いまは一歩を選び直すときなんだ。`
       : counselorId === "mirai"
-        ? `『${cleanedRag}』`
+        ? `『${cleanRagSnippetForQuote(cleanedRag)}』`
         : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
@@ -980,7 +1012,9 @@ export async function POST(request: NextRequest) {
     }
 
     const mustUseRag = shouldUseRagThisTurn;
-    if (mustUseRag && !seemsToUseRag(finalContent, ragContext)) {
+    const ragSeemsUsed =
+      counselor.id === "mirai" ? seemsToUseRagByQuote(finalContent, ragContext) : seemsToUseRag(finalContent, ragContext);
+    if (mustUseRag && !ragSeemsUsed) {
       const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
       const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
       const snippet =
