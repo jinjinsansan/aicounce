@@ -36,6 +36,21 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
   return (first ?? "").slice(0, maxLen);
 }
 
+function cleanRagText(ragContext?: string) {
+  const raw = String(ragContext ?? "");
+  return raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
+    .trim();
+}
+
+function extractQuotedPhrases(output: string) {
+  return Array.from(output.matchAll(/『([^』]{6,})』/g)).map((m) => m[1]);
+}
+
 const KENJI_FORBIDDEN_PHRASES = [
   /雨ニモマケズ/,
   /南に死にそうな人あれば/,
@@ -89,18 +104,23 @@ function containsWorkAction(text: string) {
 
 function seemsToUseRag(output: string, ragContext?: string) {
   if (!ragContext?.trim()) return true;
+  const ragNorm = normalizeForMatch(cleanRagText(ragContext));
+  if (!ragNorm) return true;
+
+  const quoted = extractQuotedPhrases(output)
+    .map((q) => normalizeForMatch(q))
+    .filter((q) => q.length >= 10);
+
+  if (quoted.length > 0) {
+    return quoted.some((q) => ragNorm.includes(q.slice(0, 16)));
+  }
+
   const snippet = extractRagSnippet(ragContext, 60);
   if (!snippet) return true;
-
   const outputNorm = normalizeForMatch(output);
   const snippetNorm = normalizeForMatch(snippet).slice(0, 18);
-
   if (snippetNorm.length < 6) return true;
-
-  return (
-    outputNorm.includes(snippetNorm) ||
-    /『[^』]{8,}』/.test(output)
-  );
+  return outputNorm.includes(snippetNorm);
 }
 
 function isGreetingOnly(message: string): boolean {
@@ -135,6 +155,13 @@ function containsClarificationPrompt(text: string) {
 function isAdviceRequest(message: string) {
   const norm = normalizeForMatch(message);
   return ["どうしたら", "どうすれば", "助けて", "アドバイス", "解決", "対処"].some((p) =>
+    norm.includes(normalizeForMatch(p)),
+  );
+}
+
+function isMoreAdviceRequest(message: string) {
+  const norm = normalizeForMatch(message);
+  return ["他に", "他には", "ほかに", "ほかには", "別の", "もっと"].some((p) =>
     norm.includes(normalizeForMatch(p)),
   );
 }
@@ -198,11 +225,17 @@ function buildStageGuard(params: {
     guard: [
       "【進行（強制）】いまはステップ4（ゴール）。",
       "- 解決策/希望/光を示す（断定せず提案）",
-      "- 3分でできる一歩を1つだけ",
+      counselorId === "mitsu" && isMoreAdviceRequest(userMessage)
+        ? "- 3分でできる一歩を最大2つ（選択肢）"
+        : "- 3分でできる一歩を1つだけ",
       "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
       "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
-      "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
-      "- 質問は短い確認質問を1つだけ（例：『これ、できそう？』）",
+      counselorId === "mitsu"
+        ? "- 追加の聞き直しは原則しない。ただし助言に必要なら、選択肢式の確認質問を1つだけ（例：『ミス/態度/遅れのどれ？』）"
+        : "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+      counselorId === "mitsu" && isMoreAdviceRequest(userMessage)
+        ? "- 最後に『どれがいちばんやりやすそう？』など短い確認質問を1つだけ"
+        : "- 質問は短い確認質問を1つだけ（例：『これ、できそう？』）",
     ].join("\n"),
   };
 }
@@ -477,7 +510,24 @@ export async function POST(request: NextRequest) {
       counselor.systemPrompt ??
       "You are a supportive counselor who responds in Japanese with empathy and actionable advice.";
 
-    const finalSystemPrompt = ragContext
+    const managed = counselor.id === "mitsu" || counselor.id === "kenji";
+    const isGreetingMessage = isGreetingOnly(message);
+
+    const { stage, guard: stageGuard } = buildStageGuard({
+      counselorId: String(counselor.id),
+      historyMessages,
+      userMessage: message,
+    });
+
+    const shouldUseRagThisTurn = Boolean(
+      useRag &&
+        counselor.ragEnabled &&
+        ragContext?.trim() &&
+        !isGreetingMessage &&
+        (!managed || stage >= 3),
+    );
+
+    const finalSystemPrompt = shouldUseRagThisTurn
       ? `${baseSystemPrompt}
 
 [RAG活用ルール]
@@ -486,12 +536,6 @@ export async function POST(request: NextRequest) {
 - 参考情報と質問がずれている場合は、その旨を一言添えたうえで一般的な助言も補ってください
 - 参考情報をそのまま読み上げず、会話調で温かく伝えてください`
       : baseSystemPrompt;
-
-    const { stage, guard: stageGuard } = buildStageGuard({
-      counselorId: String(counselor.id),
-      historyMessages,
-      userMessage: message,
-    });
 
     const guardedSystemPrompt = stageGuard
       ? [stageGuard, finalSystemPrompt].join("\n\n")
@@ -502,13 +546,65 @@ export async function POST(request: NextRequest) {
       counselor.modelName ?? "gpt-4o-mini",
       guardedSystemPrompt,
       historyMessages,
-      ragContext,
+      shouldUseRagThisTurn ? ragContext : undefined,
     );
 
     let finalContent = content;
-    const managed = counselor.id === "mitsu" || counselor.id === "kenji";
     const mustNotClarify = managed && (stage >= 2 || isAdviceRequest(message));
-    const isGreetingMessage = isGreetingOnly(message);
+
+    if (managed && !isGreetingMessage && !isAdviceRequest(message) && (stage === 1 || stage === 2)) {
+      const hasQuote = /『[^』]+』/.test(finalContent);
+      const hasQuestion = /[?？]/.test(finalContent);
+      const suggestsAction = /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(
+        finalContent,
+      );
+
+      const needsInterviewRepair =
+        hasQuote ||
+        !hasQuestion ||
+        suggestsAction ||
+        (stage === 2 && /(どんなことがあった|具体的に教えて)/.test(finalContent));
+
+      if (needsInterviewRepair) {
+        const repairSystem = [
+          stageGuard,
+          baseSystemPrompt,
+          stage === 1
+            ? [
+                "【再生成（必須）】いまはステップ1（インタビュー）。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
+                "- 共感は1行だけ",
+                "- 質問は1つだけ（例：『叱られたのは何について？』『何と言われた？』『どの場面？』）",
+                "- 助言/解決策/行動提案は禁止",
+                "- RAG引用（『』）は禁止",
+              ].join("\n")
+            : [
+                "【再生成（必須）】いまはステップ2（展開＆掘り下げ）。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
+                "- 既に聞いた事実を1行で要約",
+                "- 感情/影響をたずねる質問は1つだけ",
+                "- 事実の聞き直し（『どんなことがあった』等）は禁止",
+                "- 助言/解決策/行動提案は禁止",
+                "- RAG引用（『』）は禁止",
+              ].join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        const repairMessages: ChatMessage[] = [
+          ...historyMessages,
+          { role: "assistant", content: finalContent },
+          { role: "user", content: "上の返答を、指定ルールどおりに短く自然な日本語で書き直して。" },
+        ];
+
+        const repaired = await callLLMWithHistory(
+          counselor.modelType ?? "openai",
+          counselor.modelName ?? "gpt-4o-mini",
+          repairSystem,
+          repairMessages,
+          undefined,
+        );
+        finalContent = repaired.content ?? finalContent;
+      }
+    }
     const tooGenericForWork =
       managed &&
       stage >= 4 &&
@@ -556,7 +652,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const mustUseRag = Boolean(useRag && counselor.ragEnabled && ragContext?.trim() && !isGreetingMessage);
+    const mustUseRag = shouldUseRagThisTurn;
     if (mustUseRag && !seemsToUseRag(finalContent, ragContext)) {
       const snippet = extractRagSnippet(ragContext, 90);
       if (snippet) {

@@ -209,7 +209,7 @@ describe("POST /api/chat", () => {
       "gpt-4o-mini",
       expect.stringContaining("system"),
       [{ role: "user", content: "こんにちは" }],
-      "参考",
+      undefined,
     );
     expect(capturedMessages).toHaveLength(2);
     expect(ragLogInsert).toHaveBeenCalled();
