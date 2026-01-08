@@ -268,7 +268,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["銀河", "静けさ", "比喩", "孤独", "一歩"],
     systemPrompt: KENJI_SYSTEM_PROMPT,
     negativeInstruction:
-      "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教・長文・一般化は禁止。感情を短く言い換え、静かな比喩と一歩を必ず示してください。",
+      "必ずRAGから『銀河鉄道の夜』の具体的な場面や言葉を引用（ジョバンニ/カムパネルラ/ほんとうのさいわい/銀河の風景）。同じ質問を3回以上繰り返さない。相談内容に応じてパターンを選ぶ（孤独/自己犠牲/生きる意味/美しさ）。3分でできる小さな一歩を提案。『感情ラベル』禁止。一般化禁止。命令形禁止。『RAGによると』禁止。",
     provider: "openai",
     model: "gpt-4o",
   },
