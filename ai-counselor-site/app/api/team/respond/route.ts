@@ -46,6 +46,13 @@ type Specialization = {
   model: string;
 };
 
+type HistoryMessage = {
+  role: "user" | "assistant";
+  content: string;
+  author?: string;
+  authorId?: string;
+};
+
 function sanitizeContent(raw: string, author?: string) {
   const text = raw.trim();
   if (!author) return text;
@@ -70,7 +77,14 @@ function normalizeForMatch(value?: string) {
 }
 
 function detectRepeatedClarificationLoop(texts: string[]) {
-  const phrases = ["どんなことがあった", "具体的に教えて", "教えてくれる", "話してみて"];
+  const phrases = [
+    "どんなことがあった",
+    "具体的に教えて",
+    "教えてくれる",
+    "話してみて",
+    "詳しく教えて",
+    "もう少し教えて",
+  ];
   const counts = new Map<string, number>(phrases.map((p) => [normalizeForMatch(p), 0]));
   for (const t of texts) {
     const norm = normalizeForMatch(t);
@@ -78,7 +92,7 @@ function detectRepeatedClarificationLoop(texts: string[]) {
       if (norm.includes(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
     }
   }
-  return (counts.get(normalizeForMatch("どんなことがあった")) ?? 0) >= 2;
+  return Array.from(counts.values()).some((v) => v >= 2);
 }
 
 // ユーザーメッセージが挨拶のみかどうか判定
@@ -331,7 +345,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: message }, { status });
     }
 
-    const { message, participants, history } = await req.json();
+    const { sessionId, message, participants, history } = await req.json();
     if (!message || !Array.isArray(participants) || participants.length === 0) {
       return NextResponse.json({ error: "invalid request" }, { status: 400 });
     }
@@ -370,17 +384,57 @@ export async function POST(req: Request) {
     }
 
     const userMessage = String(message).slice(0, 4000);
-    const previousMessages: { role: "user" | "assistant"; content: string; author?: string }[] = Array.isArray(history)
-      ? history
-          .map((m: { role: "user" | "assistant"; content: string; author?: string }) => ({
-            role: m.role,
-            content: m.content,
-            author: m.author,
-          }))
-          .filter((m) => m.role === "user" || m.role === "assistant")
-      : [];
+    let previousMessages: HistoryMessage[] = [];
 
-    const hasAssistantAuthors = previousMessages.some((m) => m.role === "assistant" && m.author);
+    if (sessionId) {
+      // Verify session ownership
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: teamSession, error: sessionError } = await (supabase as any)
+        .from("team_sessions")
+        .select("id")
+        .eq("id", sessionId)
+        .eq("auth_user_id", session.user.id)
+        .single();
+
+      if (sessionError || !teamSession) {
+        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      }
+
+      // Load recent history from DB (TeamChatClient does not send history)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from("team_messages")
+        .select("role, content, author, author_id, created_at")
+        .eq("team_session_id", sessionId)
+        .order("created_at", { ascending: false })
+        .limit(40);
+
+      if (error) {
+        console.error("Failed to fetch team messages", error);
+        return NextResponse.json({ error: "Failed to load messages" }, { status: 500 });
+      }
+
+      previousMessages = (data ?? [])
+        .reverse()
+        .map((m: { role: "user" | "assistant"; content: string; author?: string; author_id?: string }) => ({
+          role: m.role,
+          content: m.content,
+          author: m.author ?? undefined,
+          authorId: m.author_id ?? undefined,
+        }))
+        .filter((m: HistoryMessage) => m.role === "user" || m.role === "assistant");
+    } else if (Array.isArray(history)) {
+      previousMessages = history
+        .map((m: { role: "user" | "assistant"; content: string; author?: string; authorId?: string }) => ({
+          role: m.role,
+          content: m.content,
+          author: m.author,
+          authorId: m.authorId,
+        }))
+        .filter((m: HistoryMessage) => m.role === "user" || m.role === "assistant");
+    }
+
+    const hasAssistantAuthors = previousMessages.some((m) => m.role === "assistant" && (m.author || m.authorId));
 
     // ユーザーメッセージが挨拶のみかどうか判定
     const isGreeting = isGreetingOnly(userMessage);
@@ -402,7 +456,8 @@ export async function POST(req: Request) {
         ? previousMessages.filter(
             (m) =>
               m.role === "user" ||
-              (m.role === "assistant" && normalizeForMatch(m.author) === normalizeForMatch(p.name)),
+              (m.role === "assistant" &&
+                (m.authorId === p.id || normalizeForMatch(m.author) === normalizeForMatch(p.name))),
           )
         : previousMessages;
 
