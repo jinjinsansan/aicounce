@@ -223,7 +223,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["最悪を受け入れる", "今日一日", "レモネード", "行動ステップ", "不安対処"],
     systemPrompt: DALE_SYSTEM_PROMPT,
     negativeInstruction:
-      "ステップ1は最大2ターン。具体的な出来事が判明したら即ステップ2へ。『具体的に教えて』を3回以上繰り返さない。ステップ2開始時に必ず『カーネギーはMagic Formulaという方法を教えています』と言う。各ステップでRAG引用必須。『感情ラベル』禁止。Why質問禁止。一般化禁止。命令形禁止。『RAGによると』禁止。",
+      "ステップ1は最大2ターン。具体的な出来事が判明したら即ステップ2へ。ステップ2開始後にステップ1に戻らない。状況に応じて原則を選ぶ（Magic Formula/Don't Saw Sawdust/Co-operate/Keep Busy等）。Magic Formulaの3ステップを1ターンで全部説明しない。各質問を1ターンずつ。『感情ラベル』禁止。Why質問禁止。一般化禁止。命令形禁止。『RAGによると』禁止。",
     provider: "openai",
     model: "gpt-4o",
   },
