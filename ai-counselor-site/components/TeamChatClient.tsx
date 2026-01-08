@@ -762,12 +762,12 @@ export function TeamChatClient() {
         </div>
       )}
 
-      <div className="mx-auto flex h-full min-h-0 max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row">
-        <aside className="hidden w-80 flex-shrink-0 rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:flex">
+      <div className="mx-auto grid h-full min-h-0 max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:grid-rows-1">
+        <aside className="hidden rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:block">
           {renderSidebarContent(false)}
         </aside>
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
+        <main className="flex h-full min-h-0 flex-col overflow-hidden rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
             <div className="flex items-center gap-3">
               <Button
