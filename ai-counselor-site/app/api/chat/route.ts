@@ -737,6 +737,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Counselor not found" }, { status: 404 });
     }
 
+    if (counselor.teamOnly) {
+      return NextResponse.json(
+        { error: "このカウンセラーはチームカウンセリングチャット専用です" },
+        { status: 400 },
+      );
+    }
+
     const cookieStore = await cookies();
     const supabase = createSupabaseRouteClient(cookieStore);
     const {

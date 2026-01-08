@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, ClipboardList, HeartHandshake, LifeBuoy, NotebookPen, ShieldCheck } from "lucide-react";
+import { ClipboardList, HeartHandshake, LifeBuoy, NotebookPen, ShieldCheck } from "lucide-react";
 
 const SUPPORT_PILLARS = [
   {
@@ -49,8 +48,6 @@ const SESSION_FLOW = [
 const BADGES = ["精神保健福祉士視点", "安心・秘密厳守", "現実的アドバイス"];
 
 export default function NanaDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -153,11 +150,11 @@ export default function NanaDetailPage() {
           <p className="mt-4 text-lg text-[#be123c]">話したいタイミングでいつでも。ナナがやさしく伴走します。</p>
           <button
             type="button"
-            onClick={() => router.push("/counselor/chat/nana")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f9a8d4] via-[#f472b6] to-[#fb7185] focus-visible:ring-pink-200 shadow-pink-200/60 px-10 py-4 font-shippori text-lg font-bold text-white shadow-2xl transition hover:scale-105"
+            disabled
+            aria-disabled="true"
+            className="mt-8 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-slate-300 px-10 py-4 font-shippori text-lg font-bold text-slate-700 shadow-2xl"
           >
-            相談を始める
-            <ArrowRight size={20} />
+            ナナはチームカウンセリングチャット専用です
           </button>
           <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-dashed border-[#fbcfe8] px-4 py-2 text-sm text-[#be123c]">
             <ClipboardList className="h-4 w-4" /> RAG（精神保健福祉チャンク）× GPT-4o-mini

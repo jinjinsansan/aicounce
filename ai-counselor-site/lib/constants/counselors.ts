@@ -86,6 +86,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     tags: ["福祉", "優しい", "支援"],
     responseTime: "即時",
     sessionCount: 0,
+    teamOnly: true,
   },
   {
     id: "yuki",
