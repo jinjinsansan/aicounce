@@ -15,7 +15,7 @@ function normalizeForMatch(value?: string) {
     .toLowerCase()
     .trim()
     .replace(/[\s\u3000]+/g, "")
-    .replace(/[、。！？!?:：\-–—…「」『』（）()【】\[\]<>]/g, "");
+    .replace(/[、。！？!?:：\-–—…「」『』（）()【】\[\]<>#]/g, "");
 }
 
 function extractRagSnippet(ragContext?: string, maxLen = 90) {
@@ -58,6 +58,7 @@ function cleanRagSnippetForQuote(value: string) {
     .replace(/\*\*/g, "")
     .replace(/\*/g, "")
     .replace(/[`]/g, "")
+    .replace(/\s*#{2,}\s*/g, " ")
     .replace(/[\s\u3000]+/g, " ")
     .trim();
 }
@@ -102,6 +103,52 @@ function pickRagSnippetAvoidingRepeat(params: {
   const sentenceLike = pickFrom.filter((c) => /[。！？?!]/.test(c));
   const picked = sentenceLike.find(notRepeat) ?? pickFrom.find(notRepeat) ?? pickFrom[0] ?? "";
 
+  return String(picked).slice(0, maxLen);
+}
+
+function pickRagQuoteSentenceAvoidingRepeat(params: {
+  ragContext?: string;
+  maxLen?: number;
+  avoidQuotes?: Array<string | null | undefined> | null;
+}) {
+  const { ragContext, maxLen = 90, avoidQuotes } = params;
+  const raw = String(ragContext ?? "");
+  if (!raw.trim()) return "";
+
+  const cleaned = raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
+    .replace(/#+/g, " ");
+
+  const sentenceMatches = cleaned.match(/[^\n。！？?!]{6,}[。！？?!]/g) ?? [];
+  const sentenceCandidates = sentenceMatches
+    .map((s) => cleanRagSnippetForQuote(s))
+    .map((s) => s.slice(0, maxLen))
+    .filter((s) => s.length >= 10);
+
+  const paraCandidates = cleaned
+    .split(/\n\n+/)
+    .map((s) => cleanRagSnippetForQuote(s))
+    .filter((s) => s.length >= 10);
+
+  const avoidNorms = new Set(
+    (avoidQuotes ?? [])
+      .filter((q): q is string => typeof q === "string" && q.length > 0)
+      .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
+      .filter(Boolean),
+  );
+
+  const pickFrom = sentenceCandidates.length > 0 ? sentenceCandidates : paraCandidates;
+  const notRepeat = (c: string) => {
+    if (avoidNorms.size === 0) return true;
+    const candNorm = normalizeForMatch(c).slice(0, 18);
+    return candNorm && !avoidNorms.has(candNorm);
+  };
+
+  const picked = pickFrom.find(notRepeat) ?? pickFrom[0] ?? "";
   return String(picked).slice(0, maxLen);
 }
 
@@ -169,7 +216,7 @@ function buildRagContextFromSources(sources: { chunk_text: string; similarity?: 
 }
 
 function buildForcedInterviewReply(params: {
-  counselorId: "mitsu" | "kenji" | "mirai";
+  counselorId: "mitsu" | "kenji" | "mirai" | "nana";
   stage: 1 | 2;
   historyMessages: ChatMessage[];
 }) {
@@ -197,6 +244,14 @@ function buildForcedInterviewReply(params: {
       return `${summary}\n何がきっかけで𠮟られたのか、教えてくれる？`;
     }
     return `${summary}\nいちばん苦しいのは、叱られた言い方？ミスの不安？クビの不安？`;
+  }
+
+  if (counselorId === "nana") {
+    const summary = "それはとてもおつらいですね。";
+    if (stage === 1) {
+      return `${summary}\n何について叱られたのか、差し支えない範囲で教えてください。`;
+    }
+    return `${summary}\nいちばん苦しいのは、『評価』と『今後の対応』のどちらですか？`;
   }
 
   if (counselorId === "mitsu") {
@@ -346,7 +401,8 @@ function buildStageGuard(params: {
   userMessage: string;
 }) {
   const { counselorId, historyMessages, userMessage } = params;
-  const managed = counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai";
+  const managed =
+    counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai" || counselorId === "nana";
   if (!managed) return { stage: 0 as const, guard: "" };
 
   if (isGreetingOnly(userMessage)) {
@@ -384,6 +440,8 @@ function buildStageGuard(params: {
           ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何について叱られた？など）"
           : counselorId === "mirai"
             ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ"
+            : counselorId === "nana"
+              ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（状況確認）"
             : "- 返答は短く：共感1行 + 質問1つだけ",
         "- ここでは助言/解決策/RAG引用は禁止",
         "- 同じ聞き直しは禁止",
@@ -402,6 +460,8 @@ function buildStageGuard(params: {
           ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばん苦しいのは？』）"
           : counselorId === "mirai"
             ? "- 感情/影響をたずねる質問は1つだけ"
+            : counselorId === "nana"
+              ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばんつらいのは？』）"
             : "- 感情/影響/背景をたずねる質問は1つだけ",
       ].join("\n"),
     };
@@ -413,7 +473,7 @@ function buildStageGuard(params: {
       guard: [
         "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
         "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
-        counselorId === "mirai"
+        counselorId === "mirai" || counselorId === "nana"
           ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。直前と同じ引用/同じフレーズは繰り返さない"
           : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
         "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
@@ -432,7 +492,7 @@ function buildStageGuard(params: {
         ? "- 3分でできる一歩を最大2つ（選択肢）"
         : "- 3分でできる一歩を1つだけ",
       "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
-      counselorId === "mirai"
+      counselorId === "mirai" || counselorId === "nana"
         ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。同じ引用の繰り返し禁止"
         : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       counselorId === "mitsu"
@@ -459,7 +519,7 @@ function hashString(value: string) {
   return Math.abs(hash);
 }
 
-function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji" | "mirai", seed: string) {
+function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji" | "mirai" | "nana", seed: string) {
   const options =
     counselorId === "mitsu"
       ? [
@@ -475,6 +535,13 @@ function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji" | "mirai", se
             "いま一番ほしいのは、落ち着き？具体策？",
             "ここまでの話、合ってる？",
           ]
+          : counselorId === "nana"
+            ? [
+                "ここまでの整理で合っていますか？",
+                "この次の一手、いま実行できそうですか？",
+                "まずは一つだけ、試せそうですか？",
+                "いま一番ほしいのは、安心？具体策？",
+              ]
         : [
             "これ、できそう？",
             "まず一歩だけ、選べそう？",
@@ -524,8 +591,20 @@ function summarizeMiraiFromHistory(historyMessages: ChatMessage[]) {
   return "上司に𠮟られて、胸が苦しいんだね。";
 }
 
+function summarizeNanaFromHistory(historyMessages: ChatMessage[]) {
+  const t = historyMessages
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-4)
+    .map((m) => m.content)
+    .join("\n");
+
+  if (/(クビ|解雇)/.test(t)) return "解雇になるかもしれない不安が強いのですね。";
+  if (/言い方/.test(t)) return "叱られた言い方がきつくて、おつらいのですね。";
+  return "上司に叱られて苦しいのですね。";
+}
+
 function buildForcedManagedReply(params: {
-  counselorId: "mitsu" | "kenji" | "mirai";
+  counselorId: "mitsu" | "kenji" | "mirai" | "nana";
   stage: 3 | 4;
   historyMessages: ChatMessage[];
   ragContext?: string;
@@ -557,6 +636,8 @@ function buildForcedManagedReply(params: {
   const cleanedRagRaw =
     counselorId === "mirai"
       ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
+      : counselorId === "nana"
+        ? pickRagQuoteSentenceAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
       : candidates.find((c) => {
           if (counselorId === "kenji") return !containsKenjiForbidden(c);
           if (counselorId === "mitsu") return !containsMitsuForbidden(c);
@@ -570,11 +651,15 @@ function buildForcedManagedReply(params: {
       ? `『${cleanedRag}』──ジョバンニみたいに、いまは一歩を選び直すときなんだ。`
       : counselorId === "mirai"
         ? `『${cleanRagSnippetForQuote(cleanedRag)}』`
+        : counselorId === "nana"
+          ? `『${cleanRagSnippetForQuote(cleanedRag)}』`
         : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
       : counselorId === "mirai"
         ? "いまは視点を少しだけ変えるヒントがほしいところだよね。"
+        : counselorId === "nana"
+          ? "いまは視点を少しだけ変えるヒントがほしいところですね。"
         : "きみの今のしんどさも、にんげんらしさの一部なんだよ。";
 
   const summary =
@@ -582,6 +667,8 @@ function buildForcedManagedReply(params: {
       ? summarizeMitsuFromHistory(historyMessages)
       : counselorId === "mirai"
         ? summarizeMiraiFromHistory(historyMessages)
+        : counselorId === "nana"
+          ? summarizeNanaFromHistory(historyMessages)
         : summarizeKenjiFromHistory(historyMessages);
 
   if (stage === 3) {
@@ -598,15 +685,22 @@ function buildForcedManagedReply(params: {
         ? "その言葉のどこが、いまのきみに一番刺さる？"
         : counselorId === "mirai"
           ? "いま一番こわいのは、クビ？評価？それとも上司の目？"
+        : counselorId === "nana"
+          ? "この言葉のどこが、いまの不安と一番つながっていますか？"
         : "この言葉のどこが、いまのきみに一番重なる？";
     return `${summary}\n${ragLine}\n${question}`;
   }
 
+  const workTopic = isWorkTopic(recentUserFacts);
   const action =
     counselorId === "kenji"
       ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
       : counselorId === "mirai"
         ? "3分だけでいいよ。上司に確認する一文を下書きしてみよう：『ご指摘の点は○○と理解しました。今後は△△で防ぎます。優先順位だけ確認させてください』。"
+        : counselorId === "nana"
+          ? workTopic
+            ? "3分だけで大丈夫です。上司に伝える一文を下書きしましょう：『ご指摘ありがとうございます。理解しました。今後は○○を確認して再発防止します』。"
+            : "3分だけで大丈夫です。いまの不安を紙に3行だけ書き出して、『事実』と『想像』を分けてみましょう。"
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   const questionSeed = `${counselorId}|${recentUserFacts}|${cleanedRag ?? ""}`;
@@ -742,7 +836,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const managed = counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai";
+    const managed =
+      counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai" || counselor.id === "nana";
     const isGreetingMessage = isGreetingOnly(message);
 
     const { stage, guard: stageGuard } = buildStageGuard({
@@ -940,7 +1035,7 @@ export async function POST(request: NextRequest) {
 
         if (stillHasQuote || !stillHasQuestion || stillSuggestsAction || stillBadMitsuQ || stillBadKenjiQ) {
           finalContent = buildForcedInterviewReply({
-            counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
+            counselorId: counselor.id as "mitsu" | "kenji" | "mirai" | "nana",
             stage,
             historyMessages,
           });
@@ -954,7 +1049,7 @@ export async function POST(request: NextRequest) {
       /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(finalContent);
     if (stage3SuggestsAction) {
       finalContent = buildForcedManagedReply({
-        counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
+        counselorId: counselor.id as "mitsu" | "kenji" | "mirai" | "nana",
         stage: 3,
         historyMessages,
         ragContext,
@@ -984,6 +1079,9 @@ export async function POST(request: NextRequest) {
       workTopic &&
       (!containsWorkAction(finalContent) || !containsMiraiWorkScript(finalContent));
 
+    const nanaMissingWorkAction =
+      counselor.id === "nana" && stage >= 4 && workTopic && !containsWorkAction(finalContent);
+
     const mitsForbidden = counselor.id === "mitsu" && containsMitsuForbidden(finalContent);
 
     const kenjiOtherWork = counselor.id === "kenji" && containsKenjiForbidden(finalContent);
@@ -1004,6 +1102,12 @@ export async function POST(request: NextRequest) {
       stage >= 3 &&
       !/『[^』]{6,}』/.test(finalContent);
 
+    const nanaMustHaveRealQuote =
+      counselor.id === "nana" &&
+      shouldUseRagThisTurn &&
+      stage >= 3 &&
+      !/『[^』]{6,}』/.test(finalContent);
+
     if (counselor.id === "kenji" && isGreetingMessage && kenjiOtherWork) {
       finalContent =
         "おはよう。銀河鉄道の夜のように、静かに聴くね。いま一番胸が苦しいのは、どんなところ？";
@@ -1018,19 +1122,21 @@ export async function POST(request: NextRequest) {
       mitsMissingWorkAction ||
       kenjiMissingWorkAction ||
       miraiMissingWorkAction ||
+      nanaMissingWorkAction ||
       mitsForbidden ||
       mustHaveRealQuote ||
-      miraiMustHaveRealQuote
+      miraiMustHaveRealQuote ||
+      nanaMustHaveRealQuote
     ) {
       if (managed && (stage === 1 || stage === 2)) {
         finalContent = buildForcedInterviewReply({
-          counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
+          counselorId: counselor.id as "mitsu" | "kenji" | "mirai" | "nana",
           stage,
           historyMessages,
         });
       } else {
         finalContent = buildForcedManagedReply({
-          counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
+          counselorId: counselor.id as "mitsu" | "kenji" | "mirai" | "nana",
           stage: stage === 3 ? 3 : 4,
           historyMessages,
           ragContext,
@@ -1072,8 +1178,10 @@ export async function POST(request: NextRequest) {
         .slice(-10)
         .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")));
       const snippet =
-        counselor.id === "mirai" || counselor.id === "nana"
+        counselor.id === "mirai"
           ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
+          : counselor.id === "nana"
+            ? pickRagQuoteSentenceAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
           : extractRagSnippet(ragContext, 90);
       if (snippet) {
         const repairSystem = [
@@ -1122,7 +1230,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (!nextQuote || !seemsToUseRagByQuote(finalContent, ragContext) || (nextKey && priorKeys.has(nextKey))) {
-        const snippet = pickRagSnippetAvoidingRepeat({
+        const snippet = pickRagQuoteSentenceAvoidingRepeat({
           ragContext,
           maxLen: 90,
           avoidQuotes: historyMessages
