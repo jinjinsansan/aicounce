@@ -180,9 +180,9 @@ function buildForcedRagReplyNana(params: {
   const quote = cleanRagSnippetForQuote(snippet);
   return [
     `『${quote}』`,
-    `いまは不安が強いと思います。仕事の問題だけで自分を裁くより、生活全体（睡眠・食事・相談先など）の土台も同時に整えると、持ち直しやすくなります。`,
+    "いまはつらさや不安が強いと思います。出来事だけで自分を裁くより、生活全体（睡眠・食事・相談先など）の土台も同時に整えると、持ち直しやすくなります。",
     recentUserText ? `（状況：${recentUserText}）` : "",
-    "いま一番しんどいのは『評価』と『今後の対応』のどちらですか？",
+    "いま一番つらいのは、どんな気持ちですか？",
   ]
     .filter(Boolean)
     .join("\n");
@@ -249,9 +249,9 @@ function buildForcedInterviewReply(params: {
   if (counselorId === "nana") {
     const summary = "それはとてもおつらいですね。";
     if (stage === 1) {
-      return `${summary}\n何について叱られたのか、差し支えない範囲で教えてください。`;
+      return `${summary}\n何が起きたのか、差し支えない範囲で教えてください。`;
     }
-    return `${summary}\nいちばん苦しいのは、『評価』と『今後の対応』のどちらですか？`;
+    return `${summary}\nいちばん苦しいのは、どんな気持ちですか？`;
   }
 
   if (counselorId === "mitsu") {
@@ -598,9 +598,15 @@ function summarizeNanaFromHistory(historyMessages: ChatMessage[]) {
     .map((m) => m.content)
     .join("\n");
 
-  if (/(クビ|解雇)/.test(t)) return "解雇になるかもしれない不安が強いのですね。";
-  if (/言い方/.test(t)) return "叱られた言い方がきつくて、おつらいのですね。";
-  return "上司に叱られて苦しいのですね。";
+  const recent = t
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(-2)
+    .join(" / ")
+    .slice(0, 80);
+
+  return recent ? `いまは「${recent}」のことで苦しいのですね。` : "いま、とてもつらいのですね。";
 }
 
 function buildForcedManagedReply(params: {
@@ -698,9 +704,7 @@ function buildForcedManagedReply(params: {
       : counselorId === "mirai"
         ? "3分だけでいいよ。上司に確認する一文を下書きしてみよう：『ご指摘の点は○○と理解しました。今後は△△で防ぎます。優先順位だけ確認させてください』。"
         : counselorId === "nana"
-          ? workTopic
-            ? "3分だけで大丈夫です。上司に伝える一文を下書きしましょう：『ご指摘ありがとうございます。理解しました。今後は○○を確認して再発防止します』。"
-            : "3分だけで大丈夫です。いまの不安を紙に3行だけ書き出して、『事実』と『想像』を分けてみましょう。"
+          ? "3分だけで大丈夫です。紙に1行ずつ『起きた事実』『いまの気持ち』『次にしたいこと1つ』を書いて、最後に1つだけ選びましょう。"
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   const questionSeed = `${counselorId}|${recentUserFacts}|${cleanedRag ?? ""}`;
@@ -1079,8 +1083,7 @@ export async function POST(request: NextRequest) {
       workTopic &&
       (!containsWorkAction(finalContent) || !containsMiraiWorkScript(finalContent));
 
-    const nanaMissingWorkAction =
-      counselor.id === "nana" && stage >= 4 && workTopic && !containsWorkAction(finalContent);
+    const nanaMissingWorkAction = false;
 
     const mitsForbidden = counselor.id === "mitsu" && containsMitsuForbidden(finalContent);
 
