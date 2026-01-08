@@ -66,6 +66,7 @@ export type ChatConfig = {
     inputBorder: string;
     inputBg: string;
     inputPlaceholder: string;
+    inputText?: string;
     skeletonBorder: string;
     skeletonHighlight: string;
     skeletonShade: string;
@@ -765,6 +766,7 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
                     config.theme.inputBorder,
                     config.theme.inputBg,
                     config.theme.inputPlaceholder,
+                    config.theme.inputText,
                   )}
                   rows={1}
                   autoComplete="off"
@@ -1282,6 +1284,7 @@ const DALE_CONFIG: ChatConfig = {
     inputBorder: "border-[#1e3a8a] focus:border-sky-400 focus:ring-sky-200/40",
     inputBg: "bg-[#0b162f]",
     inputPlaceholder: "placeholder:text-sky-100/70",
+    inputText: "text-white",
     skeletonBorder: "border-[#1e3a8a]",
     skeletonHighlight: "#1d2b4a",
     skeletonShade: "#0f172a",
