@@ -434,6 +434,19 @@ function summarizeMitsuFromHistory(history: HistoryMessage[]) {
   return "上司に𠮟られて胸が苦しいんだね。";
 }
 
+function summarizeKenjiFromHistory(history: HistoryMessage[]) {
+  const t = history
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-4)
+    .map((m) => m.content)
+    .join("\n");
+
+  if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
+  if (/(注文|失念|忘れ)/.test(t)) return "注文を忘れて叱られて、胸が苦しいんだね。";
+  if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
+  return "上司に𠮟られて胸が苦しいんだね。";
+}
+
 function buildForcedManagedReply(params: {
   counselorId: "mitsu" | "kenji";
   stage: 3 | 4;
@@ -479,9 +492,7 @@ function buildForcedManagedReply(params: {
   const summary =
     counselorId === "mitsu"
       ? summarizeMitsuFromHistory(scopedHistory)
-      : recentUserFacts
-        ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
-        : "いま胸が苦しいんだね。";
+      : summarizeKenjiFromHistory(scopedHistory);
 
   if (stage === 3) {
     if (!cleanedRag) {
@@ -1057,6 +1068,19 @@ export async function POST(req: Request) {
             });
           }
         }
+      }
+
+      const stage3SuggestsAction =
+        isManaged &&
+        stage === 3 &&
+        /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(final);
+      if (stage3SuggestsAction && (p.id.toLowerCase() === "kenji" || p.id.toLowerCase() === "mitsu")) {
+        final = buildForcedManagedReply({
+          counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
+          stage: 3,
+          scopedHistory,
+          ragContext: context || undefined,
+        });
       }
 
       // Mitsu/Kenji: enforce stage 2+ (and advice requests) not to ask clarification questions again.

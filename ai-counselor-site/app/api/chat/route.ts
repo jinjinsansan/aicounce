@@ -374,6 +374,19 @@ function summarizeMitsuFromHistory(historyMessages: ChatMessage[]) {
   return "上司に𠮟られて胸が苦しいんだね。";
 }
 
+function summarizeKenjiFromHistory(historyMessages: ChatMessage[]) {
+  const t = historyMessages
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-4)
+    .map((m) => m.content)
+    .join("\n");
+
+  if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
+  if (/(注文|失念|忘れ)/.test(t)) return "注文を忘れて叱られて、胸が苦しいんだね。";
+  if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
+  return "上司に𠮟られて胸が苦しいんだね。";
+}
+
 function buildForcedManagedReply(params: {
   counselorId: "mitsu" | "kenji";
   stage: 3 | 4;
@@ -418,9 +431,7 @@ function buildForcedManagedReply(params: {
   const summary =
     counselorId === "mitsu"
       ? summarizeMitsuFromHistory(historyMessages)
-      : recentUserFacts
-        ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
-        : "いま胸が苦しいんだね。";
+      : summarizeKenjiFromHistory(historyMessages);
 
   if (stage === 3) {
     if (!cleanedRag) {
@@ -765,6 +776,19 @@ export async function POST(request: NextRequest) {
           });
         }
       }
+    }
+
+    const stage3SuggestsAction =
+      managed &&
+      stage === 3 &&
+      /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(finalContent);
+    if (stage3SuggestsAction) {
+      finalContent = buildForcedManagedReply({
+        counselorId: counselor.id as "mitsu" | "kenji",
+        stage: 3,
+        historyMessages,
+        ragContext,
+      });
     }
     const tooGenericForWork =
       managed &&
