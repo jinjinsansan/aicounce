@@ -1,18 +1,9 @@
-import { getServiceSupabase } from "@/lib/supabase-server";
+import { getAdminSupabase } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
 
-const ADMIN_EMAIL = "goldbenchan@gmail.com";
-
 export async function GET() {
-  const supabase = getServiceSupabase();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || user.email !== ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [supabase, authError] = await getAdminSupabase();
+  if (authError) return authError;
 
   try {
     // Get all users with related data

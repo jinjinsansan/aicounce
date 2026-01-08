@@ -1,19 +1,10 @@
-import { getServiceSupabase } from "@/lib/supabase-server";
+import { getAdminSupabase } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
-const ADMIN_EMAIL = "goldbenchan@gmail.com";
-
 export async function GET(request: NextRequest) {
-  const supabase = getServiceSupabase();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || user.email !== ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [supabase, authError] = await getAdminSupabase();
+  if (authError) return authError;
 
   const searchParams = request.nextUrl.searchParams;
   const userId = searchParams.get("userId");
@@ -22,6 +13,8 @@ export async function GET(request: NextRequest) {
   try {
     if (conversationId) {
       // Get specific conversation with messages
+      // NOTE: This endpoint returns user PII (email addresses) for emergency response.
+      // Access is logged via admin_audit_logs. Ensure GDPR/privacy compliance.
       const { data: conversation, error: convError } = await supabase
         .from("conversations")
         .select(`

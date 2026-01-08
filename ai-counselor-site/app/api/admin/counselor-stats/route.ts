@@ -1,18 +1,9 @@
-import { getServiceSupabase } from "@/lib/supabase-server";
+import { getAdminSupabase } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
 
-const ADMIN_EMAIL = "goldbenchan@gmail.com";
-
 export async function GET() {
-  const supabase = getServiceSupabase();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || user.email !== ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [supabase, authError] = await getAdminSupabase();
+  if (authError) return authError;
 
   try {
     // Get all counselors with their session counts
@@ -24,8 +15,14 @@ export async function GET() {
     if (statsError) throw statsError;
 
     // Load counselor data from constants (as counselors are defined in code, not DB)
-    const { loadCounselors } = await import("@/lib/client-counselors");
-    const counselors = await loadCounselors();
+    let counselors;
+    try {
+      const { loadCounselors } = await import("@/lib/client-counselors");
+      counselors = await loadCounselors();
+    } catch (loadError) {
+      console.error("Failed to load counselors from constants", loadError);
+      throw new Error("Failed to load counselor configuration");
+    }
 
     // Merge stats with counselor info
     const counselorMap = new Map(counselors.map((c) => [c.id, c]));

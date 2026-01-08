@@ -1,23 +1,16 @@
-import { getServiceSupabase } from "@/lib/supabase-server";
+import { getAdminSupabase } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
 
-const ADMIN_EMAIL = "goldbenchan@gmail.com";
-
 export async function GET() {
-  const supabase = getServiceSupabase();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || user.email !== ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [supabase, authError] = await getAdminSupabase();
+  if (authError) return authError;
 
   try {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
-    // Users active in last 5 minutes (based on last_login_at)
+    // NOTE: "Active users" are based on last_login_at which updates on login,
+    // not continuously during session. This provides a rough estimate of recent activity.
+    // For more accurate real-time data, consider implementing session heartbeat tracking.
     const { data: activeUsers, error: activeError } = await supabase
       .from("users")
       .select("id, email, last_login_at")
