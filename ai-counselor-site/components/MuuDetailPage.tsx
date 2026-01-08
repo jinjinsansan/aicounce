@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Leaf, Wind, Sparkles, Compass } from "lucide-react";
 
@@ -27,8 +26,6 @@ const PILLARS = [
 ];
 
 export default function MuuDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -74,12 +71,13 @@ export default function MuuDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/muu")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#22c55e] via-[#60a5fa] to-[#a855f7] px-10 py-3 text-lg font-bold text-white shadow-2xl transition hover:translate-y-[1px]"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-slate-300 px-10 py-3 text-lg font-bold text-slate-700 shadow-2xl"
             >
-              相談を始める
+              MUUはチームカウンセリングチャット専用です
             </button>
-            <p className="mt-2 text-sm text-emerald-700">名言チャンクをRAG検索し、穏やかな一言と小さな行動を届けます</p>
+            <p className="mt-2 text-sm text-emerald-700">穏やかな名言の視点で、チームカウンセリングでサポートします</p>
           </div>
         </div>
       </section>

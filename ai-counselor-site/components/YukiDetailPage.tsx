@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Compass, ShieldCheck, HeartHandshake, Target } from "lucide-react";
 
@@ -27,8 +26,6 @@ const PILLARS = [
 ];
 
 export default function YukiDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -75,12 +72,13 @@ export default function YukiDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/yuki")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f97316] via-[#f59e0b] to-[#16a34a] px-10 py-3 text-lg font-bold text-white shadow-2xl transition hover:translate-y-[1px]"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-slate-300 px-10 py-3 text-lg font-bold text-slate-700 shadow-2xl"
             >
-              相談を始める
+              YUKIはチームカウンセリングチャット専用です
             </button>
-            <p className="mt-2 text-sm text-emerald-700">RAGでアドラー心理学を参照し、行動に落とします</p>
+            <p className="mt-2 text-sm text-emerald-700">アドラー心理学の視点で、チームカウンセリングでサポートします</p>
           </div>
         </div>
       </section>

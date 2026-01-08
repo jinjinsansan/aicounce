@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Sparkles, Compass, HeartHandshake, Laugh } from "lucide-react";
 
@@ -27,8 +26,6 @@ const PILLARS = [
 ];
 
 export default function PinaDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -74,12 +71,13 @@ export default function PinaDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/pina")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#10b981] to-[#38bdf8] px-10 py-3 text-lg font-bold text-white shadow-2xl transition hover:translate-y-[1px]"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-slate-300 px-10 py-3 text-lg font-bold text-slate-700 shadow-2xl"
             >
-              相談を始める
+              PINAはチームカウンセリングチャット専用です
             </button>
-            <p className="mt-2 text-sm text-indigo-700">名言チャンクをRAG検索し、短く具体的に寄り添います</p>
+            <p className="mt-2 text-sm text-indigo-700">名言の視点で、チームカウンセリングで伴走します</p>
           </div>
         </div>
       </section>

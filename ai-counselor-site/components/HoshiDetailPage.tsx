@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Sparkles, Heart, Eye, Footprints } from "lucide-react";
 
@@ -11,8 +10,6 @@ const POINTS = [
 ];
 
 export default function HoshiDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -58,12 +55,13 @@ export default function HoshiDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/hoshi")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#d97706] px-10 py-3 text-lg font-bold text-white shadow-2xl transition hover:translate-y-[1px]"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-slate-300 px-10 py-3 text-lg font-bold text-slate-700 shadow-2xl"
             >
-              相談を始める
+              HOSHIはチームカウンセリングチャット専用です
             </button>
-            <p className="mt-2 text-sm text-amber-700">見えない大切さを思い出し、今日の一歩を一緒に見つけます</p>
+            <p className="mt-2 text-sm text-amber-700">星の旅の視点で、チームカウンセリングで伴走します</p>
           </div>
         </div>
       </section>

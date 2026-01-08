@@ -101,6 +101,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     tags: ["アドラー心理学", "課題の分離", "勇気づけ"],
     responseTime: "即時",
     sessionCount: 0,
+    teamOnly: true,
   },
   {
     id: "pina",
@@ -115,6 +116,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     tags: ["名言", "希望", "友達", "ユーモア"],
     responseTime: "即時",
     sessionCount: 0,
+    teamOnly: true,
   },
   {
     id: "muu",
@@ -129,6 +131,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     tags: ["北欧", "穏やか", "哲学", "自然"],
     responseTime: "即時",
     sessionCount: 0,
+    teamOnly: true,
   },
   {
     id: "mitsu",
@@ -158,6 +161,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     tags: ["星", "素朴", "大切なもの", "一歩"],
     responseTime: "即時",
     sessionCount: 0,
+    teamOnly: true,
   },
   {
     id: "iris",
