@@ -159,6 +159,14 @@ function isMitsuFeelingQuestion(text: string) {
   return /(気持|いちばん|一番|不安|怖|つら|苦し|胸)/.test(text);
 }
 
+function isKenjiFactQuestion(text: string) {
+  return /(何について|どんなことで|原因|なぜ|ミス|注文|対応|態度|遅れ|クレーム|忘れ|失念)/.test(text);
+}
+
+function isKenjiFeelingQuestion(text: string) {
+  return /(気持|いちばん|一番|不安|怖|つら|苦し|胸|重|しんど)/.test(text);
+}
+
 function seemsToUseRag(output: string, ragContext?: string) {
   if (!ragContext?.trim()) return true;
   const ragNorm = normalizeForMatch(cleanRagText(ragContext));
@@ -702,10 +710,15 @@ export async function POST(request: NextRequest) {
       );
 
       const isMitsu = counselor.id === "mitsu";
+      const isKenji = counselor.id === "kenji";
       const mitsQuestionIsNotFact =
         isMitsu && stage === 1 && hasQuestion && !isMitsuFactQuestion(finalContent);
       const mitsQuestionIsNotFeeling =
         isMitsu && stage === 2 && hasQuestion && !isMitsuFeelingQuestion(finalContent);
+      const kenjiQuestionIsNotFact =
+        isKenji && stage === 1 && hasQuestion && !isKenjiFactQuestion(finalContent);
+      const kenjiQuestionIsNotFeeling =
+        isKenji && stage === 2 && hasQuestion && !isKenjiFeelingQuestion(finalContent);
 
       const needsInterviewRepair =
         hasQuote ||
@@ -713,7 +726,9 @@ export async function POST(request: NextRequest) {
         suggestsAction ||
         (stage === 2 && /(どんなことがあった|具体的に教えて)/.test(finalContent)) ||
         mitsQuestionIsNotFact ||
-        mitsQuestionIsNotFeeling;
+        mitsQuestionIsNotFeeling ||
+        kenjiQuestionIsNotFact ||
+        kenjiQuestionIsNotFeeling;
 
       if (needsInterviewRepair) {
         const repairSystem = [
@@ -767,8 +782,12 @@ export async function POST(request: NextRequest) {
           counselor.id === "mitsu" &&
           ((stage === 1 && stillHasQuestion && !isMitsuFactQuestion(finalContent)) ||
             (stage === 2 && stillHasQuestion && !isMitsuFeelingQuestion(finalContent)));
+        const stillBadKenjiQ =
+          counselor.id === "kenji" &&
+          ((stage === 1 && stillHasQuestion && !isKenjiFactQuestion(finalContent)) ||
+            (stage === 2 && stillHasQuestion && !isKenjiFeelingQuestion(finalContent)));
 
-        if (stillHasQuote || !stillHasQuestion || stillSuggestsAction || stillBadMitsuQ) {
+        if (stillHasQuote || !stillHasQuestion || stillSuggestsAction || stillBadMitsuQ || stillBadKenjiQ) {
           finalContent = buildForcedInterviewReply({
             counselorId: counselor.id as "mitsu" | "kenji",
             stage,
@@ -805,6 +824,9 @@ export async function POST(request: NextRequest) {
     const mitsMissingWorkAction =
       counselor.id === "mitsu" && stage >= 4 && workTopic && !containsWorkAction(finalContent);
 
+    const kenjiMissingWorkAction =
+      counselor.id === "kenji" && stage >= 4 && workTopic && !containsWorkAction(finalContent);
+
     const mitsForbidden = counselor.id === "mitsu" && containsMitsuForbidden(finalContent);
 
     const kenjiOtherWork = counselor.id === "kenji" && containsKenjiForbidden(finalContent);
@@ -831,6 +853,7 @@ export async function POST(request: NextRequest) {
       (!isGreetingMessage && kenjiOtherWork) ||
       kenjiMissingAnchor ||
       mitsMissingWorkAction ||
+      kenjiMissingWorkAction ||
       mitsForbidden ||
       mustHaveRealQuote
     ) {
