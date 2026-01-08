@@ -416,16 +416,29 @@ function PayPalButton({ plan }: { plan: PlanSlug }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scriptRef = useRef<HTMLScriptElement | null>(null);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     if (!paypalClientId) return;
     if (typeof window === "undefined") return;
+    if (mountedRef.current) return;
 
     const renderButtons = () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current) {
+        console.warn(`[PayPal ${plan}] containerRef is null, retrying...`);
+        setTimeout(renderButtons, 100);
+        return;
+      }
       const paypalSdk = (window as PaypalWindow).paypal;
-      if (!paypalSdk) return;
+      if (!paypalSdk) {
+        console.warn(`[PayPal ${plan}] SDK not loaded, retrying...`);
+        setTimeout(renderButtons, 100);
+        return;
+      }
+      
+      mountedRef.current = true;
+      console.log(`[PayPal ${plan}] Rendering button...`);
+      
       paypalSdk.Buttons({
         createOrder: async () => {
           const response = await fetch("/api/payments/paypal/create-order", {
@@ -451,29 +464,46 @@ function PayPalButton({ plan }: { plan: PlanSlug }) {
           window.location.reload();
         },
         onError: (err: unknown) => {
-          console.error(err);
+          console.error(`[PayPal ${plan}] Error:`, err);
           setError("決済に失敗しました");
         },
       }).render(containerRef.current);
     };
 
     if (typeof window !== "undefined" && (window as PaypalWindow).paypal) {
+      console.log(`[PayPal ${plan}] SDK already loaded, rendering immediately`);
       renderButtons();
       return;
     }
 
+    const existingScript = document.querySelector('script[src*="paypal.com/sdk"]');
+    if (existingScript) {
+      console.log(`[PayPal ${plan}] Script already exists, waiting for load...`);
+      const checkInterval = setInterval(() => {
+        if ((window as PaypalWindow).paypal) {
+          clearInterval(checkInterval);
+          renderButtons();
+        }
+      }, 100);
+      return () => clearInterval(checkInterval);
+    }
+
+    console.log(`[PayPal ${plan}] Loading SDK...`);
     const script = document.createElement("script");
     script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=JPY`;
     script.async = true;
-    script.onload = () => renderButtons();
+    script.onload = () => {
+      console.log(`[PayPal ${plan}] SDK loaded`);
+      renderButtons();
+    };
+    script.onerror = () => {
+      console.error(`[PayPal ${plan}] Failed to load SDK`);
+      setError("PayPal SDKの読み込みに失敗しました");
+    };
     document.body.appendChild(script);
-    scriptRef.current = script;
 
     return () => {
-      if (scriptRef.current) {
-        document.body.removeChild(scriptRef.current);
-        scriptRef.current = null;
-      }
+      mountedRef.current = false;
     };
   }, [plan]);
 
