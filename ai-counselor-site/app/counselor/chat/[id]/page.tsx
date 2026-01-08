@@ -18,7 +18,6 @@ import {
   NanaChatClient,
   SaitoChatClient,
   DaleChatClient,
-  MiraiChatClient,
   PinaChatClient,
   MuuChatClient,
   MitsuChatClient,
@@ -141,7 +140,33 @@ function StandardChatExperience({ counselorId }: { counselorId: string }) {
     loadMessages();
   }, [conversationId, setMessages]);
 
-  if (loading || accessLoading) {
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        ロード中...
+      </div>
+    );
+  }
+
+  if (counselor?.teamOnly) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center">
+        <div className="max-w-md space-y-3">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+            Team Counseling Only
+          </p>
+          <h1 className="text-3xl font-black text-slate-900">
+            {counselor.name}はチームカウンセリングチャット専用です
+          </h1>
+          <p className="text-slate-600">個別カウンセリングでは利用できません。</p>
+        </div>
+        <LinkButton href="/team" label="チームカウンセリングを開く" />
+        <LinkButton href={`/counselor/${counselor.id}`} label="カウンセラー説明ページへ" />
+      </div>
+    );
+  }
+
+  if (accessLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-500">
         ロード中...
@@ -233,6 +258,10 @@ export default function ChatPage({
     );
   }
 
+  if (counselorId === "mirai" || counselorId === "kenji") {
+    return <StandardChatExperience counselorId={counselorId} />;
+  }
+
   if (counselorId === "michele") {
     return <MichelleChatClient />;
   }
@@ -277,9 +306,7 @@ export default function ChatPage({
     return <DaleChatClient />;
   }
 
-  if (counselorId === "mirai") {
-    return <MiraiChatClient />;
-  }
+
 
   if (counselorId === "yuki") {
     return <YukiChatClient />;

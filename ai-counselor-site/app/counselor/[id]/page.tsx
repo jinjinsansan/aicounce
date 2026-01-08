@@ -23,6 +23,7 @@ import PinaDetailPage from "@/components/PinaDetailPage";
 import MuuDetailPage from "@/components/MuuDetailPage";
 import MitsuDetailPage from "@/components/MitsuDetailPage";
 import HoshiDetailPage from "@/components/HoshiDetailPage";
+import KenjiDetailPage from "@/components/KenjiDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -189,6 +190,10 @@ export default function CounselorDetailPage({
 
   if (counselorId === "mirai") {
     return <MiraiDetailPage />;
+  }
+
+  if (counselorId === "kenji") {
+    return <KenjiDetailPage />;
   }
 
   if (counselorId === "yuki") {

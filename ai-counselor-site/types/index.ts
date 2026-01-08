@@ -18,6 +18,7 @@ export interface Counselor {
   tags?: string[];
   highlight?: string;
   comingSoon?: boolean;
+  teamOnly?: boolean;
 }
 
 export interface FeatureHighlight {

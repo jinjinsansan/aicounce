@@ -39,7 +39,14 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
           <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">
             {counselor.specialty}
           </p>
-          <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{counselor.name}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{counselor.name}</h3>
+            {counselor.teamOnly && (
+              <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700">
+                チーム専用
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Sparkles, MoonStar, Wind, Footprints } from "lucide-react";
 
@@ -11,8 +10,6 @@ const POINTS = [
 ];
 
 export default function KenjiDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -58,10 +55,11 @@ export default function KenjiDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/kenji")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#38bdf8] via-[#6366f1] to-[#0ea5e9] px-10 py-3 text-lg font-bold text-white shadow-2xl transition hover:translate-y-[1px]"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-white/20 px-10 py-3 text-lg font-bold text-white/80 shadow-2xl"
             >
-              相談を始める
+              KENJIはチームカウンセリングチャット専用です
             </button>
             <p className="mt-2 text-sm text-sky-100">静かな比喩とRAG要約で、今に小さな灯りをともします</p>
           </div>
