@@ -231,7 +231,8 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "北欧メッセージカウンセリング",
     terms: ["森", "自由", "静けさ", "小さな一歩", "哲学", "名言"],
     systemPrompt: MUU_SYSTEM_PROMPT,
-    negativeInstruction: "急かさず、説教せず。RAGチャンクを1〜2件要約し、自然の比喩と小さな行動を必ず添えてください。",
+    negativeInstruction:
+      "急かさず、説教せず。RAGチャンクを1〜2件要約し、自然の比喩と小さな行動を必ず添えてください。『RAGによると』『チャンクによると』など情報源の言及は禁止です。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
