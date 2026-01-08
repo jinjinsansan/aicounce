@@ -42,6 +42,8 @@ const KENJI_FORBIDDEN_PHRASES = [
   /東に病気の子供あれば/,
   /西に疲れた母あれば/,
   /北に喧嘩や訴訟があれば/,
+  /今日から一つだけ、人の痛みに寄り添う/,
+  /いつも静かに笑っていましょう/,
 ] as const;
 
 function containsKenjiForbidden(text: string) {
@@ -59,6 +61,30 @@ function buildRagContextFromSources(sources: { chunk_text: string; similarity?: 
         `[ソース ${index + 1}] (score: ${(chunk.similarity ?? 0).toFixed(2)})\n${chunk.chunk_text}`,
     )
     .join("\n\n");
+}
+
+const MITSU_ANCHORS = [
+  /相田みつを/,
+  /にんげんだもの/,
+  /つまづいたっていいじゃないか/,
+] as const;
+
+const MITSU_FORBIDDEN_PHRASES = [/柔道/, /受身/, /一生勉強/, /一生青春/] as const;
+
+function hasMitsuAnchor(text: string) {
+  return MITSU_ANCHORS.some((re) => re.test(text));
+}
+
+function containsMitsuForbidden(text: string) {
+  return MITSU_FORBIDDEN_PHRASES.some((re) => re.test(text));
+}
+
+function isWorkTopic(text: string) {
+  return /(上司|会社|仕事|職場|クビ|解雇|叱|注意|ミス|報告|謝罪|再発防止)/.test(text);
+}
+
+function containsWorkAction(text: string) {
+  return /(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|期限|手順)/.test(text);
 }
 
 function seemsToUseRag(output: string, ragContext?: string) {
@@ -397,6 +423,14 @@ export async function POST(request: NextRequest) {
           ragContext = buildRagContextFromSources(ragSources);
         }
       }
+
+      if (counselor.id === "mitsu" && ragSources.length > 0) {
+        const filtered = ragSources.filter((s) => hasMitsuAnchor(s.chunk_text));
+        if (filtered.length > 0) {
+          ragSources = filtered.slice(0, 5);
+          ragContext = buildRagContextFromSources(ragSources);
+        }
+      }
       const ragEnd =
         typeof performance !== "undefined" && typeof performance.now === "function"
           ? performance.now()
@@ -452,6 +486,20 @@ export async function POST(request: NextRequest) {
       /(深呼吸|夜空|星|旅)/.test(finalContent) &&
       !/(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|お客様|注文)/.test(finalContent);
 
+    const recentUserText = historyMessages
+      .filter((m) => m.role === "user")
+      .slice(-3)
+      .map((m) => m.content)
+      .join("\n");
+    const workTopic = isWorkTopic(`${recentUserText}\n${message}`);
+    const mitsMissingWorkAction =
+      counselor.id === "mitsu" &&
+      stage >= 3 &&
+      workTopic &&
+      !containsWorkAction(finalContent);
+
+    const mitsForbidden = counselor.id === "mitsu" && containsMitsuForbidden(finalContent);
+
     const kenjiOtherWork = counselor.id === "kenji" && containsKenjiForbidden(finalContent);
     const kenjiMissingAnchor =
       counselor.id === "kenji" &&
@@ -464,7 +512,14 @@ export async function POST(request: NextRequest) {
     }
 
 
-    if ((mustNotClarify && containsClarificationPrompt(finalContent)) || tooGenericForWork || (!isGreetingMessage && kenjiOtherWork) || kenjiMissingAnchor) {
+    if (
+      (mustNotClarify && containsClarificationPrompt(finalContent)) ||
+      tooGenericForWork ||
+      (!isGreetingMessage && kenjiOtherWork) ||
+      kenjiMissingAnchor ||
+      mitsMissingWorkAction ||
+      mitsForbidden
+    ) {
       finalContent = buildForcedManagedReply({
         counselorId: counselor.id as "mitsu" | "kenji",
         historyMessages,

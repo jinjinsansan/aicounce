@@ -100,6 +100,8 @@ const KENJI_FORBIDDEN_PHRASES = [
   /東に病気の子供あれば/,
   /西に疲れた母あれば/,
   /北に喧嘩や訴訟があれば/,
+  /今日から一つだけ、人の痛みに寄り添う/,
+  /いつも静かに笑っていましょう/,
 ] as const;
 
 function containsKenjiForbidden(text: string) {
@@ -117,6 +119,30 @@ function buildRagContextFromSources(sources: { chunk_text: string; similarity?: 
         `[ソース ${index + 1}] (score: ${(chunk.similarity ?? 0).toFixed(2)})\n${chunk.chunk_text}`,
     )
     .join("\n\n");
+}
+
+const MITSU_ANCHORS = [
+  /相田みつを/,
+  /にんげんだもの/,
+  /つまづいたっていいじゃないか/,
+] as const;
+
+const MITSU_FORBIDDEN_PHRASES = [/柔道/, /受身/, /一生勉強/, /一生青春/] as const;
+
+function hasMitsuAnchor(text: string) {
+  return MITSU_ANCHORS.some((re) => re.test(text));
+}
+
+function containsMitsuForbidden(text: string) {
+  return MITSU_FORBIDDEN_PHRASES.some((re) => re.test(text));
+}
+
+function isWorkTopic(text: string) {
+  return /(上司|会社|仕事|職場|クビ|解雇|叱|注意|ミス|報告|謝罪|再発防止)/.test(text);
+}
+
+function containsWorkAction(text: string) {
+  return /(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|期限|手順)/.test(text);
 }
 
 function seemsToUseRag(output: string, ragContext?: string) {
@@ -678,12 +704,20 @@ export async function POST(req: Request) {
       const ragResult = p.ragEnabled ? await searchRagContext(p.id, ragQuery, 6) : { context: "", sources: [] };
 
       let context = ragResult.context;
-      if (p.id.toLowerCase() === "kenji" && Array.isArray(ragResult.sources) && ragResult.sources.length > 0) {
-        const filtered = ragResult.sources.filter(
-          (s: { chunk_text: string }) => hasKenjiAnchor(s.chunk_text) && !containsKenjiForbidden(s.chunk_text),
-        );
-        if (filtered.length > 0) {
-          context = buildRagContextFromSources(filtered.slice(0, 5));
+      if (Array.isArray(ragResult.sources) && ragResult.sources.length > 0) {
+        if (p.id.toLowerCase() === "kenji") {
+          const filtered = ragResult.sources.filter(
+            (s: { chunk_text: string }) => hasKenjiAnchor(s.chunk_text) && !containsKenjiForbidden(s.chunk_text),
+          );
+          if (filtered.length > 0) {
+            context = buildRagContextFromSources(filtered.slice(0, 5));
+          }
+        }
+        if (p.id.toLowerCase() === "mitsu") {
+          const filtered = ragResult.sources.filter((s: { chunk_text: string }) => hasMitsuAnchor(s.chunk_text));
+          if (filtered.length > 0) {
+            context = buildRagContextFromSources(filtered.slice(0, 5));
+          }
         }
       }
 
@@ -772,6 +806,17 @@ export async function POST(req: Request) {
         stage >= 2 &&
         !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(final);
 
+      const recentUserText = scopedHistory
+        .filter((m) => m.role === "user")
+        .slice(-3)
+        .map((m) => m.content)
+        .join("\n");
+      const workTopic = isWorkTopic(`${recentUserText}\n${userMessage}`);
+      const mitsMissingWorkAction =
+        p.id.toLowerCase() === "mitsu" && stage >= 3 && workTopic && !containsWorkAction(final);
+
+      const mitsForbidden = p.id.toLowerCase() === "mitsu" && containsMitsuForbidden(final);
+
       const tooGenericForWorkInitial =
         stage >= 4 &&
         isManaged &&
@@ -783,7 +828,9 @@ export async function POST(req: Request) {
         askedWrongQuestion ||
         includesOtherWork ||
         missingKenjiAnchor ||
-        tooGenericForWorkInitial;
+        tooGenericForWorkInitial ||
+        mitsMissingWorkAction ||
+        mitsForbidden;
 
       if (needsRepair) {
         for (let attempt = 0; attempt < 2; attempt += 1) {
