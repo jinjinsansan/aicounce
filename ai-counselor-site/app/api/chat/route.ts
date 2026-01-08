@@ -23,6 +23,9 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
   const cleaned = raw
     .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
     .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .trim();
 
   const first = cleaned
@@ -31,6 +34,31 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
     .filter(Boolean)[0];
 
   return (first ?? "").slice(0, maxLen);
+}
+
+const KENJI_FORBIDDEN_PHRASES = [
+  /雨ニモマケズ/,
+  /南に死にそうな人あれば/,
+  /東に病気の子供あれば/,
+  /西に疲れた母あれば/,
+  /北に喧嘩や訴訟があれば/,
+] as const;
+
+function containsKenjiForbidden(text: string) {
+  return KENJI_FORBIDDEN_PHRASES.some((re) => re.test(text));
+}
+
+function hasKenjiAnchor(text: string) {
+  return /(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(text);
+}
+
+function buildRagContextFromSources(sources: { chunk_text: string; similarity?: number }[]) {
+  return sources
+    .map(
+      (chunk, index) =>
+        `[ソース ${index + 1}] (score: ${(chunk.similarity ?? 0).toFixed(2)})\n${chunk.chunk_text}`,
+    )
+    .join("\n\n");
 }
 
 function seemsToUseRag(output: string, ragContext?: string) {
@@ -167,13 +195,21 @@ function buildForcedManagedReply(params: {
     .slice(0, 140);
 
   const raw = String(ragContext ?? "");
-  const cleanedRag = raw
+  const cleanedRagRaw = raw
     .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
     .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .split(/\n\n+/)
     .map((s) => s.trim())
     .filter(Boolean)[0]
     ?.slice(0, 90);
+
+  const cleanedRag =
+    counselorId === "kenji" && cleanedRagRaw && containsKenjiForbidden(cleanedRagRaw)
+      ? undefined
+      : cleanedRagRaw;
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
@@ -189,7 +225,7 @@ function buildForcedManagedReply(params: {
 
   const action =
     counselorId === "kenji"
-      ? "3分だけ、上司に伝える一文をメモしてみよう：『注文忘れ→いまやった対応→再発防止（チェック）』。"
+      ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
@@ -350,6 +386,17 @@ export async function POST(request: NextRequest) {
       const ragResult = await searchRagContext(counselorId, ragQuery);
       ragContext = ragResult.context || undefined;
       ragSources = ragResult.sources;
+
+      // Kenji: prefer 銀河鉄道の夜 anchors and avoid 雨ニモマケズ content.
+      if (counselor.id === "kenji" && ragSources.length > 0) {
+        const filtered = ragSources.filter(
+          (s) => hasKenjiAnchor(s.chunk_text) && !containsKenjiForbidden(s.chunk_text),
+        );
+        if (filtered.length > 0) {
+          ragSources = filtered.slice(0, 5);
+          ragContext = buildRagContextFromSources(ragSources);
+        }
+      }
       const ragEnd =
         typeof performance !== "undefined" && typeof performance.now === "function"
           ? performance.now()
@@ -398,19 +445,26 @@ export async function POST(request: NextRequest) {
     let finalContent = content;
     const managed = counselor.id === "mitsu" || counselor.id === "kenji";
     const mustNotClarify = managed && (stage >= 2 || isAdviceRequest(message));
+    const isGreetingMessage = isGreetingOnly(message);
     const tooGenericForWork =
       managed &&
       stage >= 4 &&
       /(深呼吸|夜空|星|旅)/.test(finalContent) &&
       !/(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|お客様|注文)/.test(finalContent);
 
-    const kenjiOtherWork = counselor.id === "kenji" && /雨ニモマケズ/.test(finalContent);
+    const kenjiOtherWork = counselor.id === "kenji" && containsKenjiForbidden(finalContent);
     const kenjiMissingAnchor =
       counselor.id === "kenji" &&
       stage >= 2 &&
       !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(finalContent);
 
-    if ((mustNotClarify && containsClarificationPrompt(finalContent)) || tooGenericForWork || kenjiOtherWork || kenjiMissingAnchor) {
+    if (counselor.id === "kenji" && isGreetingMessage && kenjiOtherWork) {
+      finalContent =
+        "おはよう。銀河鉄道の夜のように、静かに聴くね。いま一番胸が苦しいのは、どんなところ？";
+    }
+
+
+    if ((mustNotClarify && containsClarificationPrompt(finalContent)) || tooGenericForWork || (!isGreetingMessage && kenjiOtherWork) || kenjiMissingAnchor) {
       finalContent = buildForcedManagedReply({
         counselorId: counselor.id as "mitsu" | "kenji",
         historyMessages,
@@ -418,7 +472,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const mustUseRag = Boolean(useRag && counselor.ragEnabled && ragContext?.trim());
+    const mustUseRag = Boolean(useRag && counselor.ragEnabled && ragContext?.trim() && !isGreetingMessage);
     if (mustUseRag && !seemsToUseRag(finalContent, ragContext)) {
       const snippet = extractRagSnippet(ragContext, 90);
       if (snippet) {

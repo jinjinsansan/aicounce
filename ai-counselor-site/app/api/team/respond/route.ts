@@ -81,6 +81,9 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
   const cleaned = raw
     .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
     .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .trim();
 
   const first = cleaned
@@ -89,6 +92,31 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
     .filter(Boolean)[0];
 
   return (first ?? "").slice(0, maxLen);
+}
+
+const KENJI_FORBIDDEN_PHRASES = [
+  /雨ニモマケズ/,
+  /南に死にそうな人あれば/,
+  /東に病気の子供あれば/,
+  /西に疲れた母あれば/,
+  /北に喧嘩や訴訟があれば/,
+] as const;
+
+function containsKenjiForbidden(text: string) {
+  return KENJI_FORBIDDEN_PHRASES.some((re) => re.test(text));
+}
+
+function hasKenjiAnchor(text: string) {
+  return /(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(text);
+}
+
+function buildRagContextFromSources(sources: { chunk_text: string; similarity?: number }[]) {
+  return sources
+    .map(
+      (chunk, index) =>
+        `[ソース ${index + 1}] (score: ${(chunk.similarity ?? 0).toFixed(2)})\n${chunk.chunk_text}`,
+    )
+    .join("\n\n");
 }
 
 function seemsToUseRag(output: string, ragContext?: string) {
@@ -228,13 +256,21 @@ function buildForcedManagedReply(params: {
     .slice(0, 140);
 
   const raw = String(ragContext ?? "");
-  const cleanedRag = raw
+  const cleanedRagRaw = raw
     .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
     .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .split(/\n\n+/)
     .map((s) => s.trim())
     .filter(Boolean)[0]
     ?.slice(0, 90);
+
+  const cleanedRag =
+    counselorId === "kenji" && cleanedRagRaw && containsKenjiForbidden(cleanedRagRaw)
+      ? undefined
+      : cleanedRagRaw;
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
@@ -250,7 +286,7 @@ function buildForcedManagedReply(params: {
 
   const action =
     counselorId === "kenji"
-      ? "3分だけ、上司に伝える一文をメモしてみよう：『注文忘れ→いまやった対応→再発防止（チェック）』。"
+      ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
@@ -639,7 +675,17 @@ export async function POST(req: Request) {
             ? `${ragQueryBase}\n\n相田みつを にんげんだもの 書`
             : ragQueryBase;
 
-      const { context } = p.ragEnabled ? await searchRagContext(p.id, ragQuery, 6) : { context: "" };
+      const ragResult = p.ragEnabled ? await searchRagContext(p.id, ragQuery, 6) : { context: "", sources: [] };
+
+      let context = ragResult.context;
+      if (p.id.toLowerCase() === "kenji" && Array.isArray(ragResult.sources) && ragResult.sources.length > 0) {
+        const filtered = ragResult.sources.filter(
+          (s: { chunk_text: string }) => hasKenjiAnchor(s.chunk_text) && !containsKenjiForbidden(s.chunk_text),
+        );
+        if (filtered.length > 0) {
+          context = buildRagContextFromSources(filtered.slice(0, 5));
+        }
+      }
 
       const recentAssistantTexts = scopedHistory
         .filter((m) => m.role === "assistant")
@@ -720,7 +766,7 @@ export async function POST(req: Request) {
         /[?？]/.test(final) &&
         !normalizeForMatch(final).includes(normalizeForMatch("できそう"));
 
-      const includesOtherWork = p.id.toLowerCase() === "kenji" && /雨ニモマケズ/.test(final);
+      const includesOtherWork = p.id.toLowerCase() === "kenji" && containsKenjiForbidden(final);
       const missingKenjiAnchor =
         p.id.toLowerCase() === "kenji" &&
         stage >= 2 &&
@@ -781,7 +827,7 @@ export async function POST(req: Request) {
 
         const mustFallback =
           containsClarificationPrompt(final) ||
-          (p.id.toLowerCase() === "kenji" && /雨ニモマケズ/.test(final)) ||
+          (p.id.toLowerCase() === "kenji" && containsKenjiForbidden(final)) ||
           (p.id.toLowerCase() === "kenji" && stage >= 2 && !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(final)) ||
           (tooGenericForWorkFinal && isAdviceRequest(userMessage));
 
