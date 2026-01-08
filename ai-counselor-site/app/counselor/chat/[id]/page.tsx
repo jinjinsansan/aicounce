@@ -22,7 +22,6 @@ import {
   PinaChatClient,
   MuuChatClient,
   MitsuChatClient,
-  KenjiChatClient,
   HoshiChatClient,
   YukiChatClient,
 } from "@/components/GeneralCounselorChatClient";
@@ -296,10 +295,6 @@ export default function ChatPage({
 
   if (counselorId === "mitsu") {
     return <MitsuChatClient />;
-  }
-
-  if (counselorId === "kenji") {
-    return <KenjiChatClient />;
   }
 
   if (counselorId === "hoshi") {

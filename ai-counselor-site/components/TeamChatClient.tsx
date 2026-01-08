@@ -87,7 +87,6 @@ const COLOR_MAP: Record<string, { bubble: string; text: string; border: string }
   pina: { bubble: "bg-[#f0fdfa]", text: "text-[#312e81]", border: "border-[#c7d2fe]" },
   muu: { bubble: "bg-[#f3f8f2]", text: "text-[#14532d]", border: "border-[#c7e8c2]" },
   mitsu: { bubble: "bg-[#fdfaf5]", text: "text-[#7c5a1f]", border: "border-[#f3d9a4]" },
-  kenji: { bubble: "bg-[#e0f2fe]", text: "text-[#0f172a]", border: "border-[#c7d2fe]" },
   hoshi: { bubble: "bg-[#fff7ed]", text: "text-[#78350f]", border: "border-[#fcd34d]" },
   yuki: { bubble: "bg-[#f5fbe9]", text: "text-[#166534]", border: "border-[#d9f99d]" },
   moderator: { bubble: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
