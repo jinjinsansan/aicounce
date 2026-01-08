@@ -76,6 +76,37 @@ function normalizeForMatch(value?: string) {
     .replace(/[、。！？!?:：\-–—…「」『』（）()【】\[\]<>]/g, "");
 }
 
+function extractRagSnippet(ragContext?: string, maxLen = 90) {
+  const raw = String(ragContext ?? "");
+  const cleaned = raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .trim();
+
+  const first = cleaned
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean)[0];
+
+  return (first ?? "").slice(0, maxLen);
+}
+
+function seemsToUseRag(output: string, ragContext?: string) {
+  if (!ragContext?.trim()) return true;
+  const snippet = extractRagSnippet(ragContext, 60);
+  if (!snippet) return true;
+
+  const outputNorm = normalizeForMatch(output);
+  const snippetNorm = normalizeForMatch(snippet).slice(0, 18);
+
+  if (snippetNorm.length < 6) return true;
+
+  return (
+    outputNorm.includes(snippetNorm) ||
+    /『[^』]{8,}』/.test(output)
+  );
+}
+
 const CLARIFICATION_PHRASES = [
   "どんなことがあった",
   "具体的に教えて",
@@ -762,6 +793,40 @@ export async function POST(req: Request) {
               ragContext: context || undefined,
             });
           }
+        }
+      }
+
+      const mustUseRag = Boolean(p.ragEnabled && context?.trim());
+      if (mustUseRag && !seemsToUseRag(final, context || undefined)) {
+        const snippet = extractRagSnippet(context || undefined, 90);
+        if (snippet) {
+          const repairSystem = [
+            priorityGuards,
+            "【再生成（必須）】参考情報（RAG）の反映が不足しています。次の条件でユーザーに返す最終回答だけを書き直してください。",
+            "- 次の一節を『』で1回だけ引用する（出典名・ソース番号は言わない）",
+            "- 引用の意味を自分の言葉で言い換えて、ユーザーの状況に結びつける",
+            "- 説教や一般論だけで終わらない",
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          const repairMessages: ChatMessage[] = [
+            ...historyMessages,
+            { role: "assistant", content: final },
+            {
+              role: "user",
+              content: `上の返答を、次の一節を必ず引用して作り直して：『${snippet}』`,
+            },
+          ];
+
+          const repaired = await callLLMWithHistory(
+            p.provider,
+            p.model,
+            [repairSystem, p.systemPrompt + teamInstructions + ragSection].join("\n\n"),
+            repairMessages,
+            context || undefined,
+          );
+          final = repaired.content ?? final;
         }
       }
 
