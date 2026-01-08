@@ -457,8 +457,7 @@ function buildStageGuard(params: {
   loopDetected: boolean;
 }) {
   const { counselorId, scopedHistory, userMessage, loopDetected } = params;
-  const managed =
-    counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai" || counselorId === "nana";
+  const managed = counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai";
   if (!managed) return { stage: 0 as const, guard: "" };
 
   if (isGreetingOnly(userMessage)) {
@@ -497,8 +496,6 @@ function buildStageGuard(params: {
           ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何について叱られた？など）"
           : counselorId === "mirai"
             ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ"
-            : counselorId === "nana"
-              ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（状況確認）"
           : "- 返答は短く：共感1行 + 質問1つだけ",
       "- ここでは助言/解決策/RAG引用は禁止",
       "- すでに原因が述べられている場合は『どんなことがあった』を聞かず、影響/気持ちを1つだけ聞く",
@@ -518,8 +515,6 @@ function buildStageGuard(params: {
         ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばん苦しいのは？』）"
         : counselorId === "mirai"
           ? "- 感情/影響をたずねる質問は1つだけ"
-          : counselorId === "nana"
-            ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばんつらいのは？』）"
         : "- 感情/影響/背景をたずねる質問は1つだけ",
       "- RAG引用はまだ控える（必要でも軽く触れる程度）",
     ].join("\n"),
@@ -532,7 +527,7 @@ function buildStageGuard(params: {
       guard: [
       "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
       "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
-      counselorId === "mirai" || counselorId === "nana"
+      counselorId === "mirai"
         ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。直前と同じ引用/同じフレーズは繰り返さない"
         : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
@@ -551,7 +546,7 @@ function buildStageGuard(params: {
       ? "- 3分でできる一歩を最大2つ（選択肢）"
       : "- 3分でできる一歩を1つだけ",
     "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
-    counselorId === "mirai" || counselorId === "nana"
+    counselorId === "mirai"
       ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。同じ引用の繰り返し禁止"
       : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
     counselorId === "mitsu"
@@ -1196,8 +1191,7 @@ export async function POST(req: Request) {
       const isManaged =
         p.id.toLowerCase() === "mitsu" ||
         p.id.toLowerCase() === "kenji" ||
-        p.id.toLowerCase() === "mirai" ||
-        p.id.toLowerCase() === "nana";
+        p.id.toLowerCase() === "mirai";
       const isGreetingMessage = isGreetingOnly(userMessage);
       const shouldUseRagThisTurn = Boolean(
         p.ragEnabled && context?.trim() && !isGreetingMessage && (!isManaged || stage >= 3),
@@ -1343,11 +1337,10 @@ export async function POST(req: Request) {
         stage3SuggestsAction &&
         (p.id.toLowerCase() === "kenji" ||
           p.id.toLowerCase() === "mitsu" ||
-          p.id.toLowerCase() === "mirai" ||
-          p.id.toLowerCase() === "nana")
+          p.id.toLowerCase() === "mirai")
       ) {
         final = buildForcedManagedReply({
-          counselorId: p.id.toLowerCase() as "kenji" | "mitsu" | "mirai" | "nana",
+          counselorId: p.id.toLowerCase() as "kenji" | "mitsu" | "mirai",
           stage: 3,
           scopedHistory,
           ragContext: context || undefined,
@@ -1406,12 +1399,6 @@ export async function POST(req: Request) {
         stage >= 3 &&
         !/『[^』]{6,}』/.test(final);
 
-      const nanaMustHaveRealQuote =
-        p.id.toLowerCase() === "nana" &&
-        shouldUseRagThisTurn &&
-        stage >= 3 &&
-        !/『[^』]{6,}』/.test(final);
-
       const tooGenericForWorkInitial =
         stage >= 4 &&
         isManaged &&
@@ -1430,8 +1417,7 @@ export async function POST(req: Request) {
         nanaMissingWorkAction ||
         mitsForbidden ||
         mustHaveRealQuote ||
-        miraiMustHaveRealQuote ||
-        nanaMustHaveRealQuote;
+        miraiMustHaveRealQuote;
 
       if (needsRepair) {
         for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -1485,25 +1471,23 @@ export async function POST(req: Request) {
             workTopic &&
             (!containsWorkAction(final) || !containsMiraiWorkScript(final))) ||
           (p.id.toLowerCase() === "mirai" && shouldUseRagThisTurn && stage >= 3 && !/『[^』]{6,}』/.test(final)) ||
-          (p.id.toLowerCase() === "nana" && shouldUseRagThisTurn && stage >= 3 && !/『[^』]{6,}』/.test(final)) ||
           (tooGenericForWorkFinal && isAdviceRequest(userMessage));
 
         if (mustFallback) {
           if (
             p.id.toLowerCase() === "kenji" ||
             p.id.toLowerCase() === "mitsu" ||
-            p.id.toLowerCase() === "mirai" ||
-            p.id.toLowerCase() === "nana"
+            p.id.toLowerCase() === "mirai"
           ) {
             if (isManaged && (stage === 1 || stage === 2)) {
               final = buildForcedInterviewReply({
-                counselorId: p.id.toLowerCase() as "kenji" | "mitsu" | "mirai" | "nana",
+                counselorId: p.id.toLowerCase() as "kenji" | "mitsu" | "mirai",
                 stage,
                 scopedHistory,
               });
             } else {
               final = buildForcedManagedReply({
-                counselorId: p.id.toLowerCase() as "kenji" | "mitsu" | "mirai" | "nana",
+                counselorId: p.id.toLowerCase() as "kenji" | "mitsu" | "mirai",
                 stage: stage === 3 ? 3 : 4,
                 scopedHistory,
                 ragContext: context || undefined,
@@ -1537,11 +1521,12 @@ export async function POST(req: Request) {
       }
 
       const mustUseRag = shouldUseRagThisTurn;
+      const shouldEnforceRag = p.id.toLowerCase() !== "nana";
       const ragSeemsUsed =
-        p.id.toLowerCase() === "mirai" || p.id.toLowerCase() === "nana"
+        p.id.toLowerCase() === "mirai"
           ? seemsToUseRagByQuote(final, context || undefined)
           : seemsToUseRag(final, context || undefined);
-      if (mustUseRag && !ragSeemsUsed) {
+      if (shouldEnforceRag && mustUseRag && !ragSeemsUsed) {
         const avoidQuotes = scopedHistory
           .filter((m) => m.role === "assistant")
           .slice(-10)
@@ -1549,8 +1534,6 @@ export async function POST(req: Request) {
         const snippet =
           p.id.toLowerCase() === "mirai"
             ? pickRagSnippetAvoidingRepeat({ ragContext: context || undefined, maxLen: 90, avoidQuotes })
-            : p.id.toLowerCase() === "nana"
-              ? pickRagQuoteSentenceAvoidingRepeat({ ragContext: context || undefined, maxLen: 90, avoidQuotes })
             : extractRagSnippet(context || undefined, 90);
         if (snippet) {
           const repairSystem = [
@@ -1580,45 +1563,6 @@ export async function POST(req: Request) {
             shouldUseRagThisTurn ? context || undefined : undefined,
           );
           final = repaired.content ?? final;
-
-          if (
-            p.id.toLowerCase() === "nana" &&
-            !seemsToUseRagByQuote(final, context || undefined)
-          ) {
-            final = buildForcedRagReplyNana({ scopedHistory, snippet });
-          }
-        }
-      }
-
-      if (p.id.toLowerCase() === "nana" && mustUseRag && context?.trim()) {
-        const nextQuote = extractQuotedPhrases(final)[0];
-        const nextKey = nextQuote
-          ? normalizeForMatch(cleanRagSnippetForQuote(nextQuote)).slice(0, 18)
-          : "";
-        const priorKeys = new Set(
-          scopedHistory
-            .filter((m) => m.role === "assistant")
-            .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")))
-            .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
-            .filter(Boolean),
-        );
-
-        if (
-          !nextQuote ||
-          !seemsToUseRagByQuote(final, context || undefined) ||
-          (nextKey && priorKeys.has(nextKey))
-        ) {
-          const snippet = pickRagQuoteSentenceAvoidingRepeat({
-            ragContext: context || undefined,
-            maxLen: 90,
-            avoidQuotes: scopedHistory
-              .filter((m) => m.role === "assistant")
-              .slice(-10)
-              .flatMap((m) => extractQuotedPhrases(String(m.content ?? ""))),
-          });
-          if (snippet) {
-            final = buildForcedRagReplyNana({ scopedHistory, snippet });
-          }
         }
       }
 

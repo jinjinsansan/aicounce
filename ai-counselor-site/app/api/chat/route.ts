@@ -401,8 +401,7 @@ function buildStageGuard(params: {
   userMessage: string;
 }) {
   const { counselorId, historyMessages, userMessage } = params;
-  const managed =
-    counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai" || counselorId === "nana";
+  const managed = counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai";
   if (!managed) return { stage: 0 as const, guard: "" };
 
   if (isGreetingOnly(userMessage)) {
@@ -440,8 +439,6 @@ function buildStageGuard(params: {
           ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何について叱られた？など）"
           : counselorId === "mirai"
             ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ"
-            : counselorId === "nana"
-              ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（状況確認）"
             : "- 返答は短く：共感1行 + 質問1つだけ",
         "- ここでは助言/解決策/RAG引用は禁止",
         "- 同じ聞き直しは禁止",
@@ -460,8 +457,6 @@ function buildStageGuard(params: {
           ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばん苦しいのは？』）"
           : counselorId === "mirai"
             ? "- 感情/影響をたずねる質問は1つだけ"
-            : counselorId === "nana"
-              ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばんつらいのは？』）"
             : "- 感情/影響/背景をたずねる質問は1つだけ",
       ].join("\n"),
     };
@@ -473,7 +468,7 @@ function buildStageGuard(params: {
       guard: [
         "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
         "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
-        counselorId === "mirai" || counselorId === "nana"
+        counselorId === "mirai"
           ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。直前と同じ引用/同じフレーズは繰り返さない"
           : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
         "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
@@ -492,7 +487,7 @@ function buildStageGuard(params: {
         ? "- 3分でできる一歩を最大2つ（選択肢）"
         : "- 3分でできる一歩を1つだけ",
       "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
-      counselorId === "mirai" || counselorId === "nana"
+      counselorId === "mirai"
         ? "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）。同じ引用の繰り返し禁止"
         : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       counselorId === "mitsu"
@@ -840,8 +835,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const managed =
-      counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai" || counselor.id === "nana";
+    const managed = counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai";
     const isGreetingMessage = isGreetingOnly(message);
 
     const { stage, guard: stageGuard } = buildStageGuard({
@@ -1105,11 +1099,6 @@ export async function POST(request: NextRequest) {
       stage >= 3 &&
       !/『[^』]{6,}』/.test(finalContent);
 
-    const nanaMustHaveRealQuote =
-      counselor.id === "nana" &&
-      shouldUseRagThisTurn &&
-      stage >= 3 &&
-      !/『[^』]{6,}』/.test(finalContent);
 
     if (counselor.id === "kenji" && isGreetingMessage && kenjiOtherWork) {
       finalContent =
@@ -1128,8 +1117,7 @@ export async function POST(request: NextRequest) {
       nanaMissingWorkAction ||
       mitsForbidden ||
       mustHaveRealQuote ||
-      miraiMustHaveRealQuote ||
-      nanaMustHaveRealQuote
+      miraiMustHaveRealQuote
     ) {
       if (managed && (stage === 1 || stage === 2)) {
         finalContent = buildForcedInterviewReply({
@@ -1171,11 +1159,12 @@ export async function POST(request: NextRequest) {
     }
 
     const mustUseRag = shouldUseRagThisTurn;
+    const shouldEnforceRag = counselor.id !== "nana";
     const ragSeemsUsed =
-      counselor.id === "mirai" || counselor.id === "nana"
+      counselor.id === "mirai"
         ? seemsToUseRagByQuote(finalContent, ragContext)
         : seemsToUseRag(finalContent, ragContext);
-    if (mustUseRag && !ragSeemsUsed) {
+    if (shouldEnforceRag && mustUseRag && !ragSeemsUsed) {
       const avoidQuotes = historyMessages
         .filter((m) => m.role === "assistant")
         .slice(-10)
@@ -1183,8 +1172,6 @@ export async function POST(request: NextRequest) {
       const snippet =
         counselor.id === "mirai"
           ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
-          : counselor.id === "nana"
-            ? pickRagQuoteSentenceAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
           : extractRagSnippet(ragContext, 90);
       if (snippet) {
         const repairSystem = [
@@ -1212,38 +1199,6 @@ export async function POST(request: NextRequest) {
           ragContext,
         );
         finalContent = repaired.content ?? finalContent;
-
-        if (counselor.id === "nana" && !seemsToUseRagByQuote(finalContent, ragContext)) {
-          finalContent = buildForcedRagReplyNana({ historyMessages, snippet });
-        }
-      }
-    }
-
-    if (counselor.id === "nana" && mustUseRag && ragContext?.trim()) {
-      const nextQuote = extractQuotedPhrases(finalContent)[0];
-      const nextKey = nextQuote
-        ? normalizeForMatch(cleanRagSnippetForQuote(nextQuote)).slice(0, 18)
-        : "";
-      const priorKeys = new Set(
-        historyMessages
-          .filter((m) => m.role === "assistant")
-          .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")))
-          .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
-          .filter(Boolean),
-      );
-
-      if (!nextQuote || !seemsToUseRagByQuote(finalContent, ragContext) || (nextKey && priorKeys.has(nextKey))) {
-        const snippet = pickRagQuoteSentenceAvoidingRepeat({
-          ragContext,
-          maxLen: 90,
-          avoidQuotes: historyMessages
-            .filter((m) => m.role === "assistant")
-            .slice(-10)
-            .flatMap((m) => extractQuotedPhrases(String(m.content ?? ""))),
-        });
-        if (snippet) {
-          finalContent = buildForcedRagReplyNana({ historyMessages, snippet });
-        }
       }
     }
 
