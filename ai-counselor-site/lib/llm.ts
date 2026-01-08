@@ -21,6 +21,7 @@ type CallOptions = {
   messages: ChatMessage[];
   ragContext?: string;
   model?: string;
+  temperature?: number;
 };
 
 function injectRagContext(messages: ChatMessage[], ragContext?: string) {
@@ -63,6 +64,7 @@ export async function callOpenAI({
   messages,
   ragContext,
   model = "gpt-4o-mini",
+  temperature = 0.7,
 }: CallOptions): Promise<LLMResponse> {
   if (!process.env.OPENAI_API_KEY) {
     return { content: PLACEHOLDER };
@@ -81,7 +83,7 @@ export async function callOpenAI({
     },
     body: JSON.stringify({
       model,
-      temperature: 0.7,
+      temperature,
       messages: [
         { role: "system", content: systemPrompt },
         ...preparedMessages,
@@ -303,12 +305,14 @@ export async function callLLMWithHistory(
   systemPrompt: string,
   messages: ChatMessage[],
   ragContext?: string,
+  temperature?: number,
 ): Promise<LLMResponse> {
   const options: CallOptions = {
     systemPrompt,
     messages,
     ragContext,
     model: modelName,
+    temperature,
   };
 
   switch (provider) {
@@ -330,8 +334,16 @@ export async function callLLM(
   systemPrompt: string,
   userMessage: string,
   ragContext?: string,
+  temperature?: number,
 ): Promise<LLMResponse> {
-  return callLLMWithHistory(provider, modelName, systemPrompt, [{ role: "user", content: userMessage }], ragContext);
+  return callLLMWithHistory(
+    provider,
+    modelName,
+    systemPrompt,
+    [{ role: "user", content: userMessage }],
+    ragContext,
+    temperature,
+  );
 }
 
 export type { LLMResponse };

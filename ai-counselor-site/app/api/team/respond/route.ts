@@ -1236,12 +1236,15 @@ export async function POST(req: Request) {
 
       historyMessages.push({ role: "user", content: userMessage });
 
+      const temperature = p.id.toLowerCase() === "nana" ? 0.4 : undefined;
+
       const { content } = await callLLMWithHistory(
         p.provider,
         p.model,
         system,
         historyMessages,
         shouldUseRagThisTurn ? context || undefined : undefined,
+        temperature,
       );
 
       let final = content ?? "";

@@ -934,12 +934,15 @@ export async function POST(request: NextRequest) {
       ? [stageGuard, finalSystemPrompt].join("\n\n")
       : finalSystemPrompt;
 
+    const temperature = counselor.id === "nana" ? 0.4 : undefined;
+
     const { content, tokensUsed } = await callLLMWithHistory(
       counselor.modelType ?? "openai",
       counselor.modelName ?? "gpt-4o-mini",
       guardedSystemPrompt,
       historyMessages,
       shouldUseRagThisTurn ? ragContext : undefined,
+      temperature,
     );
 
     let finalContent = content;

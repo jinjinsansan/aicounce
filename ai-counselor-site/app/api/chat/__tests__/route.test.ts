@@ -210,6 +210,7 @@ describe("POST /api/chat", () => {
       expect.stringContaining("system"),
       [{ role: "user", content: "こんにちは" }],
       undefined,
+      undefined,
     );
     expect(capturedMessages).toHaveLength(2);
     expect(ragLogInsert).toHaveBeenCalled();
