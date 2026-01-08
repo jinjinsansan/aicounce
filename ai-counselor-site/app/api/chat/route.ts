@@ -118,6 +118,29 @@ function seemsToUseRagByQuote(output: string, ragContext?: string) {
   return quoted.some((q) => ragNorm.includes(q.slice(0, 16)));
 }
 
+function buildForcedRagReplyNana(params: {
+  historyMessages: ChatMessage[];
+  snippet: string;
+}) {
+  const { historyMessages, snippet } = params;
+  const recentUserText = historyMessages
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-3)
+    .map((m) => m.content.trim())
+    .join(" / ")
+    .slice(0, 160);
+
+  const quote = cleanRagSnippetForQuote(snippet);
+  return [
+    `『${quote}』`,
+    `いまは不安が強いと思います。仕事の問題だけで自分を裁くより、生活全体（睡眠・食事・相談先など）の土台も同時に整えると、持ち直しやすくなります。`,
+    recentUserText ? `（状況：${recentUserText}）` : "",
+    "いま一番しんどいのは『評価』と『今後の対応』のどちらですか？",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 const KENJI_FORBIDDEN_PHRASES = [
   /雨ニモマケズ/,
   /南に死にそうな人あれば/,
@@ -1040,14 +1063,16 @@ export async function POST(request: NextRequest) {
 
     const mustUseRag = shouldUseRagThisTurn;
     const ragSeemsUsed =
-      counselor.id === "mirai" ? seemsToUseRagByQuote(finalContent, ragContext) : seemsToUseRag(finalContent, ragContext);
+      counselor.id === "mirai" || counselor.id === "nana"
+        ? seemsToUseRagByQuote(finalContent, ragContext)
+        : seemsToUseRag(finalContent, ragContext);
     if (mustUseRag && !ragSeemsUsed) {
       const avoidQuotes = historyMessages
         .filter((m) => m.role === "assistant")
         .slice(-10)
         .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")));
       const snippet =
-        counselor.id === "mirai"
+        counselor.id === "mirai" || counselor.id === "nana"
           ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
           : extractRagSnippet(ragContext, 90);
       if (snippet) {
@@ -1076,6 +1101,38 @@ export async function POST(request: NextRequest) {
           ragContext,
         );
         finalContent = repaired.content ?? finalContent;
+
+        if (counselor.id === "nana" && !seemsToUseRagByQuote(finalContent, ragContext)) {
+          finalContent = buildForcedRagReplyNana({ historyMessages, snippet });
+        }
+      }
+    }
+
+    if (counselor.id === "nana" && mustUseRag && ragContext?.trim()) {
+      const nextQuote = extractQuotedPhrases(finalContent)[0];
+      const nextKey = nextQuote
+        ? normalizeForMatch(cleanRagSnippetForQuote(nextQuote)).slice(0, 18)
+        : "";
+      const priorKeys = new Set(
+        historyMessages
+          .filter((m) => m.role === "assistant")
+          .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")))
+          .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
+          .filter(Boolean),
+      );
+
+      if (!nextQuote || !seemsToUseRagByQuote(finalContent, ragContext) || (nextKey && priorKeys.has(nextKey))) {
+        const snippet = pickRagSnippetAvoidingRepeat({
+          ragContext,
+          maxLen: 90,
+          avoidQuotes: historyMessages
+            .filter((m) => m.role === "assistant")
+            .slice(-10)
+            .flatMap((m) => extractQuotedPhrases(String(m.content ?? ""))),
+        });
+        if (snippet) {
+          finalContent = buildForcedRagReplyNana({ historyMessages, snippet });
+        }
       }
     }
 
