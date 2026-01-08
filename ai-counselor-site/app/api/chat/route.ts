@@ -65,9 +65,9 @@ function cleanRagSnippetForQuote(value: string) {
 function pickRagSnippetAvoidingRepeat(params: {
   ragContext?: string;
   maxLen?: number;
-  avoidQuote?: string | null;
+  avoidQuotes?: Array<string | null | undefined> | null;
 }) {
-  const { ragContext, maxLen = 90, avoidQuote } = params;
+  const { ragContext, maxLen = 90, avoidQuotes } = params;
   const raw = String(ragContext ?? "");
   if (!raw.trim()) return "";
 
@@ -85,13 +85,18 @@ function pickRagSnippetAvoidingRepeat(params: {
     .map((c) => cleanRagSnippetForQuote(c))
     .filter((c) => c.length >= 10);
 
-  const avoidNorm = avoidQuote ? normalizeForMatch(cleanRagSnippetForQuote(avoidQuote)).slice(0, 18) : "";
+  const avoidNorms = new Set(
+    (avoidQuotes ?? [])
+      .filter((q): q is string => typeof q === "string" && q.length > 0)
+      .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
+      .filter(Boolean),
+  );
   const pickFrom = cleanedCandidates.length > 0 ? cleanedCandidates : candidates.map((c) => cleanRagSnippetForQuote(c));
 
   const notRepeat = (c: string) => {
-    if (!avoidNorm) return true;
+    if (avoidNorms.size === 0) return true;
     const candNorm = normalizeForMatch(c).slice(0, 18);
-    return candNorm && candNorm !== avoidNorm;
+    return candNorm && !avoidNorms.has(candNorm);
   };
 
   const sentenceLike = pickFrom.filter((c) => /[。！？?!]/.test(c));
@@ -213,6 +218,10 @@ function isWorkTopic(text: string) {
 
 function containsWorkAction(text: string) {
   return /(報告|謝罪|確認|連絡|再発防止|チェック|メモ|期限|手順)/.test(text);
+}
+
+function containsMiraiWorkScript(text: string) {
+  return /(ご指摘|理解しました|防ぎます|優先順位|確認させて|と理解しました)/.test(text);
 }
 
 function hasWorkDetail(text: string) {
@@ -517,12 +526,14 @@ function buildForcedManagedReply(params: {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
-  const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
+  const avoidQuotes = historyMessages
+    .filter((m) => m.role === "assistant")
+    .slice(-10)
+    .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")));
 
   const cleanedRagRaw =
     counselorId === "mirai"
-      ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuote })
+      ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
       : candidates.find((c) => {
           if (counselorId === "kenji") return !containsKenjiForbidden(c);
           if (counselorId === "mitsu") return !containsMitsuForbidden(c);
@@ -944,6 +955,12 @@ export async function POST(request: NextRequest) {
     const kenjiMissingWorkAction =
       counselor.id === "kenji" && stage >= 4 && workTopic && !containsWorkAction(finalContent);
 
+    const miraiMissingWorkAction =
+      counselor.id === "mirai" &&
+      stage >= 4 &&
+      workTopic &&
+      (!containsWorkAction(finalContent) || !containsMiraiWorkScript(finalContent));
+
     const mitsForbidden = counselor.id === "mitsu" && containsMitsuForbidden(finalContent);
 
     const kenjiOtherWork = counselor.id === "kenji" && containsKenjiForbidden(finalContent);
@@ -977,6 +994,7 @@ export async function POST(request: NextRequest) {
       kenjiMissingAnchor ||
       mitsMissingWorkAction ||
       kenjiMissingWorkAction ||
+      miraiMissingWorkAction ||
       mitsForbidden ||
       mustHaveRealQuote ||
       miraiMustHaveRealQuote
@@ -998,16 +1016,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (counselor.id === "mirai" && stage >= 3) {
-      const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
-      const lastQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0];
       const nextQuote = extractQuotedPhrases(finalContent)[0];
-      if (lastQuote && nextQuote && normalizeForMatch(lastQuote) === normalizeForMatch(nextQuote)) {
-        finalContent = buildForcedManagedReply({
-          counselorId: "mirai",
-          stage: stage >= 4 ? 4 : 3,
-          historyMessages,
-          ragContext,
-        });
+      if (nextQuote) {
+        const nextKey = normalizeForMatch(cleanRagSnippetForQuote(nextQuote)).slice(0, 18);
+        const priorKeys = new Set(
+          historyMessages
+            .filter((m) => m.role === "assistant")
+            .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")))
+            .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
+            .filter(Boolean),
+        );
+
+        if (nextKey && priorKeys.has(nextKey)) {
+          finalContent = buildForcedManagedReply({
+            counselorId: "mirai",
+            stage: stage >= 4 ? 4 : 3,
+            historyMessages,
+            ragContext,
+          });
+        }
       }
     }
 
@@ -1015,11 +1042,13 @@ export async function POST(request: NextRequest) {
     const ragSeemsUsed =
       counselor.id === "mirai" ? seemsToUseRagByQuote(finalContent, ragContext) : seemsToUseRag(finalContent, ragContext);
     if (mustUseRag && !ragSeemsUsed) {
-      const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
-      const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
+      const avoidQuotes = historyMessages
+        .filter((m) => m.role === "assistant")
+        .slice(-10)
+        .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")));
       const snippet =
         counselor.id === "mirai"
-          ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuote })
+          ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
           : extractRagSnippet(ragContext, 90);
       if (snippet) {
         const repairSystem = [

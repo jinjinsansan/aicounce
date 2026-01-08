@@ -123,9 +123,9 @@ function cleanRagSnippetForQuote(value: string) {
 function pickRagSnippetAvoidingRepeat(params: {
   ragContext?: string;
   maxLen?: number;
-  avoidQuote?: string | null;
+  avoidQuotes?: Array<string | null | undefined> | null;
 }) {
-  const { ragContext, maxLen = 90, avoidQuote } = params;
+  const { ragContext, maxLen = 90, avoidQuotes } = params;
   const raw = String(ragContext ?? "");
   if (!raw.trim()) return "";
 
@@ -143,13 +143,18 @@ function pickRagSnippetAvoidingRepeat(params: {
     .map((c) => cleanRagSnippetForQuote(c))
     .filter((c) => c.length >= 10);
 
-  const avoidNorm = avoidQuote ? normalizeForMatch(cleanRagSnippetForQuote(avoidQuote)).slice(0, 18) : "";
+  const avoidNorms = new Set(
+    (avoidQuotes ?? [])
+      .filter((q): q is string => typeof q === "string" && q.length > 0)
+      .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
+      .filter(Boolean),
+  );
   const pickFrom = cleanedCandidates.length > 0 ? cleanedCandidates : candidates.map((c) => cleanRagSnippetForQuote(c));
 
   const notRepeat = (c: string) => {
-    if (!avoidNorm) return true;
+    if (avoidNorms.size === 0) return true;
     const candNorm = normalizeForMatch(c).slice(0, 18);
-    return candNorm && candNorm !== avoidNorm;
+    return candNorm && !avoidNorms.has(candNorm);
   };
 
   const sentenceLike = pickFrom.filter((c) => /[。！？?!]/.test(c));
@@ -270,6 +275,10 @@ function isWorkTopic(text: string) {
 
 function containsWorkAction(text: string) {
   return /(報告|謝罪|確認|連絡|再発防止|チェック|メモ|期限|手順)/.test(text);
+}
+
+function containsMiraiWorkScript(text: string) {
+  return /(ご指摘|理解しました|防ぎます|優先順位|確認させて|と理解しました)/.test(text);
 }
 
 function hasWorkDetail(text: string) {
@@ -577,12 +586,14 @@ function buildForcedManagedReply(params: {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const lastAssistant = [...scopedHistory].reverse().find((m) => m.role === "assistant")?.content;
-  const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
+  const avoidQuotes = scopedHistory
+    .filter((m) => m.role === "assistant")
+    .slice(-10)
+    .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")));
 
   const cleanedRagRaw =
     counselorId === "mirai"
-      ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuote })
+      ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuotes })
       : candidates.find((c) => {
           if (counselorId === "kenji") return !containsKenjiForbidden(c);
           if (counselorId === "mitsu") return !containsMitsuForbidden(c);
@@ -1246,10 +1257,22 @@ export async function POST(req: Request) {
       const kenjiMissingWorkAction =
         p.id.toLowerCase() === "kenji" && stage >= 4 && workTopic && !containsWorkAction(final);
 
+      const miraiMissingWorkAction =
+        p.id.toLowerCase() === "mirai" &&
+        stage >= 4 &&
+        workTopic &&
+        (!containsWorkAction(final) || !containsMiraiWorkScript(final));
+
       const mitsForbidden = p.id.toLowerCase() === "mitsu" && containsMitsuForbidden(final);
 
       const mustHaveRealQuote =
         p.id.toLowerCase() === "mitsu" &&
+        shouldUseRagThisTurn &&
+        stage >= 3 &&
+        !/『[^』]{6,}』/.test(final);
+
+      const miraiMustHaveRealQuote =
+        p.id.toLowerCase() === "mirai" &&
         shouldUseRagThisTurn &&
         stage >= 3 &&
         !/『[^』]{6,}』/.test(final);
@@ -1268,8 +1291,10 @@ export async function POST(req: Request) {
         tooGenericForWorkInitial ||
         mitsMissingWorkAction ||
         kenjiMissingWorkAction ||
+        miraiMissingWorkAction ||
         mitsForbidden ||
-        mustHaveRealQuote;
+        mustHaveRealQuote ||
+        miraiMustHaveRealQuote;
 
       if (needsRepair) {
         for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -1318,6 +1343,11 @@ export async function POST(req: Request) {
           containsClarificationPrompt(final) ||
           (p.id.toLowerCase() === "kenji" && containsKenjiForbidden(final)) ||
           (p.id.toLowerCase() === "kenji" && stage >= 2 && !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(final)) ||
+          (p.id.toLowerCase() === "mirai" &&
+            stage >= 4 &&
+            workTopic &&
+            (!containsWorkAction(final) || !containsMiraiWorkScript(final))) ||
+          (p.id.toLowerCase() === "mirai" && shouldUseRagThisTurn && stage >= 3 && !/『[^』]{6,}』/.test(final)) ||
           (tooGenericForWorkFinal && isAdviceRequest(userMessage));
 
         if (mustFallback) {
@@ -1345,34 +1375,25 @@ export async function POST(req: Request) {
       }
 
       if (p.id.toLowerCase() === "mirai" && stage >= 3) {
-        const lastAssistant = [...scopedHistory].reverse().find((m) => m.role === "assistant")?.content;
-        const lastQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0];
         const nextQuote = extractQuotedPhrases(final)[0];
-        if (lastQuote && nextQuote && normalizeForMatch(lastQuote) === normalizeForMatch(nextQuote)) {
-          const repairSystem = [
-            priorityGuards,
-            "【再生成（必須）】直前と同じ『』引用を繰り返しています。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
-            "- 直前と同じ『』引用は使わない（引用なしでもOK）",
-            "- いまのステップのルール（質問数など）は維持",
-            "- 仕事の相談なら、現実の次の一手が伝わるようにする",
-          ]
-            .filter(Boolean)
-            .join("\n");
-
-          const repairMessages: ChatMessage[] = [
-            ...historyMessages,
-            { role: "assistant", content: final },
-            { role: "user", content: "上の返答を、直前と同じ引用を避けて書き直して。" },
-          ];
-
-          const repaired = await callLLMWithHistory(
-            p.provider,
-            p.model,
-            [repairSystem, p.systemPrompt + teamInstructions + ragSection].join("\n\n"),
-            repairMessages,
-            context || undefined,
+        if (nextQuote) {
+          const nextKey = normalizeForMatch(cleanRagSnippetForQuote(nextQuote)).slice(0, 18);
+          const priorKeys = new Set(
+            scopedHistory
+              .filter((m) => m.role === "assistant")
+              .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")))
+              .map((q) => normalizeForMatch(cleanRagSnippetForQuote(q)).slice(0, 18))
+              .filter(Boolean),
           );
-          final = repaired.content ?? final;
+
+          if (nextKey && priorKeys.has(nextKey)) {
+            final = buildForcedManagedReply({
+              counselorId: "mirai",
+              stage: stage >= 4 ? 4 : 3,
+              scopedHistory,
+              ragContext: context || undefined,
+            });
+          }
         }
       }
 
@@ -1382,11 +1403,13 @@ export async function POST(req: Request) {
           ? seemsToUseRagByQuote(final, context || undefined)
           : seemsToUseRag(final, context || undefined);
       if (mustUseRag && !ragSeemsUsed) {
-        const lastAssistant = [...scopedHistory].reverse().find((m) => m.role === "assistant")?.content;
-        const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
+        const avoidQuotes = scopedHistory
+          .filter((m) => m.role === "assistant")
+          .slice(-10)
+          .flatMap((m) => extractQuotedPhrases(String(m.content ?? "")));
         const snippet =
           p.id.toLowerCase() === "mirai"
-            ? pickRagSnippetAvoidingRepeat({ ragContext: context || undefined, maxLen: 90, avoidQuote })
+            ? pickRagSnippetAvoidingRepeat({ ragContext: context || undefined, maxLen: 90, avoidQuotes })
             : extractRagSnippet(context || undefined, 90);
         if (snippet) {
           const repairSystem = [
