@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Sparkles, Lightbulb, Rocket, HeartHandshake } from "lucide-react";
+import { Sparkles, Lightbulb, Rocket, HeartHandshake } from "lucide-react";
 
 const PILLARS = [
   {
@@ -27,8 +26,6 @@ const PILLARS = [
 ];
 
 export default function MiraiDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -75,11 +72,11 @@ export default function MiraiDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/mirai")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#0ea5e9] via-[#2563eb] to-[#22d3ee] px-10 py-3 font-shippori text-lg font-bold text-white shadow-2xl transition hover:scale-105"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-slate-300 px-10 py-3 font-shippori text-lg font-bold text-slate-700 shadow-2xl"
             >
-              相談を始める
-              <ArrowRight size={20} />
+              MIRAIはチームカウンセリングチャット専用です
             </button>
             <p className="mt-2 text-sm text-sky-700">未来ノート（RAG）で具体的にサポートします</p>
           </div>
