@@ -51,6 +51,123 @@
 - 全画面背景は PC 同様の `gradientStyle` が body を満たし、上部通知やモーダルにも透過感を残す。
 - モバイル内のセッションカード／ボタンも同じ `newChatButtonClasses` を使い、丸みとグラデーションを統一。
 
+### 7-1. モバイルキーボード問題の解決方法（重要）
+
+**問題**: iPhoneなどのモバイルブラウザで入力欄にフォーカスすると、画面が拡大されてユーザーが手動で縮小する必要がある。
+
+**解決策**（全て必須）:
+
+#### A. テキストエリアのフォントサイズ
+```tsx
+<textarea
+  className={cn(
+    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 px-4 py-3",
+    // ⬇️ 重要: text-base（16px）でモバイルのズームを防止、md:text-sm でデスクトップは小さく
+    "text-base leading-relaxed md:text-sm",
+    "transition focus:outline-none focus:ring-2 focus:ring-offset-0",
+    config.theme.inputBorder,
+    config.theme.inputBg,
+    config.theme.inputPlaceholder,
+    config.theme.inputText || "text-slate-900",
+  )}
+  // ...
+/>
+```
+
+**理由**: iOSは16px未満のフォントサイズにフォーカスすると自動ズームします。`text-base`（16px）以上で防止できます。
+
+#### B. 自動補完・大文字化の無効化
+```tsx
+<textarea
+  autoComplete="off"      // 自動補完を無効化
+  autoCorrect="off"       // 自動修正を無効化
+  autoCapitalize="off"    // 自動大文字化を無効化
+  enterKeyHint="send"     // キーボードのEnterボタンを「送信」に
+  // ...
+/>
+```
+
+#### C. モバイル送信後のキーボードクローズ
+```typescript
+// useChatDevice フックで isMobile を取得
+const { isMobile, scrollIntoViewOnFocus } = useChatDevice(textareaRef);
+
+// handleSend 内で送信後にキーボードを閉じる
+const handleSend = async (override?: string) => {
+  // ... 送信処理の前に ...
+  
+  if (!override) {
+    setInput("");
+  }
+  
+  // ⬇️ 重要: モバイルでは送信後にキーボードを閉じる
+  if (isMobile && textareaRef.current) {
+    textareaRef.current.blur();
+  }
+  
+  // ... 残りの送信処理 ...
+};
+```
+
+#### D. フォーカス時のスクロール処理
+```tsx
+<textarea
+  onFocus={scrollIntoViewOnFocus}  // useChatDevice から取得
+  // ...
+/>
+```
+
+`useChatDevice` フックが自動的にモバイルで入力欄を適切な位置にスクロールします。
+
+#### E. 送信ボタンのフォントサイズも統一
+```tsx
+<Button
+  className={cn(
+    "mb-1 flex h-12 w-12 items-center justify-center rounded-2xl",
+    // デスクトップでは text-sm も問題ないが、統一感のため text-base
+  )}
+  style={{ backgroundColor: config.theme.accent, color: "#ffffff" }}
+>
+  {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+</Button>
+```
+
+#### F. テーマ設定での inputText の追加（オプション）
+ダークテーマのカウンセラーの場合、`inputText` をテーマに追加：
+
+```typescript
+const COUNSELOR_CONFIG: ChatConfig = {
+  theme: {
+    // ...
+    inputBg: "bg-[#0f172a]",
+    inputPlaceholder: "placeholder:text-sky-200/60",
+    inputText: "text-[#bfdbfe] text-base",  // ⬅️ 明示的に text-base を含める
+    // ...
+  },
+};
+```
+
+そして、テキストエリアのクラス名から固定の `text-slate-900` を削除：
+
+```tsx
+className={cn(
+  "... text-base leading-relaxed transition ...",  // text-slate-900 を削除
+  config.theme.inputText || "text-slate-900",      // テーマまたはデフォルト
+)}
+```
+
+---
+
+**チェックリスト（新規カウンセラー追加時）**:
+- [ ] textarea に `text-base leading-relaxed md:text-sm` を追加
+- [ ] `autoComplete="off" autoCorrect="off" autoCapitalize="off"` を追加
+- [ ] `enterKeyHint="send"` を追加
+- [ ] handleSend 内で `isMobile && textareaRef.current.blur()` を追加
+- [ ] `onFocus={scrollIntoViewOnFocus}` を追加
+- [ ] ダークテーマの場合は `inputText` をテーマに追加し、固定色を削除
+
+この対応により、iPhoneや Android でのキーボード体験が大幅に改善されます。
+
 ### 8. 重点ポイント
 1. **左サイドバーの質感**：丸角＋半透明＋カード群という「紙束」感を損なわない。shadow を強くしすぎない。
 2. **新しいチャットボタン**：全 counselor 固有のグラデーション（`config.theme.newChatButton`）を `variant="default" + border-transparent` で必ず適用。
