@@ -1241,6 +1241,21 @@ export interface Database {
           similarity: number;
         }[];
       };
+      match_rag_chunks_sinr: {
+        Args: {
+          query_embedding: unknown;
+          counselor_id: string;
+          match_count?: number;
+          similarity_threshold?: number;
+        };
+        Returns: {
+          id: string;
+          document_id: string;
+          parent_chunk_id: string | null;
+          chunk_text: string;
+          similarity: number;
+        }[];
+      };
       match_michelle_knowledge: {
         Args: {
           query_embedding: unknown;

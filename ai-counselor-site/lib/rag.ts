@@ -59,7 +59,37 @@ export async function searchRagContext(
 
   try {
     const supabase = canUseServiceClient ? getServiceSupabase() : getSupabaseClient();
-    const { data, error } = await supabase.rpc("match_rag_chunks", {
+    // SINR: search with child chunks, return parent chunks for context.
+    const thresholds = [0.75, 0.7, 0.65];
+    for (const threshold of thresholds) {
+      const { data, error } = await supabase.rpc("match_rag_chunks_sinr" as any, {
+        counselor_id: counselorId,
+        match_count: matchCount,
+        query_embedding: embedding,
+        similarity_threshold: threshold,
+      });
+
+      if (error) {
+        // Function may not exist yet in some environments → fall back.
+        break;
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        const context = data
+          .map(
+            (chunk: RagChunkMatch, index: number) =>
+              `[ソース ${index + 1}] (score: ${chunk.similarity.toFixed(2)})\n${chunk.chunk_text}`,
+          )
+          .join("\n\n");
+
+        return {
+          context,
+          sources: data as RagChunkMatch[],
+        };
+      }
+    }
+
+    const { data, error } = await supabase.rpc("match_rag_chunks" as any, {
       counselor_id: counselorId,
       match_count: matchCount,
       query_embedding: embedding,

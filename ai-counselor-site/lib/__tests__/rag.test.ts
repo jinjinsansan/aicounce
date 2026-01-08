@@ -49,7 +49,7 @@ describe("searchRagContext", () => {
     expect(result.sources).toHaveLength(1);
     expect(result.context).toContain("[ソース 1]");
     expect(result.context).toContain("テストチャンク");
-    expect(rpc).toHaveBeenCalledWith("match_rag_chunks", expect.any(Object));
+    expect(rpc.mock.calls[0][0]).toBe("match_rag_chunks_sinr");
   });
 
   it("returns empty context when Supabase config is missing", async () => {
