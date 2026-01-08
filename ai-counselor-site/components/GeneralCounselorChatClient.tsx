@@ -762,11 +762,11 @@ export function GeneralCounselorChatClient({ config, dataSource }: GeneralChatPr
                   onKeyDown={handleKeyDown}
                   placeholder="悩みや状況を入力してください"
                   className={cn(
-                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 px-4 py-3 text-base leading-relaxed text-slate-900 transition focus:outline-none focus:ring-2 focus:ring-offset-0 md:text-sm",
+                    "min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border-2 px-4 py-3 text-base leading-relaxed transition focus:outline-none focus:ring-2 focus:ring-offset-0 md:text-sm",
                     config.theme.inputBorder,
                     config.theme.inputBg,
                     config.theme.inputPlaceholder,
-                    config.theme.inputText,
+                    config.theme.inputText || "text-slate-900",
                   )}
                   rows={1}
                   autoComplete="off"
@@ -1258,8 +1258,8 @@ const DALE_CONFIG: ChatConfig = {
     accentMuted: "#2563eb",
     cardBorder: "border-[#1e3a8a]",
     bubbleUser: "bg-[#0f172a] text-[#cbd5f5]",
-    bubbleAssistant: "bg-[#0b162f]",
-    assistantText: "text-white",
+    bubbleAssistant: "bg-[#0f172a]",
+    assistantText: "text-[#bfdbfe]",
     assistantBorder: "border border-[#1e3a8a]",
     activeBackground: "bg-gradient-to-r from-[#0ea5e9] via-[#2563eb] to-[#1d4ed8]",
     newChatButton:
@@ -1277,19 +1277,19 @@ const DALE_CONFIG: ChatConfig = {
     promptText: "text-[#c7e3ff]",
     promptHoverBorder: "hover:border-sky-400",
     detailBorder: "border-[#1e3a8a]",
-    detailBackground: "bg-[#0b162f]",
-    detailText: "text-white",
+    detailBackground: "bg-[#0f172a]",
+    detailText: "text-[#bfdbfe]",
     emptyBorder: "border-[#1e3a8a]",
     emptyText: "text-[#bfdbfe]",
     inputBorder: "border-[#1e3a8a] focus:border-sky-400 focus:ring-sky-200/40",
-    inputBg: "bg-[#0b162f]",
-    inputPlaceholder: "placeholder:text-sky-100/70",
-    inputText: "text-white",
+    inputBg: "bg-[#0f172a]",
+    inputPlaceholder: "placeholder:text-sky-200/60",
+    inputText: "text-[#bfdbfe]",
     skeletonBorder: "border-[#1e3a8a]",
     skeletonHighlight: "#1d2b4a",
     skeletonShade: "#0f172a",
-    deleteButtonText: "text-[#e2e8f0]",
-    deleteButtonHover: "hover:bg-[#0b1224]",
+    deleteButtonText: "text-[#bfdbfe]",
+    deleteButtonHover: "hover:bg-[#0f172a]",
   },
   initialPrompts: [
     "最悪を想像して受け入れる方法を知りたい",
