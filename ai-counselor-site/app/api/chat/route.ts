@@ -51,6 +51,16 @@ function extractQuotedPhrases(output: string) {
   return Array.from(output.matchAll(/『([^』]{6,})』/g)).map((m) => m[1]);
 }
 
+function extractOpeningSentence(text: string) {
+  const firstLine = String(text ?? "").trim().split("\n")[0] ?? "";
+  const first = firstLine.split(/[。!?？]/)[0] ?? "";
+  return first.trim();
+}
+
+function openingKey(text: string) {
+  return normalizeForMatch(extractOpeningSentence(text)).slice(0, 18);
+}
+
 function cleanRagSnippetForQuote(value: string) {
   return String(value)
     .replace(/^\s*\d+\.\s*/g, "")
@@ -1200,6 +1210,46 @@ export async function POST(request: NextRequest) {
           repairSystem,
           repairMessages,
           ragContext,
+        );
+        finalContent = repaired.content ?? finalContent;
+      }
+    }
+
+    if (counselor.id === "nana") {
+      const priorOpenings = historyMessages
+        .filter((m) => m.role === "assistant")
+        .slice(-2)
+        .map((m) => openingKey(m.content))
+        .filter(Boolean);
+      const currentOpening = openingKey(finalContent);
+      const repeatsOpening =
+        Boolean(currentOpening) &&
+        priorOpenings.some((k) => k.slice(0, 12) && currentOpening.slice(0, 12) === k.slice(0, 12));
+
+      if (repeatsOpening) {
+        const repetitionRepairSystem = [
+          guardedSystemPrompt,
+          "【再生成（必須）】直前と冒頭がほぼ同じ定型文です。次の条件でユーザーに送る最終回答だけを書き直してください。",
+          `- 1文目の言い回しを変える（直前の冒頭：『${extractOpeningSentence(historyMessages.filter((m) => m.role === "assistant").slice(-1)[0]?.content ?? "")}』に似た出だしは禁止）`,
+          "- 抽象的な一般論を繰り返さない",
+          "- 具体的な次の一歩を1つだけ（安全確保/外部支援/今日できる小さな行動のいずれか）",
+          "- 質問は1つだけ（Yes/No か 選択肢）",
+          "- 200〜350文字程度",
+        ].join("\n");
+
+        const repetitionRepairMessages: ChatMessage[] = [
+          ...historyMessages,
+          { role: "assistant", content: finalContent },
+          { role: "user", content: "上の返答を、冒頭の定型文を避けて、同じ言い回しの繰り返しをせずに書き直して。" },
+        ];
+
+        const repaired = await callLLMWithHistory(
+          counselor.modelType ?? "openai",
+          counselor.modelName ?? "gpt-4o-mini",
+          repetitionRepairSystem,
+          repetitionRepairMessages,
+          shouldUseRagThisTurn ? ragContext : undefined,
+          temperature,
         );
         finalContent = repaired.content ?? finalContent;
       }
