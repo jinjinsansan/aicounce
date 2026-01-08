@@ -86,7 +86,8 @@ function extractRagSnippet(ragContext?: string, maxLen = 90) {
     .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
     .trim();
 
-  const isBadStart = (s: string) => /^[、。！？?!]/.test(s) || /^(に|を|が|は|で|と|へ|も|や|の)/.test(s);
+  const isBadStart = (s: string) =>
+    /^[、。！？?!]/.test(s) || /^(に|を|が|は|で|と|へ|も|や|の|ば|から|ので|でも|けど)/.test(s);
 
   const sentenceMatches = cleaned.match(/[^\n。！？?!]{6,}[。！？?!]/g) ?? [];
   const sentenceCandidates = sentenceMatches
@@ -310,8 +311,8 @@ function buildForcedInterviewReply(params: {
     .slice(0, 120);
 
   const summary = recentUserFacts
-    ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
-    : "いま胸が苦しいんだね。";
+    ? `いまは「${recentUserFacts}」のことでつらいんだね。`
+    : "いま、つらいんだね。";
 
   if (counselorId === "mirai") {
     if (stage === 1) {
@@ -643,13 +644,13 @@ function summarizeMitsuFromHistory(history: HistoryMessage[]) {
       .slice(-2)
       .join(" / ")
       .slice(0, 80);
-    return recent ? `いまは「${recent}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+    return recent ? `いまは「${recent}」のことでつらいんだね。` : "いま、つらいんだね。";
   }
 
   if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
-  if (/(注文|失念|忘れ)/.test(t)) return "注文のことで叱られて、胸が苦しいんだね。";
+  if (/(注文|失念|忘れ)/.test(t)) return "注文のことで叱られて、つらいんだね。";
   if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
-  return "いま、そのことで胸が苦しいんだね。";
+  return "いま、そのことでつらいんだね。";
 }
 
 function summarizeKenjiFromHistory(history: HistoryMessage[]) {
@@ -667,13 +668,13 @@ function summarizeKenjiFromHistory(history: HistoryMessage[]) {
       .slice(-2)
       .join(" / ")
       .slice(0, 80);
-    return recent ? `いまは「${recent}」のことで胸が苦しいんだね。` : "いま胸が苦しいんだね。";
+    return recent ? `いまは「${recent}」のことでつらいんだね。` : "いま、つらいんだね。";
   }
 
   if (/言い方/.test(t)) return "叱られた言い方がきつかったんだね。";
-  if (/(注文|失念|忘れ)/.test(t)) return "注文を忘れて叱られて、胸が苦しいんだね。";
+  if (/(注文|失念|忘れ)/.test(t)) return "注文を忘れて叱られて、つらいんだね。";
   if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安なんだね。";
-  return "いま、そのことで胸が苦しいんだね。";
+  return "いま、そのことでつらいんだね。";
 }
 
 function summarizeMiraiFromHistory(history: HistoryMessage[]) {
@@ -697,8 +698,8 @@ function summarizeMiraiFromHistory(history: HistoryMessage[]) {
   }
 
   if (/言い方/.test(t)) return "叱られた言い方がきつくて、苦しいんだね。";
-  if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安で、胸が苦しいんだね。";
-  return "いま、そのことで胸が苦しいんだね。";
+  if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安で、つらいんだね。";
+  return "いま、そのことでつらいんだね。";
 }
 
 function summarizeNanaFromHistory(history: HistoryMessage[]) {

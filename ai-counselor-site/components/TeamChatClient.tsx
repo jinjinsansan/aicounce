@@ -681,7 +681,7 @@ export function TeamChatClient() {
     );
   }
 
-  const messagePaddingBottom = messages.length === 0 ? 0 : Math.max(composerHeight + 16, 140);
+  const messagePaddingBottom = Math.max(composerHeight + 16, 140);
   const showPromptSection = !isLoading.messages && !isRestoringSession && messages.length === 0;
   const showParticipantSelector = !activeSessionId && selectableParticipants.length > 0;
 
@@ -767,7 +767,7 @@ export function TeamChatClient() {
           {renderSidebarContent(false)}
         </aside>
 
-        <main className="flex min-h-0 flex-1 flex-col rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
             <div className="flex items-center gap-3">
               <Button
@@ -795,72 +795,6 @@ export function TeamChatClient() {
             </div>
           </header>
 
-          {showParticipantSelector && (
-            <section className="border-b border-slate-100 px-6 py-4">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">参加AIを選択</p>
-                  <p className="text-xs text-slate-500">準備中以外のAIはデフォルトで選択されています</p>
-                </div>
-                <p className="text-xs font-semibold text-slate-500">
-                  {participants.length} / {selectableParticipants.length}
-                </p>
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {selectableParticipants.map((participant) => {
-                  const isSelected = participants.includes(participant.id);
-                  return (
-                    <button
-                      key={participant.id}
-                      type="button"
-                      onClick={() => toggleParticipant(participant.id)}
-                      className={cn(
-                        "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition",
-                        isSelected
-                          ? "border-slate-900 bg-slate-900 text-white shadow"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
-                      )}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="relative h-7 w-7 overflow-hidden rounded-xl border border-slate-100 bg-white">
-                          <Image
-                            src={participant.iconUrl || "/images/counselors/placeholder.png"}
-                            alt={participant.name}
-                            fill
-                            className="object-contain"
-                            sizes="28px"
-                          />
-                        </span>
-                        {participant.name}
-                      </span>
-                      {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-3 text-xs text-slate-500">参加AIが多いほど応答に時間がかかります。</p>
-            </section>
-          )}
-
-          {showPromptSection && (
-            <section className="border-b border-slate-100 px-6 py-4">
-              <p className="text-sm font-semibold text-slate-900">すぐに話したいことを選べます</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {PROMPT_PRESETS.map((prompt) => (
-                  <Button
-                    key={prompt}
-                    variant="outline"
-                    className="rounded-full border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
-                    onClick={() => handleSendMessage(prompt)}
-                    disabled={isLoading.sending}
-                  >
-                    {prompt}
-                  </Button>
-                ))}
-              </div>
-            </section>
-          )}
-
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
             <div
               ref={scrollContainerRef}
@@ -868,6 +802,72 @@ export function TeamChatClient() {
               style={{ paddingBottom: `${messagePaddingBottom}px` }}
             >
               <div className="mx-auto w-full max-w-3xl space-y-5">
+                {showParticipantSelector && (
+                  <section className="rounded-3xl border border-slate-100 bg-white px-6 py-4 shadow-sm">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">参加AIを選択</p>
+                        <p className="text-xs text-slate-500">準備中以外のAIはデフォルトで選択されています</p>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-500">
+                        {participants.length} / {selectableParticipants.length}
+                      </p>
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {selectableParticipants.map((participant) => {
+                        const isSelected = participants.includes(participant.id);
+                        return (
+                          <button
+                            key={participant.id}
+                            type="button"
+                            onClick={() => toggleParticipant(participant.id)}
+                            className={cn(
+                              "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm transition",
+                              isSelected
+                                ? "border-slate-900 bg-slate-900 text-white shadow"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                            )}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="relative h-7 w-7 overflow-hidden rounded-xl border border-slate-100 bg-white">
+                                <Image
+                                  src={participant.iconUrl || "/images/counselors/placeholder.png"}
+                                  alt={participant.name}
+                                  fill
+                                  className="object-contain"
+                                  sizes="28px"
+                                />
+                              </span>
+                              {participant.name}
+                            </span>
+                            {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">参加AIが多いほど応答に時間がかかります。</p>
+                  </section>
+                )}
+
+                {showPromptSection && (
+                  <section className="rounded-3xl border border-slate-100 bg-white px-6 py-4 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-900">すぐに話したいことを選べます</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {PROMPT_PRESETS.map((prompt) => (
+                        <Button
+                          key={prompt}
+                          variant="outline"
+                          className="rounded-full border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                          onClick={() => handleSendMessage(prompt)}
+                          disabled={isLoading.sending}
+                        >
+                          {prompt}
+                        </Button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
                     <p className="text-base font-semibold text-slate-900">まだ会話はありません</p>
