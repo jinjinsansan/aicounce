@@ -1621,6 +1621,130 @@ const MITSU_CONFIG: ChatConfig = {
   ],
 };
 
+const KENJI_CONFIG: ChatConfig = {
+  counselorId: "kenji",
+  storageKey: "kenji-galaxy-chat-session",
+  hero: {
+    name: "ケンジ",
+    subtitle: "銀河ことばカウンセリング",
+    description: "夜空の物語のような静かな比喩で、小さな一歩を示します",
+    iconUrl: "/images/counselors/kenji.png",
+  },
+  theme: {
+    gradientFrom: "#0f172a",
+    gradientVia: "#1e3a8a",
+    gradientTo: "#312e81",
+    accent: "#38bdf8",
+    accentMuted: "#6366f1",
+    cardBorder: "border-indigo-200",
+    bubbleUser: "bg-[#e0f2fe] text-[#0f172a]",
+    bubbleAssistant: "bg-[#eef2ff]",
+    assistantText: "text-[#0b1224]",
+    assistantBorder: "border border-indigo-100",
+    activeBackground: "bg-gradient-to-r from-[#38bdf8] via-[#6366f1] to-[#0ea5e9]",
+    newChatButton:
+      "bg-gradient-to-r from-[#38bdf8] via-[#6366f1] to-[#0ea5e9] focus-visible:ring-indigo-200 shadow-indigo-300/50",
+    headingText: "text-[#0f172a]",
+    headerSubtitle: "text-[#38bdf8]",
+    headerDescription: "text-[#0b1224]",
+    badgeBackground: "bg-[#e0f2fe]",
+    badgeText: "text-[#0f172a]",
+    badgeHintText: "text-[#0b1224]",
+    statsBadgeBackground: "bg-[#eef2ff]",
+    statsBadgeText: "text-[#0f172a]",
+    sectionBorder: "border-indigo-50",
+    promptBorder: "border-indigo-100",
+    promptText: "text-[#0f172a]",
+    promptHoverBorder: "hover:border-indigo-300",
+    detailBorder: "border-indigo-100",
+    detailBackground: "bg-[#eef2ff]",
+    detailText: "text-[#0b1224]",
+    emptyBorder: "border-indigo-100",
+    emptyText: "text-[#0f172a]",
+    inputBorder: "border-indigo-100 focus:border-indigo-300 focus:ring-indigo-100",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-indigo-300",
+    skeletonBorder: "border-indigo-50",
+    skeletonHighlight: "bg-indigo-100",
+    skeletonShade: "bg-indigo-50",
+    deleteButtonText: "text-[#0f172a]",
+    deleteButtonHover: "hover:bg-indigo-50",
+  },
+  initialPrompts: [
+    "星を見上げる余裕がない",
+    "がんばっても報われない気がする",
+    "静かに気持ちを整理したい",
+    "小さな希望を見つけたい",
+  ],
+  thinkingMessages: [
+    "銀河のことばを探しています...",
+    "静かな比喩を紡いでいます...",
+    "小さな一歩を考えています...",
+  ],
+};
+
+const HOSHI_CONFIG: ChatConfig = {
+  counselorId: "hoshi",
+  storageKey: "hoshi-little-star-chat-session",
+  hero: {
+    name: "ホシ",
+    subtitle: "星の旅カウンセリング",
+    description: "小さな星の旅の気づきで、見えない大切なものを思い出させます",
+    iconUrl: "/images/counselors/hoshi.png",
+  },
+  theme: {
+    gradientFrom: "#fff7ed",
+    gradientVia: "#fef3c7",
+    gradientTo: "#fef9c3",
+    accent: "#f59e0b",
+    accentMuted: "#d97706",
+    cardBorder: "border-amber-100",
+    bubbleUser: "bg-[#fef3c7] text-[#78350f]",
+    bubbleAssistant: "bg-[#fffaf0]",
+    assistantText: "text-[#3f2d1c]",
+    assistantBorder: "border border-amber-100",
+    activeBackground: "bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#d97706]",
+    newChatButton:
+      "bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#d97706] focus-visible:ring-amber-200 shadow-amber-300/50",
+    headingText: "text-[#78350f]",
+    headerSubtitle: "text-[#f59e0b]",
+    headerDescription: "text-[#3f2d1c]",
+    badgeBackground: "bg-[#fef3c7]",
+    badgeText: "text-[#78350f]",
+    badgeHintText: "text-[#3f2d1c]",
+    statsBadgeBackground: "bg-[#fffaf0]",
+    statsBadgeText: "text-[#78350f]",
+    sectionBorder: "border-amber-50",
+    promptBorder: "border-amber-100",
+    promptText: "text-[#3f2d1c]",
+    promptHoverBorder: "hover:border-amber-300",
+    detailBorder: "border-amber-100",
+    detailBackground: "bg-[#fffaf0]",
+    detailText: "text-[#3f2d1c]",
+    emptyBorder: "border-amber-100",
+    emptyText: "text-[#78350f]",
+    inputBorder: "border-amber-100 focus:border-amber-300 focus:ring-amber-100",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-amber-300",
+    skeletonBorder: "border-amber-50",
+    skeletonHighlight: "bg-amber-100",
+    skeletonShade: "bg-amber-50",
+    deleteButtonText: "text-[#78350f]",
+    deleteButtonHover: "hover:bg-amber-50",
+  },
+  initialPrompts: [
+    "大切なものがわからない",
+    "素直に話せる相手がほしい",
+    "子どものような気持ちを思い出したい",
+    "小さな星を見つけたい",
+  ],
+  thinkingMessages: [
+    "小さな星の言葉を探しています...",
+    "大切なものを思い出しています...",
+    "小さな一歩を考えています...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
@@ -1634,3 +1758,5 @@ export const PinaChatClient = () => <GeneralCounselorChatClient config={PINA_CON
 export const MuuChatClient = () => <GeneralCounselorChatClient config={MUU_CONFIG} />;
 export const YukiChatClient = () => <GeneralCounselorChatClient config={YUKI_CONFIG} />;
 export const MitsuChatClient = () => <GeneralCounselorChatClient config={MITSU_CONFIG} />;
+export const KenjiChatClient = () => <GeneralCounselorChatClient config={KENJI_CONFIG} />;
+export const HoshiChatClient = () => <GeneralCounselorChatClient config={HOSHI_CONFIG} />;

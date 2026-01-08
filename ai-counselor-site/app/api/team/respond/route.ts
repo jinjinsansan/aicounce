@@ -17,6 +17,8 @@ import { PINA_SYSTEM_PROMPT } from "@/lib/team/prompts/pina";
 import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
 import { MITSU_SYSTEM_PROMPT } from "@/lib/team/prompts/mitsu";
 import { MUU_SYSTEM_PROMPT } from "@/lib/team/prompts/muu";
+import { KENJI_SYSTEM_PROMPT } from "@/lib/team/prompts/kenji";
+import { HOSHI_SYSTEM_PROMPT } from "@/lib/team/prompts/hoshi";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -126,6 +128,14 @@ const AI_ROLES = {
   mitsu: {
     greeting: "ミツです。にんげんだもの、の気持ちでゆっくり聴きますね。",
     role: "書のような短い言葉をRAGで探し、弱さを肯定しつつ今日の一歩を添える",
+  },
+  kenji: {
+    greeting: "ケンジだよ。銀河の静かな光みたいに、そっと聴くね。",
+    role: "星や風の比喩で受容し、RAGを要約して静かに一歩を示す",
+  },
+  hoshi: {
+    greeting: "ホシだよ。小さな星の旅みたいに、素朴に聴くね。",
+    role: "見えない大切さを思い出させ、RAGを要約してやさしい一歩を示す",
   },
   yuki: {
     greeting: "ユウキだよ。課題を分けて、勇気づけながら次の一歩を考えよう。",
@@ -250,6 +260,24 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: MITSU_SYSTEM_PROMPT,
     negativeInstruction:
       "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教・長文・一般化（みんなそう等）は禁止。感情を受け止め短く言い換え、今日の小さな一歩を1つ示してください。",
+    provider: "openai",
+    model: "gpt-4o",
+  },
+  kenji: {
+    name: "銀河ことばカウンセリング",
+    terms: ["銀河", "静けさ", "比喩", "孤独", "一歩"],
+    systemPrompt: KENJI_SYSTEM_PROMPT,
+    negativeInstruction:
+      "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教・長文・一般化は禁止。感情を短く言い換え、静かな比喩と一歩を必ず示してください。",
+    provider: "openai",
+    model: "gpt-4o",
+  },
+  hoshi: {
+    name: "星の旅カウンセリング",
+    terms: ["星", "素朴", "大切なもの", "子どものまなざし", "一歩"],
+    systemPrompt: HOSHI_SYSTEM_PROMPT,
+    negativeInstruction:
+      "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教・長文・一般化禁止。感情を短く言い換え、見えない大切さに触れつつ一歩を示してください。",
     provider: "openai",
     model: "gpt-4o",
   },

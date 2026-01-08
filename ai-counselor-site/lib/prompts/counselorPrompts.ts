@@ -11,6 +11,8 @@ import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
 import { PINA_SYSTEM_PROMPT } from "@/lib/team/prompts/pina";
 import { MUU_SYSTEM_PROMPT } from "@/lib/team/prompts/muu";
 import { MITSU_SYSTEM_PROMPT } from "@/lib/team/prompts/mitsu";
+import { KENJI_SYSTEM_PROMPT } from "@/lib/team/prompts/kenji";
+import { HOSHI_SYSTEM_PROMPT } from "@/lib/team/prompts/hoshi";
 import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
 
 export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
@@ -27,6 +29,8 @@ export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
   pina: PINA_SYSTEM_PROMPT,
   muu: MUU_SYSTEM_PROMPT,
   mitsu: MITSU_SYSTEM_PROMPT,
+  kenji: KENJI_SYSTEM_PROMPT,
+  hoshi: HOSHI_SYSTEM_PROMPT,
   yuki: YUKI_SYSTEM_PROMPT,
 };
 
@@ -49,5 +53,7 @@ export {
   PINA_SYSTEM_PROMPT,
   MUU_SYSTEM_PROMPT,
   MITSU_SYSTEM_PROMPT,
+  KENJI_SYSTEM_PROMPT,
+  HOSHI_SYSTEM_PROMPT,
   YUKI_SYSTEM_PROMPT,
 };
