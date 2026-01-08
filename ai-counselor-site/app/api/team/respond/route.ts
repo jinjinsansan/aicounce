@@ -76,16 +76,24 @@ function normalizeForMatch(value?: string) {
     .replace(/[、。！？!?:：\-–—…「」『』（）()【】\[\]<>]/g, "");
 }
 
+const CLARIFICATION_PHRASES = [
+  "どんなことがあった",
+  "具体的に教えて",
+  "教えてくれる",
+  "話してみて",
+  "詳しく教えて",
+  "もう少し教えて",
+] as const;
+
+function containsClarificationPrompt(text: string) {
+  const norm = normalizeForMatch(text);
+  return CLARIFICATION_PHRASES.some((p) => norm.includes(normalizeForMatch(p)));
+}
+
 function detectRepeatedClarificationLoop(texts: string[]) {
-  const phrases = [
-    "どんなことがあった",
-    "具体的に教えて",
-    "教えてくれる",
-    "話してみて",
-    "詳しく教えて",
-    "もう少し教えて",
-  ];
-  const counts = new Map<string, number>(phrases.map((p) => [normalizeForMatch(p), 0]));
+  const counts = new Map<string, number>(
+    CLARIFICATION_PHRASES.map((p) => [normalizeForMatch(p), 0]),
+  );
   for (const t of texts) {
     const norm = normalizeForMatch(t);
     for (const key of counts.keys()) {
@@ -110,7 +118,7 @@ function buildStageGuard(params: {
 }) {
   const { counselorId, scopedHistory, userMessage, loopDetected } = params;
   const managed = counselorId === "mitsu" || counselorId === "kenji";
-  if (!managed) return "";
+  if (!managed) return { stage: 0 as const, guard: "" };
 
   const priorNonGreetingUserCount = scopedHistory.filter(
     (m) => m.role === "user" && !isGreetingOnly(m.content),
@@ -122,40 +130,53 @@ function buildStageGuard(params: {
   if (loopDetected) stage = Math.max(stage, 3);
 
   if (stage === 1) {
-    return [
+    return {
+      stage,
+      guard: [
       "【進行（強制）】いまはステップ1（インタビュー）。",
       "- 返答は短く：共感1行 + 質問1つだけ",
       "- ここでは助言/解決策/RAG引用は禁止",
-      "- 質問は『何が起きた？』系を1回だけ（同じ聞き直し禁止）",
-    ].join("\n");
+      "- すでに原因が述べられている場合は『どんなことがあった』を聞かず、影響/気持ちを1つだけ聞く",
+      "- 同じ聞き直しは禁止",
+    ].join("\n"),
+    };
   }
 
   if (stage === 2) {
-    return [
+    return {
+      stage,
+      guard: [
       "【進行（強制）】いまはステップ2（展開＆掘り下げ）。",
       "- 既に聞いた事実を1行で要約してから進める",
       "- 『どんなことがあった』等の事実の聞き直しは禁止",
       "- 感情/影響/背景をたずねる質問は1つだけ",
       "- RAG引用はまだ控える（必要でも軽く触れる程度）",
-    ].join("\n");
+    ].join("\n"),
+    };
   }
 
   if (stage === 3) {
-    return [
+    return {
+      stage,
+      guard: [
       "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
       "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
       "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
       "- 質問は1つだけ",
-    ].join("\n");
+    ].join("\n"),
+    };
   }
 
-  return [
+  return {
+    stage,
+    guard: [
     "【進行（強制）】いまはステップ4（ゴール）。",
     "- 解決策/希望/光を示す（断定せず提案）",
     "- 3分でできる一歩を1つだけ",
     "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
     "- 質問は『これ、できそう？』の1つだけ",
-  ].join("\n");
+  ].join("\n"),
+  };
 }
 
 // ユーザーメッセージが挨拶のみかどうか判定
@@ -537,14 +558,16 @@ export async function POST(req: Request) {
           ].join("\n")
         : "";
 
-      const stageGuard = buildStageGuard({
+      const { stage, guard: stageGuard } = buildStageGuard({
         counselorId: p.id.toLowerCase(),
         scopedHistory,
         userMessage,
         loopDetected,
       });
 
-      const negativeInstruction = [spec ? spec.negativeInstruction : "", stageGuard, loopGuard]
+      const priorityGuards = [stageGuard, loopGuard].filter(Boolean).join("\n");
+
+      const negativeInstruction = [spec ? spec.negativeInstruction : ""]
         .filter(Boolean)
         .join("\n");
 
@@ -571,7 +594,9 @@ export async function POST(req: Request) {
         : "";
 
       // 完全なシステムプロンプト
-      const system = p.systemPrompt + teamInstructions + ragSection;
+      const system = [priorityGuards, p.systemPrompt + teamInstructions + ragSection]
+        .filter(Boolean)
+        .join("\n\n");
       const historyMessages: ChatMessage[] = scopedHistory.slice(-6).map((m) => ({
         role: m.role,
         content: m.content,
@@ -587,7 +612,45 @@ export async function POST(req: Request) {
         context || undefined,
       );
 
-      const sanitized = sanitizeContent(content ?? "", p.name);
+      let final = content ?? "";
+
+      // Mitsu/Kenji: enforce stage 2+ (and advice requests) not to ask clarification questions again.
+      const isManaged = p.id.toLowerCase() === "mitsu" || p.id.toLowerCase() === "kenji";
+      const mustNotClarify = isManaged && (stage >= 2 || isAdviceRequest(userMessage) || loopDetected);
+      const askedClarification = mustNotClarify && containsClarificationPrompt(final);
+      const askedWrongQuestion =
+        isManaged &&
+        isAdviceRequest(userMessage) &&
+        /[?？]/.test(final) &&
+        !normalizeForMatch(final).includes(normalizeForMatch("できそう"));
+
+      if (askedClarification || askedWrongQuestion) {
+        const repairSystem = [
+          priorityGuards,
+          "【再生成（必須）】直前の返答はルール違反。次の条件を厳守して、ユーザーに送る最終回答だけを書き直せ。",
+          "- 『どんなことがあった』『具体的に教えて』等の追加聴取は絶対にしない",
+          "- 事実の要約1行 + RAG要素1つ + 3分の一歩1つ + 質問は『これ、できそう？』の1つだけ",
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        const repairMessages: ChatMessage[] = [
+          ...historyMessages,
+          { role: "assistant", content: final },
+          { role: "user", content: "上の返答を、禁止質問なしで今すぐ使える形に書き直して。" },
+        ];
+
+        const repaired = await callLLMWithHistory(
+          p.provider,
+          p.model,
+          [repairSystem, p.systemPrompt + teamInstructions + ragSection].join("\n\n"),
+          repairMessages,
+          context || undefined,
+        );
+        final = repaired.content ?? final;
+      }
+
+      const sanitized = sanitizeContent(final, p.name);
 
       return { author: p.name, authorId: p.id, content: sanitized, iconUrl: p.iconUrl };
     });
