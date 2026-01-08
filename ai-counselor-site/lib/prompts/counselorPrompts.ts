@@ -9,6 +9,7 @@ import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
 import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
 import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
 import { PINA_SYSTEM_PROMPT } from "@/lib/team/prompts/pina";
+import { MUU_SYSTEM_PROMPT } from "@/lib/team/prompts/muu";
 import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
 
 export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
@@ -23,6 +24,7 @@ export const COUNSELOR_SYSTEM_PROMPTS: Record<string, string> = {
   dale: DALE_SYSTEM_PROMPT,
   mirai: MIRAI_SYSTEM_PROMPT,
   pina: PINA_SYSTEM_PROMPT,
+  muu: MUU_SYSTEM_PROMPT,
   yuki: YUKI_SYSTEM_PROMPT,
 };
 
@@ -43,5 +45,6 @@ export {
   DALE_SYSTEM_PROMPT,
   MIRAI_SYSTEM_PROMPT,
   PINA_SYSTEM_PROMPT,
+  MUU_SYSTEM_PROMPT,
   YUKI_SYSTEM_PROMPT,
 };

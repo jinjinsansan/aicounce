@@ -15,6 +15,7 @@ import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
 import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
 import { PINA_SYSTEM_PROMPT } from "@/lib/team/prompts/pina";
 import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
+import { MUU_SYSTEM_PROMPT } from "@/lib/team/prompts/muu";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -116,6 +117,10 @@ const AI_ROLES = {
   pina: {
     greeting: "ピーナだよ。配られたカードで一緒に考えよう、今日の一歩を見つけよう。",
     role: "名言チャンクをもとに視点を変え、軽やかに行動を提案する",
+  },
+  muu: {
+    greeting: "ムウなのよ。森のようにゆっくり聴くわ…小さな一歩を一緒に考えましょう。",
+    role: "北欧メッセージをRAGで要約し、自然の比喩で視点を緩めて行動を提案",
   },
   yuki: {
     greeting: "ユウキだよ。課題を分けて、勇気づけながら次の一歩を考えよう。",
@@ -219,6 +224,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["名言", "友情", "希望", "自分らしさ", "今日を生きる", "配られたカード"],
     systemPrompt: PINA_SYSTEM_PROMPT,
     negativeInstruction: "説教せず、友達として対等に。RAGチャンクを1〜2件必ず要約し、短く具体的な一歩を添えてください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
+  muu: {
+    name: "北欧メッセージカウンセリング",
+    terms: ["森", "自由", "静けさ", "小さな一歩", "哲学", "名言"],
+    systemPrompt: MUU_SYSTEM_PROMPT,
+    negativeInstruction: "急かさず、説教せず。RAGチャンクを1〜2件要約し、自然の比喩と小さな行動を必ず添えてください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },

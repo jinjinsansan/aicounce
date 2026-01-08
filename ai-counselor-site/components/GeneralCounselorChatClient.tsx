@@ -1497,6 +1497,68 @@ const YUKI_CONFIG: ChatConfig = {
   ],
 };
 
+const MUU_CONFIG: ChatConfig = {
+  counselorId: "muu",
+  storageKey: "muu-forest-chat-session",
+  hero: {
+    name: "ムウ",
+    subtitle: "北欧メッセージカウンセリング",
+    description: "森と自由を愛する穏やかな友人として、名言から小さな一歩を届けます",
+    iconUrl: "/images/counselors/muu.png",
+  },
+  theme: {
+    gradientFrom: "#f3f8f2",
+    gradientVia: "#e6f2ff",
+    gradientTo: "#f8f3ff",
+    accent: "#22c55e",
+    accentMuted: "#60a5fa",
+    cardBorder: "border-emerald-100",
+    bubbleUser: "bg-[#e6f2ff] text-[#1f2937]",
+    bubbleAssistant: "bg-[#f3f8f2]",
+    assistantText: "text-[#0f172a]",
+    assistantBorder: "border border-emerald-100",
+    activeBackground: "bg-gradient-to-r from-[#22c55e] via-[#60a5fa] to-[#a855f7]",
+    newChatButton:
+      "bg-gradient-to-r from-[#22c55e] via-[#60a5fa] to-[#a855f7] focus-visible:ring-emerald-200 shadow-emerald-300/50",
+    headingText: "text-[#14532d]",
+    headerSubtitle: "text-[#22c55e]",
+    headerDescription: "text-[#1f2937]",
+    badgeBackground: "bg-[#e6f2ff]",
+    badgeText: "text-[#14532d]",
+    badgeHintText: "text-[#1f2937]",
+    statsBadgeBackground: "bg-[#f3f8f2]",
+    statsBadgeText: "text-[#14532d]",
+    sectionBorder: "border-emerald-50",
+    promptBorder: "border-emerald-100",
+    promptText: "text-[#14532d]",
+    promptHoverBorder: "hover:border-emerald-300",
+    detailBorder: "border-emerald-100",
+    detailBackground: "bg-[#f3f8f2]",
+    detailText: "text-[#1f2937]",
+    emptyBorder: "border-emerald-100",
+    emptyText: "text-[#14532d]",
+    inputBorder: "border-emerald-100 focus:border-emerald-300 focus:ring-emerald-100",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-emerald-300",
+    skeletonBorder: "border-emerald-50",
+    skeletonHighlight: "bg-emerald-100",
+    skeletonShade: "bg-emerald-50",
+    deleteButtonText: "text-[#14532d]",
+    deleteButtonHover: "hover:bg-emerald-50",
+  },
+  initialPrompts: [
+    "心が霧のようにもやもやする",
+    "仕事で疲れてしまい休み方がわからない",
+    "自分らしさを見失いそう",
+    "静かに背中を押してほしい",
+  ],
+  thinkingMessages: [
+    "森の言葉を探しています...",
+    "視点をそっと変えています...",
+    "小さな一歩を考えています...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
@@ -1507,4 +1569,5 @@ export const SaitoChatClient = () => <GeneralCounselorChatClient config={SAITO_C
 export const DaleChatClient = () => <GeneralCounselorChatClient config={DALE_CONFIG} />;
 export const MiraiChatClient = () => <GeneralCounselorChatClient config={MIRAI_CONFIG} />;
 export const PinaChatClient = () => <GeneralCounselorChatClient config={PINA_CONFIG} />;
+export const MuuChatClient = () => <GeneralCounselorChatClient config={MUU_CONFIG} />;
 export const YukiChatClient = () => <GeneralCounselorChatClient config={YUKI_CONFIG} />;

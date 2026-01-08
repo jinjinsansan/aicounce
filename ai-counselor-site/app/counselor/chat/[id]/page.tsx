@@ -20,6 +20,7 @@ import {
   DaleChatClient,
   MiraiChatClient,
   PinaChatClient,
+  MuuChatClient,
   YukiChatClient,
 } from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
@@ -284,6 +285,10 @@ export default function ChatPage({
 
   if (counselorId === "pina") {
     return <PinaChatClient />;
+  }
+
+  if (counselorId === "muu") {
+    return <MuuChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;

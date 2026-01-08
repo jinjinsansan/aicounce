@@ -20,6 +20,7 @@ import DaleDetailPage from "@/components/DaleDetailPage";
 import MiraiDetailPage from "@/components/MiraiDetailPage";
 import YukiDetailPage from "@/components/YukiDetailPage";
 import PinaDetailPage from "@/components/PinaDetailPage";
+import MuuDetailPage from "@/components/MuuDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -194,6 +195,10 @@ export default function CounselorDetailPage({
 
   if (counselorId === "pina") {
     return <PinaDetailPage />;
+  }
+
+  if (counselorId === "muu") {
+    return <MuuDetailPage />;
   }
 
   if (counselorId === "adam") {
