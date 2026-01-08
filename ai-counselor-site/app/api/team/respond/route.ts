@@ -249,7 +249,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["弱さ", "感謝", "今ここ", "ゆっくり", "にんげんだもの", "一歩"],
     systemPrompt: MITSU_SYSTEM_PROMPT,
     negativeInstruction:
-      "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教や長文は禁止。弱さを許し、今日の小さな一歩を示してください。",
+      "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教・長文・一般化（みんなそう等）は禁止。感情を受け止め短く言い換え、今日の小さな一歩を1つ示してください。",
     provider: "openai",
     model: "gpt-4o",
   },
