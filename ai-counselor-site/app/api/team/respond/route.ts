@@ -95,6 +95,69 @@ function detectRepeatedClarificationLoop(texts: string[]) {
   return Array.from(counts.values()).some((v) => v >= 2);
 }
 
+function isAdviceRequest(message: string) {
+  const norm = normalizeForMatch(message);
+  return ["どうしたら", "どうすれば", "助けて", "アドバイス", "解決", "対処"].some((p) =>
+    norm.includes(normalizeForMatch(p)),
+  );
+}
+
+function buildStageGuard(params: {
+  counselorId: string;
+  scopedHistory: HistoryMessage[];
+  userMessage: string;
+  loopDetected: boolean;
+}) {
+  const { counselorId, scopedHistory, userMessage, loopDetected } = params;
+  const managed = counselorId === "mitsu" || counselorId === "kenji";
+  if (!managed) return "";
+
+  const priorNonGreetingUserCount = scopedHistory.filter(
+    (m) => m.role === "user" && !isGreetingOnly(m.content),
+  ).length;
+  const currentNonGreetingUserCount = priorNonGreetingUserCount + 1;
+
+  let stage = Math.min(4, Math.max(1, currentNonGreetingUserCount));
+  if (isAdviceRequest(userMessage)) stage = 4;
+  if (loopDetected) stage = Math.max(stage, 3);
+
+  if (stage === 1) {
+    return [
+      "【進行（強制）】いまはステップ1（インタビュー）。",
+      "- 返答は短く：共感1行 + 質問1つだけ",
+      "- ここでは助言/解決策/RAG引用は禁止",
+      "- 質問は『何が起きた？』系を1回だけ（同じ聞き直し禁止）",
+    ].join("\n");
+  }
+
+  if (stage === 2) {
+    return [
+      "【進行（強制）】いまはステップ2（展開＆掘り下げ）。",
+      "- 既に聞いた事実を1行で要約してから進める",
+      "- 『どんなことがあった』等の事実の聞き直しは禁止",
+      "- 感情/影響/背景をたずねる質問は1つだけ",
+      "- RAG引用はまだ控える（必要でも軽く触れる程度）",
+    ].join("\n");
+  }
+
+  if (stage === 3) {
+    return [
+      "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
+      "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
+      "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+      "- 質問は1つだけ",
+    ].join("\n");
+  }
+
+  return [
+    "【進行（強制）】いまはステップ4（ゴール）。",
+    "- 解決策/希望/光を示す（断定せず提案）",
+    "- 3分でできる一歩を1つだけ",
+    "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+    "- 質問は『これ、できそう？』の1つだけ",
+  ].join("\n");
+}
+
 // ユーザーメッセージが挨拶のみかどうか判定
 function isGreetingOnly(message: string): boolean {
   const greetings = [
@@ -466,13 +529,22 @@ export async function POST(req: Request) {
         .slice(-4)
         .map((m) => m.content);
 
-      const loopGuard = detectRepeatedClarificationLoop(recentAssistantTexts)
+      const loopDetected = detectRepeatedClarificationLoop(recentAssistantTexts);
+
+      const loopGuard = loopDetected
         ? [
             "【ループ防止（強制）】直近で確認質問を繰り返しています。これ以上『どんなことがあったの？』『具体的に教えて』等で追加聴取しない。既に得た情報だけでステップ2/3を続ける。次の返答は(1)事実の要約1行(2)RAG要素1つ(3)問いかけは1つだけ(4)3分でできる一歩1つ。",
           ].join("\n")
         : "";
 
-      const negativeInstruction = [spec ? spec.negativeInstruction : "", loopGuard]
+      const stageGuard = buildStageGuard({
+        counselorId: p.id.toLowerCase(),
+        scopedHistory,
+        userMessage,
+        loopDetected,
+      });
+
+      const negativeInstruction = [spec ? spec.negativeInstruction : "", stageGuard, loopGuard]
         .filter(Boolean)
         .join("\n");
 
