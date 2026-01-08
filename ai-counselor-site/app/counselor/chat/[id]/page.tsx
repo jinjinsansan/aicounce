@@ -19,6 +19,7 @@ import {
   SaitoChatClient,
   DaleChatClient,
   MiraiChatClient,
+  YukiChatClient,
 } from "@/components/GeneralCounselorChatClient";
 import { useChatStore } from "@/store/chatStore";
 import { useResolvedParams } from "@/hooks/useResolvedParams";
@@ -274,6 +275,10 @@ export default function ChatPage({
 
   if (counselorId === "mirai") {
     return <MiraiChatClient />;
+  }
+
+  if (counselorId === "yuki") {
+    return <YukiChatClient />;
   }
 
   return <StandardChatExperience counselorId={counselorId} />;

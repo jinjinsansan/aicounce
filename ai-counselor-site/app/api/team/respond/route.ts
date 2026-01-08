@@ -13,6 +13,7 @@ import { SIDDHARTHA_SYSTEM_PROMPT } from "@/lib/team/prompts/siddhartha";
 import { SAITO_SYSTEM_PROMPT } from "@/lib/team/prompts/saito";
 import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
 import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
+import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { assertAccess, parseAccessError } from "@/lib/access-control";
@@ -111,6 +112,10 @@ const AI_ROLES = {
     greeting: "ミライだよ。未来ノートのヒントを使って、一緒に前向きな一歩を見つけよう。",
     role: "未来から来た猫型ロボット風カウンセラーとして、優しく行動に落とす",
   },
+  yuki: {
+    greeting: "ユウキだよ。課題を分けて、勇気づけながら次の一歩を考えよう。",
+    role: "アドラー心理学の目的論と勇気づけで、具体的な行動に導く",
+  },
 };
 
 // 各AIの専門分野を明確に定義
@@ -203,6 +208,14 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
       "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。「RAGの教えによれば」などの前置きは使わない。抽象論だけや説教口調は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
+  yuki: {
+    name: "アドラー心理学",
+    terms: ["目的論", "課題の分離", "共同体感覚", "勇気づけ", "自己決定", "劣等感", "所属感"],
+    systemPrompt: YUKI_SYSTEM_PROMPT,
+    negativeInstruction: "上から指示せず、対等で未来志向に。説教や同情を避け、課題の分離を崩さないでください。",
+    provider: "openai",
+    model: "gpt-4o-mini",
+  },
   },
 };
 

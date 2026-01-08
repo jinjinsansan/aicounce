@@ -17,7 +17,8 @@
     "michelle:upload": "ts-node scripts/michelle-knowledge/upload-to-rag.ts",
     "clinical:upload": "ts-node scripts/clinical-knowledge/upload-to-rag.ts",
     "christ:upload": "ts-node scripts/christ-rag/upload.ts",
-    "nana:upload": "ts-node -r tsconfig-paths/register scripts/nana/upload-to-rag.ts"
+    "nana:upload": "ts-node -r tsconfig-paths/register scripts/nana/upload-to-rag.ts",
+    "yuki:upload": "ts-node scripts/yuki/upload-to-rag.ts"
   },
   "dependencies": {
     "@line/bot-sdk": "^10.5.0",

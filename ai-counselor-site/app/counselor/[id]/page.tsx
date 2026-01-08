@@ -18,6 +18,7 @@ import NanaDetailPage from "@/components/NanaDetailPage";
 import SaitoDetailPage from "@/components/SaitoDetailPage";
 import DaleDetailPage from "@/components/DaleDetailPage";
 import MiraiDetailPage from "@/components/MiraiDetailPage";
+import YukiDetailPage from "@/components/YukiDetailPage";
 
 const FeaturesSection = dynamic(() => import("@/components/FeaturesSection"), {
   loading: () => (
@@ -184,6 +185,10 @@ export default function CounselorDetailPage({
 
   if (counselorId === "mirai") {
     return <MiraiDetailPage />;
+  }
+
+  if (counselorId === "yuki") {
+    return <YukiDetailPage />;
   }
 
   if (counselorId === "adam") {

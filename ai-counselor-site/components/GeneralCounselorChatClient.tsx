@@ -1373,6 +1373,68 @@ const MIRAI_CONFIG: ChatConfig = {
   ],
 };
 
+const YUKI_CONFIG: ChatConfig = {
+  counselorId: "yuki",
+  storageKey: "yuki-adler-chat-session",
+  hero: {
+    name: "ユウキ",
+    subtitle: "アドラー心理学カウンセラー",
+    description: "課題の分離と勇気づけで、未来志向の一歩を支えます",
+    iconUrl: "/images/counselors/yuki.png",
+  },
+  theme: {
+    gradientFrom: "#f0f9ff",
+    gradientVia: "#f5fbe9",
+    gradientTo: "#fff7ed",
+    accent: "#f97316",
+    accentMuted: "#ea580c",
+    cardBorder: "border-orange-100",
+    bubbleUser: "bg-[#fff7ed] text-[#9a3412]",
+    bubbleAssistant: "bg-[#ecfdf3]",
+    assistantText: "text-[#166534]",
+    assistantBorder: "border border-emerald-100",
+    activeBackground: "bg-gradient-to-r from-[#f97316] via-[#f59e0b] to-[#16a34a]",
+    newChatButton:
+      "bg-gradient-to-r from-[#f97316] via-[#f59e0b] to-[#16a34a] focus-visible:ring-orange-200 shadow-orange-300/50",
+    headingText: "text-[#7c2d12]",
+    headerSubtitle: "text-[#ea580c]",
+    headerDescription: "text-[#14532d]",
+    badgeBackground: "bg-[#fff7ed]",
+    badgeText: "text-[#9a3412]",
+    badgeHintText: "text-[#0f5132]",
+    statsBadgeBackground: "bg-[#ecfdf3]",
+    statsBadgeText: "text-[#166534]",
+    sectionBorder: "border-orange-100",
+    promptBorder: "border-emerald-100",
+    promptText: "text-[#166534]",
+    promptHoverBorder: "hover:border-emerald-300",
+    detailBorder: "border-emerald-100",
+    detailBackground: "bg-[#ecfdf3]",
+    detailText: "text-[#14532d]",
+    emptyBorder: "border-orange-200",
+    emptyText: "text-[#7c2d12]",
+    inputBorder: "border-emerald-100 focus:border-emerald-300 focus:ring-emerald-100",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-emerald-400",
+    skeletonBorder: "border-emerald-50",
+    skeletonHighlight: "bg-emerald-100",
+    skeletonShade: "bg-emerald-50",
+    deleteButtonText: "text-[#166534]",
+    deleteButtonHover: "hover:bg-emerald-50",
+  },
+  initialPrompts: [
+    "人の目が気になって断れない",
+    "比べて落ち込む癖を変えたい",
+    "家族との境界線が曖昧で疲れる",
+    "勇気づけの言葉を知りたい",
+  ],
+  thinkingMessages: [
+    "目的を一緒に探しています...",
+    "課題を整理しています...",
+    "勇気づけの言葉を選んでいます...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
@@ -1382,3 +1444,4 @@ export const NanaChatClient = () => <GeneralCounselorChatClient config={NANA_CON
 export const SaitoChatClient = () => <GeneralCounselorChatClient config={SAITO_CONFIG} />;
 export const DaleChatClient = () => <GeneralCounselorChatClient config={DALE_CONFIG} />;
 export const MiraiChatClient = () => <GeneralCounselorChatClient config={MIRAI_CONFIG} />;
+export const YukiChatClient = () => <GeneralCounselorChatClient config={YUKI_CONFIG} />;
