@@ -179,6 +179,49 @@ function buildStageGuard(params: {
   };
 }
 
+function buildForcedManagedReply(params: {
+  counselorId: "mitsu" | "kenji";
+  scopedHistory: HistoryMessage[];
+  ragContext?: string;
+}) {
+  const { counselorId, scopedHistory, ragContext } = params;
+
+  const recentUserFacts = scopedHistory
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-3)
+    .map((m) => m.content.trim())
+    .join(" / ")
+    .slice(0, 140);
+
+  const raw = String(ragContext ?? "");
+  const cleanedRag = raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean)[0]
+    ?.slice(0, 90);
+
+  const ragLine = cleanedRag
+    ? counselorId === "kenji"
+      ? `物語の中でも、迷いの中で一歩を選び直していく場面があるんだ。${cleanedRag}`
+      : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
+    : counselorId === "kenji"
+      ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
+      : "『つまづいたっていいじゃないか、にんげんだもの』って言葉があるんだよ。";
+
+  const summary = recentUserFacts
+    ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
+    : "いま胸が苦しいんだね。";
+
+  const action =
+    counselorId === "kenji"
+      ? "3分だけ、(1)ミスの事実(2)次に防ぐ工夫1つ(3)いま連絡すべき相手、をメモしてみよう。"
+      : "3分だけ、(1)起きたこと(2)次に同じミスを減らす工夫1つ、をメモしてみない？";
+
+  return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
+}
+
 // ユーザーメッセージが挨拶のみかどうか判定
 function isGreetingOnly(message: string): boolean {
   const greetings = [
@@ -625,29 +668,48 @@ export async function POST(req: Request) {
         !normalizeForMatch(final).includes(normalizeForMatch("できそう"));
 
       if (askedClarification || askedWrongQuestion) {
-        const repairSystem = [
-          priorityGuards,
-          "【再生成（必須）】直前の返答はルール違反。次の条件を厳守して、ユーザーに送る最終回答だけを書き直せ。",
-          "- 『どんなことがあった』『具体的に教えて』等の追加聴取は絶対にしない",
-          "- 事実の要約1行 + RAG要素1つ + 3分の一歩1つ + 質問は『これ、できそう？』の1つだけ",
-        ]
-          .filter(Boolean)
-          .join("\n");
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const repairSystem = [
+            priorityGuards,
+            "【再生成（必須）】直前の返答はルール違反。次の条件を厳守して、ユーザーに送る最終回答だけを書き直せ。",
+            "- 『どんなことがあった』『具体的に教えて』等の追加聴取は絶対にしない",
+            "- 事実の要約1行 + RAG要素1つ + 3分の一歩1つ + 質問は『これ、できそう？』の1つだけ",
+          ]
+            .filter(Boolean)
+            .join("\n");
 
-        const repairMessages: ChatMessage[] = [
-          ...historyMessages,
-          { role: "assistant", content: final },
-          { role: "user", content: "上の返答を、禁止質問なしで今すぐ使える形に書き直して。" },
-        ];
+          const repairMessages: ChatMessage[] = [
+            ...historyMessages,
+            { role: "assistant", content: final },
+            { role: "user", content: "上の返答を、禁止質問なしで今すぐ使える形に書き直して。" },
+          ];
 
-        const repaired = await callLLMWithHistory(
-          p.provider,
-          p.model,
-          [repairSystem, p.systemPrompt + teamInstructions + ragSection].join("\n\n"),
-          repairMessages,
-          context || undefined,
-        );
-        final = repaired.content ?? final;
+          const repaired = await callLLMWithHistory(
+            p.provider,
+            p.model,
+            [repairSystem, p.systemPrompt + teamInstructions + ragSection].join("\n\n"),
+            repairMessages,
+            context || undefined,
+          );
+          final = repaired.content ?? final;
+
+          const stillBad = containsClarificationPrompt(final);
+          const stillWrongQ =
+            isAdviceRequest(userMessage) && /[?？]/.test(final) && !normalizeForMatch(final).includes("できそう");
+
+          if (!stillBad && !stillWrongQ) break;
+        }
+
+        // Hard fallback if the model keeps leaking clarification questions.
+        if (containsClarificationPrompt(final)) {
+          if (p.id.toLowerCase() === "kenji" || p.id.toLowerCase() === "mitsu") {
+            final = buildForcedManagedReply({
+              counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
+              scopedHistory,
+              ragContext: context || undefined,
+            });
+          }
+        }
       }
 
       const sanitized = sanitizeContent(final, p.name);
