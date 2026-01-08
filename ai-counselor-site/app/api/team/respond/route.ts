@@ -252,6 +252,13 @@ function containsClarificationPrompt(text: string) {
   return CLARIFICATION_PHRASES.some((p) => norm.includes(normalizeForMatch(p)));
 }
 
+function isQuoteClarificationRequest(message: string) {
+  const norm = normalizeForMatch(message);
+  return ["どの言葉", "どのことば", "その言葉", "そのことば", "さっきの言葉", "さっきのことば"].some(
+    (p) => norm.includes(normalizeForMatch(p)),
+  );
+}
+
 function detectRepeatedClarificationLoop(texts: string[]) {
   const counts = new Map<string, number>(
     CLARIFICATION_PHRASES.map((p) => [normalizeForMatch(p), 0]),
@@ -314,6 +321,7 @@ function buildStageGuard(params: {
   let stage = Math.min(4, Math.max(1, currentNonGreetingUserCount));
   if (isAdviceRequest(userMessage)) stage = 4;
   if (loopDetected) stage = Math.max(stage, 3);
+  if (counselorId === "mitsu" && isQuoteClarificationRequest(userMessage)) stage = 3;
 
   if (stage === 1) {
     return {
@@ -353,6 +361,7 @@ function buildStageGuard(params: {
       "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
       "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+      "- ここでは行動提案はせず、問いで終える",
       "- 質問は1つだけ",
     ].join("\n"),
     };
@@ -475,6 +484,11 @@ function buildForcedManagedReply(params: {
         : "いま胸が苦しいんだね。";
 
   if (stage === 3) {
+    if (!cleanedRag) {
+      const question = "いま一番こわいのは、何が起きること？";
+      return `${summary}\n${question}`;
+    }
+
     const question =
       counselorId === "kenji"
         ? "その言葉のどこが、いまのきみに一番刺さる？"
@@ -1026,11 +1040,30 @@ export async function POST(req: Request) {
             undefined,
           );
           final = repaired.content ?? final;
+
+          const stillHasQuote = /『[^』]+』/.test(final);
+          const stillHasQuestion = /[?？]/.test(final);
+          const stillSuggestsAction = /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(final);
+          const stillBadMitsuQ =
+            isMitsu &&
+            ((stage === 1 && stillHasQuestion && !isMitsuFactQuestion(final)) ||
+              (stage === 2 && stillHasQuestion && !isMitsuFeelingQuestion(final)));
+
+          if (stillHasQuote || !stillHasQuestion || stillSuggestsAction || stillBadMitsuQ) {
+            final = buildForcedInterviewReply({
+              counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
+              stage,
+              scopedHistory,
+            });
+          }
         }
       }
 
       // Mitsu/Kenji: enforce stage 2+ (and advice requests) not to ask clarification questions again.
-      const mustNotClarify = isManaged && (stage >= 2 || isAdviceRequest(userMessage) || loopDetected);
+      const mustNotClarify =
+        isManaged &&
+        !isQuoteClarificationRequest(userMessage) &&
+        (stage >= 2 || isAdviceRequest(userMessage) || loopDetected);
       const askedClarification = mustNotClarify && containsClarificationPrompt(final);
       const askedWrongQuestion =
         p.id.toLowerCase() === "kenji" &&
@@ -1051,7 +1084,7 @@ export async function POST(req: Request) {
         .join("\n");
       const workTopic = isWorkTopic(`${recentUserText}\n${userMessage}`);
       const mitsMissingWorkAction =
-        p.id.toLowerCase() === "mitsu" && stage >= 3 && workTopic && !containsWorkAction(final);
+        p.id.toLowerCase() === "mitsu" && stage >= 4 && workTopic && !containsWorkAction(final);
 
       const mitsForbidden = p.id.toLowerCase() === "mitsu" && containsMitsuForbidden(final);
 

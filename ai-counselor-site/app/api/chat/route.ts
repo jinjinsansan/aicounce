@@ -209,6 +209,13 @@ function containsClarificationPrompt(text: string) {
   return CLARIFICATION_PHRASES.some((p) => norm.includes(normalizeForMatch(p)));
 }
 
+function isQuoteClarificationRequest(message: string) {
+  const norm = normalizeForMatch(message);
+  return ["どの言葉", "どのことば", "その言葉", "そのことば", "さっきの言葉", "さっきのことば"].some(
+    (p) => norm.includes(normalizeForMatch(p)),
+  );
+}
+
 function isAdviceRequest(message: string) {
   const norm = normalizeForMatch(message);
   return ["どうしたら", "どうすれば", "助けて", "アドバイス", "解決", "対処"].some((p) =>
@@ -256,6 +263,7 @@ function buildStageGuard(params: {
 
   let stage = Math.min(4, Math.max(1, currentNonGreetingUserCount));
   if (isAdviceRequest(userMessage)) stage = 4;
+  if (counselorId === "mitsu" && isQuoteClarificationRequest(userMessage)) stage = 3;
 
   if (stage === 1) {
     return {
@@ -293,6 +301,7 @@ function buildStageGuard(params: {
         "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
         "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
         "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+        "- ここでは行動提案はせず、問いで終える",
         "- 質問は1つだけ",
       ].join("\n"),
     };
@@ -414,6 +423,14 @@ function buildForcedManagedReply(params: {
         : "いま胸が苦しいんだね。";
 
   if (stage === 3) {
+    if (!cleanedRag) {
+      const question =
+        counselorId === "kenji"
+          ? "いま一番こわいのは、何が起きること？"
+          : "いま一番こわいのは、何が起きること？";
+      return `${summary}\n${question}`;
+    }
+
     const question =
       counselorId === "kenji"
         ? "その言葉のどこが、いまのきみに一番刺さる？"
@@ -663,7 +680,8 @@ export async function POST(request: NextRequest) {
     );
 
     let finalContent = content;
-    const mustNotClarify = managed && (stage >= 2 || isAdviceRequest(message));
+    const mustNotClarify =
+      managed && !isQuoteClarificationRequest(message) && (stage >= 2 || isAdviceRequest(message));
 
     if (managed && !isGreetingMessage && !isAdviceRequest(message) && (stage === 1 || stage === 2)) {
       const hasQuote = /『[^』]+』/.test(finalContent);
@@ -728,6 +746,24 @@ export async function POST(request: NextRequest) {
           undefined,
         );
         finalContent = repaired.content ?? finalContent;
+
+        const stillHasQuote = /『[^』]+』/.test(finalContent);
+        const stillHasQuestion = /[?？]/.test(finalContent);
+        const stillSuggestsAction = /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(
+          finalContent,
+        );
+        const stillBadMitsuQ =
+          counselor.id === "mitsu" &&
+          ((stage === 1 && stillHasQuestion && !isMitsuFactQuestion(finalContent)) ||
+            (stage === 2 && stillHasQuestion && !isMitsuFeelingQuestion(finalContent)));
+
+        if (stillHasQuote || !stillHasQuestion || stillSuggestsAction || stillBadMitsuQ) {
+          finalContent = buildForcedInterviewReply({
+            counselorId: counselor.id as "mitsu" | "kenji",
+            stage,
+            historyMessages,
+          });
+        }
       }
     }
     const tooGenericForWork =
@@ -743,10 +779,7 @@ export async function POST(request: NextRequest) {
       .join("\n");
     const workTopic = isWorkTopic(`${recentUserText}\n${message}`);
     const mitsMissingWorkAction =
-      counselor.id === "mitsu" &&
-      stage >= 3 &&
-      workTopic &&
-      !containsWorkAction(finalContent);
+      counselor.id === "mitsu" && stage >= 4 && workTopic && !containsWorkAction(finalContent);
 
     const mitsForbidden = counselor.id === "mitsu" && containsMitsuForbidden(finalContent);
 
