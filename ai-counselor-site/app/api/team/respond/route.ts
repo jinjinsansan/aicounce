@@ -136,7 +136,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: MICHELLE_SYSTEM_PROMPT,
     negativeInstruction: "あなたの専門はテープ式心理学のみです。臨床心理学については言及しないでください。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   sato: {
     name: "臨床心理学",
@@ -144,7 +144,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: SATO_SYSTEM_PROMPT,
     negativeInstruction: "あなたの専門は臨床心理学のみです。テープ式心理学については言及しないでください。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   adam: {
     name: "一般的なAI",
@@ -152,7 +152,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: ADAM_SYSTEM_PROMPT,
     negativeInstruction: "特定の心理学理論の専門用語（ガムテープ、認知の歪みなど）は使わないでください。一般的でわかりやすい言葉を使ってください。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   nazare: {
     name: "聖書カウンセリング",
@@ -160,7 +160,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: NAZARE_SYSTEM_PROMPT,
     negativeInstruction: "他の宗教や信条を否定せず、断定的な口調を避けてください。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   siddhartha: {
     name: "仏教カウンセリング",
@@ -168,7 +168,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: SIDDHARTHA_SYSTEM_PROMPT,
     negativeInstruction: "仏教を押し付けず、他の宗教や信条を尊重してください。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   gemini: {
     name: "双視点カウンセリング",
@@ -201,7 +201,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction:
       "敬語（です・ます）や説教臭い長文は禁止。RAGは1〜2件要約し、『RAGによると』『チャンクによると』など情報源の言及は禁止。核心を短く、天国言葉で締めてください。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   dale: {
     name: "自己啓発カウンセリング（道は開ける）",
@@ -210,7 +210,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction:
       "説教臭くせず短く実践的に。RAGを1〜2件要約し原則と結びつけ、必ず今日の行動を1つ添える。『RAGによると』『チャンクによると』など情報源の言及は禁止。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   mirai: {
     name: "未来型ロボットカウンセリング",
@@ -219,7 +219,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction:
       "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。『RAGの教えによれば』『チャンクによれば』等の前置きは禁止。抽象論だけや説教口調は禁止。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   pina: {
     name: "名言カウンセリング",
@@ -228,7 +228,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction:
       "説教せず、友達として対等に。RAGチャンクを1〜2件必ず要約し、短く具体的な一歩を添えてください。『RAGによると』『チャンクによると』など情報源の言及は禁止。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   muu: {
     name: "北欧メッセージカウンセリング",
@@ -237,7 +237,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction:
       "急かさず、説教せず。RAGチャンクを1〜2件要約し、自然の比喩と小さな行動を必ず添えてください。『RAGによると』『チャンクによると』など情報源の言及は禁止です。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
   yuki: {
     name: "アドラー心理学",
@@ -246,7 +246,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     negativeInstruction:
       "上から指示せず、対等で未来志向に。RAGを1〜2件要約して使い（情報源の明示は禁止）、課題の分離を崩さず勇気づけで今日の一歩を示してください。説教や同情は禁止。",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
 } as const;
 
