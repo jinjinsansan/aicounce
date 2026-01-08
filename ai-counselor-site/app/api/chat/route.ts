@@ -474,16 +474,30 @@ function buildForcedManagedReply(params: {
     .join(" / ")
     .slice(0, 140);
 
+  const raw = String(ragContext ?? "");
+  const candidates = raw
+    .replace(/\[ソース\s*\d+\][^\n]*\n/g, "")
+    .replace(/\(score:[^)]+\)/g, "")
+    .replace(/^#+\s+.*$/gmu, "")
+    .replace(/^##\s*キーワード.*$/gmu, "")
+    .replace(/^\s*キーワード\s*[:：].*$/gmu, "")
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
   const avoidQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0] ?? null;
 
-  const cleanedRagRaw = pickRagSnippetAvoidingRepeat({
-    ragContext,
-    maxLen: 90,
-    avoidQuote,
-  });
+  const cleanedRagRaw =
+    counselorId === "mirai"
+      ? pickRagSnippetAvoidingRepeat({ ragContext, maxLen: 90, avoidQuote })
+      : candidates.find((c) => {
+          if (counselorId === "kenji") return !containsKenjiForbidden(c);
+          if (counselorId === "mitsu") return !containsMitsuForbidden(c);
+          return true;
+        });
 
-  const cleanedRag = cleanedRagRaw?.slice(0, 90);
+  const cleanedRag = String(cleanedRagRaw ?? "").slice(0, 90);
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
@@ -662,6 +676,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const managed = counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai";
+    const isGreetingMessage = isGreetingOnly(message);
+
+    const { stage, guard: stageGuard } = buildStageGuard({
+      counselorId: String(counselor.id),
+      historyMessages,
+      userMessage: message,
+    });
+
+    const effectiveUseRag = Boolean(
+      counselor.ragEnabled && (useRag || (counselor.id === "mirai" && stage >= 3)),
+    );
+
     let ragContext: string | undefined;
     let ragSources: { id: string; chunk_text: string; similarity: number }[] = [];
     let ragDurationMs: number | null = null;
@@ -680,7 +707,7 @@ export async function POST(request: NextRequest) {
           ? `${ragQueryBase}\n\n相田みつを にんげんだもの 書`
           : ragQueryBase;
 
-    if (useRag && counselor.ragEnabled) {
+    if (effectiveUseRag) {
       const ragStart =
         typeof performance !== "undefined" && typeof performance.now === "function"
           ? performance.now()
@@ -726,17 +753,8 @@ export async function POST(request: NextRequest) {
       counselor.systemPrompt ??
       "You are a supportive counselor who responds in Japanese with empathy and actionable advice.";
 
-    const managed = counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai";
-    const isGreetingMessage = isGreetingOnly(message);
-
-    const { stage, guard: stageGuard } = buildStageGuard({
-      counselorId: String(counselor.id),
-      historyMessages,
-      userMessage: message,
-    });
-
     const shouldUseRagThisTurn = Boolean(
-      useRag &&
+      effectiveUseRag &&
         counselor.ragEnabled &&
         ragContext?.trim() &&
         !isGreetingMessage &&
@@ -908,6 +926,12 @@ export async function POST(request: NextRequest) {
       stage >= 3 &&
       !/『[^』]{6,}』/.test(finalContent);
 
+    const miraiMustHaveRealQuote =
+      counselor.id === "mirai" &&
+      shouldUseRagThisTurn &&
+      stage >= 3 &&
+      !/『[^』]{6,}』/.test(finalContent);
+
     if (counselor.id === "kenji" && isGreetingMessage && kenjiOtherWork) {
       finalContent =
         "おはよう。銀河鉄道の夜のように、静かに聴くね。いま一番胸が苦しいのは、どんなところ？";
@@ -922,7 +946,8 @@ export async function POST(request: NextRequest) {
       mitsMissingWorkAction ||
       kenjiMissingWorkAction ||
       mitsForbidden ||
-      mustHaveRealQuote
+      mustHaveRealQuote ||
+      miraiMustHaveRealQuote
     ) {
       if (managed && (stage === 1 || stage === 2)) {
         finalContent = buildForcedInterviewReply({
@@ -945,31 +970,12 @@ export async function POST(request: NextRequest) {
       const lastQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0];
       const nextQuote = extractQuotedPhrases(finalContent)[0];
       if (lastQuote && nextQuote && normalizeForMatch(lastQuote) === normalizeForMatch(nextQuote)) {
-        const repairSystem = [
-          guardedSystemPrompt,
-          "【再生成（必須）】直前と同じ『』引用を繰り返しています。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
-          "- 直前と同じ『』引用は使わない（引用なしでもOK）",
-          "- いまのステップのルール（質問数など）は維持",
-          "- 仕事の相談なら、現実の次の一手が伝わるようにする",
-        ].join("\n");
-
-        const repairMessages: ChatMessage[] = [
-          ...historyMessages,
-          { role: "assistant", content: finalContent },
-          {
-            role: "user",
-            content: "上の返答を、直前と同じ引用を避けて、自然な日本語で書き直して。",
-          },
-        ];
-
-        const repaired = await callLLMWithHistory(
-          counselor.modelType ?? "openai",
-          counselor.modelName ?? "gpt-4o-mini",
-          repairSystem,
-          repairMessages,
-          shouldUseRagThisTurn ? ragContext : undefined,
-        );
-        finalContent = repaired.content ?? finalContent;
+        finalContent = buildForcedManagedReply({
+          counselorId: "mirai",
+          stage: stage >= 4 ? 4 : 3,
+          historyMessages,
+          ragContext,
+        });
       }
     }
 
