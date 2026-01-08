@@ -15,6 +15,7 @@ import { DALE_SYSTEM_PROMPT } from "@/lib/team/prompts/dale";
 import { MIRAI_SYSTEM_PROMPT } from "@/lib/team/prompts/mirai";
 import { PINA_SYSTEM_PROMPT } from "@/lib/team/prompts/pina";
 import { YUKI_SYSTEM_PROMPT } from "@/lib/team/prompts/yuki";
+import { MITSU_SYSTEM_PROMPT } from "@/lib/team/prompts/mitsu";
 import { MUU_SYSTEM_PROMPT } from "@/lib/team/prompts/muu";
 import { callLLMWithHistory, type ChatMessage } from "@/lib/llm";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
@@ -121,6 +122,10 @@ const AI_ROLES = {
   muu: {
     greeting: "ムウなのよ。森のようにゆっくり聴くわ…小さな一歩を一緒に考えましょう。",
     role: "北欧メッセージをRAGで要約し、自然の比喩で視点を緩めて行動を提案",
+  },
+  mitsu: {
+    greeting: "ミツです。にんげんだもの、の気持ちでゆっくり聴きますね。",
+    role: "書のような短い言葉をRAGで探し、弱さを肯定しつつ今日の一歩を添える",
   },
   yuki: {
     greeting: "ユウキだよ。課題を分けて、勇気づけながら次の一歩を考えよう。",
@@ -236,6 +241,15 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     systemPrompt: MUU_SYSTEM_PROMPT,
     negativeInstruction:
       "急かさず、説教せず。RAGチャンクを1〜2件要約し、自然の比喩と小さな行動を必ず添えてください。『RAGによると』『チャンクによると』など情報源の言及は禁止です。",
+    provider: "openai",
+    model: "gpt-4o",
+  },
+  mitsu: {
+    name: "書のことばカウンセリング",
+    terms: ["弱さ", "感謝", "今ここ", "ゆっくり", "にんげんだもの", "一歩"],
+    systemPrompt: MITSU_SYSTEM_PROMPT,
+    negativeInstruction:
+      "RAGは1〜2件要約して自分の言葉で。『RAGによると』『チャンクによると』禁止。説教や長文は禁止。弱さを許し、今日の小さな一歩を示してください。",
     provider: "openai",
     model: "gpt-4o",
   },

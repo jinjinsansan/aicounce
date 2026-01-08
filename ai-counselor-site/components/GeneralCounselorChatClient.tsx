@@ -1559,6 +1559,68 @@ const MUU_CONFIG: ChatConfig = {
   ],
 };
 
+const MITSU_CONFIG: ChatConfig = {
+  counselorId: "mitsu",
+  storageKey: "mitsu-calligraphy-chat-session",
+  hero: {
+    name: "ミツ",
+    subtitle: "書のことばカウンセリング",
+    description: "素朴なことばで弱さを肯定し、今ここをそっと照らします",
+    iconUrl: "/images/counselors/mitsu.png",
+  },
+  theme: {
+    gradientFrom: "#fdfaf5",
+    gradientVia: "#f5f0e6",
+    gradientTo: "#f7f6ef",
+    accent: "#c68a2e",
+    accentMuted: "#8c6b3f",
+    cardBorder: "border-amber-100",
+    bubbleUser: "bg-[#f1eadd] text-[#7c5a1f]",
+    bubbleAssistant: "bg-[#fdfaf5]",
+    assistantText: "text-[#3f2d1c]",
+    assistantBorder: "border border-amber-100",
+    activeBackground: "bg-gradient-to-r from-[#c68a2e] via-[#d97706] to-[#8c6b3f]",
+    newChatButton:
+      "bg-gradient-to-r from-[#c68a2e] via-[#d97706] to-[#8c6b3f] focus-visible:ring-amber-200 shadow-amber-300/50",
+    headingText: "text-[#7c5a1f]",
+    headerSubtitle: "text-[#c68a2e]",
+    headerDescription: "text-[#3f2d1c]",
+    badgeBackground: "bg-[#f1eadd]",
+    badgeText: "text-[#7c5a1f]",
+    badgeHintText: "text-[#3f2d1c]",
+    statsBadgeBackground: "bg-[#fdfaf5]",
+    statsBadgeText: "text-[#7c5a1f]",
+    sectionBorder: "border-amber-50",
+    promptBorder: "border-amber-100",
+    promptText: "text-[#3f2d1c]",
+    promptHoverBorder: "hover:border-amber-300",
+    detailBorder: "border-amber-100",
+    detailBackground: "bg-[#fdfaf5]",
+    detailText: "text-[#3f2d1c]",
+    emptyBorder: "border-amber-100",
+    emptyText: "text-[#7c5a1f]",
+    inputBorder: "border-amber-100 focus:border-amber-300 focus:ring-amber-100",
+    inputBg: "bg-white",
+    inputPlaceholder: "placeholder:text-amber-300",
+    skeletonBorder: "border-amber-50",
+    skeletonHighlight: "bg-amber-100",
+    skeletonShade: "bg-amber-50",
+    deleteButtonText: "text-[#7c5a1f]",
+    deleteButtonHover: "hover:bg-amber-50",
+  },
+  initialPrompts: [
+    "失敗が頭から離れない",
+    "弱い自分を許せない",
+    "今の自分を受け入れたい",
+    "急がずに心をゆるめたい",
+  ],
+  thinkingMessages: [
+    "ことばを選んでいます...",
+    "静かに寄り添う言葉を探しています...",
+    "小さな一歩を考えています...",
+  ],
+};
+
 export const AdamChatClient = () => <GeneralCounselorChatClient config={ADAM_CONFIG} />;
 export const GeminiChatClient = () => <GeneralCounselorChatClient config={GEMINI_CONFIG} />;
 export const ClaudeChatClient = () => <GeneralCounselorChatClient config={CLAUDE_CONFIG} />;
@@ -1571,3 +1633,4 @@ export const MiraiChatClient = () => <GeneralCounselorChatClient config={MIRAI_C
 export const PinaChatClient = () => <GeneralCounselorChatClient config={PINA_CONFIG} />;
 export const MuuChatClient = () => <GeneralCounselorChatClient config={MUU_CONFIG} />;
 export const YukiChatClient = () => <GeneralCounselorChatClient config={YUKI_CONFIG} />;
+export const MitsuChatClient = () => <GeneralCounselorChatClient config={MITSU_CONFIG} />;
