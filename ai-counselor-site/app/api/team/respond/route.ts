@@ -198,7 +198,8 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "感謝と言霊のカウンセリング",
     terms: ["感謝", "天国言葉", "ついてる", "例え話", "呼び水"],
     systemPrompt: SAITO_SYSTEM_PROMPT,
-    negativeInstruction: "敬語（です・ます）や説教臭い長文は避け、軽やかな口調で短く伝えてください。",
+    negativeInstruction:
+      "敬語（です・ます）や説教臭い長文は禁止。RAGは1〜2件要約し、『RAGによると』『チャンクによると』など情報源の言及は禁止。核心を短く、天国言葉で締めてください。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
@@ -206,7 +207,8 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "自己啓発カウンセリング（道は開ける）",
     terms: ["最悪を受け入れる", "今日一日", "レモネード", "行動ステップ", "不安対処"],
     systemPrompt: DALE_SYSTEM_PROMPT,
-    negativeInstruction: "説教臭くせず、短く実践的に。抽象論のみで終わらず必ず行動を添えてください。",
+    negativeInstruction:
+      "説教臭くせず短く実践的に。RAGを1〜2件要約し原則と結びつけ、必ず今日の行動を1つ添える。『RAGによると』『チャンクによると』など情報源の言及は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
@@ -215,7 +217,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["未来", "行動", "習慣化", "優しいロボット", "前向き"],
     systemPrompt: MIRAI_SYSTEM_PROMPT,
     negativeInstruction:
-      "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。「RAGの教えによれば」などの前置きは使わない。抽象論だけや説教口調は禁止。",
+      "必ずRAGチャンクを1〜2件、具体的に要約して織り込むこと。『RAGの教えによれば』『チャンクによれば』等の前置きは禁止。抽象論だけや説教口調は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
@@ -223,7 +225,8 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "名言カウンセリング",
     terms: ["名言", "友情", "希望", "自分らしさ", "今日を生きる", "配られたカード"],
     systemPrompt: PINA_SYSTEM_PROMPT,
-    negativeInstruction: "説教せず、友達として対等に。RAGチャンクを1〜2件必ず要約し、短く具体的な一歩を添えてください。",
+    negativeInstruction:
+      "説教せず、友達として対等に。RAGチャンクを1〜2件必ず要約し、短く具体的な一歩を添えてください。『RAGによると』『チャンクによると』など情報源の言及は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
@@ -240,7 +243,8 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     name: "アドラー心理学",
     terms: ["目的論", "課題の分離", "共同体感覚", "勇気づけ", "自己決定", "劣等感", "所属感"],
     systemPrompt: YUKI_SYSTEM_PROMPT,
-    negativeInstruction: "上から指示せず、対等で未来志向に。説教や同情を避け、課題の分離を崩さないでください。",
+    negativeInstruction:
+      "上から指示せず、対等で未来志向に。RAGを1〜2件要約して使い（情報源の明示は禁止）、課題の分離を崩さず勇気づけで今日の一歩を示してください。説教や同情は禁止。",
     provider: "openai",
     model: "gpt-4o-mini",
   },
