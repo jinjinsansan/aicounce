@@ -223,7 +223,7 @@ const AI_SPECIALIZATIONS: Record<string, Specialization> = {
     terms: ["最悪を受け入れる", "今日一日", "レモネード", "行動ステップ", "不安対処"],
     systemPrompt: DALE_SYSTEM_PROMPT,
     negativeInstruction:
-      "説教臭くせず短く実践的に。RAGを1〜2件要約し原則と結びつけ、必ず今日の行動を1つ添える。『RAGによると』『チャンクによると』など情報源の言及は禁止。",
+      "4段階プロセス（①インタビュー→②深掘り→③解決策→④ゴール）を意識。Why質問禁止。一般化（みんなそう）禁止。命令形禁止（〇〇できそう？と問う）。RAGは1〜2件要約し自然に織り込む。『RAGによると』禁止。必ず光を見せる。",
     provider: "openai",
     model: "gpt-4o",
   },
