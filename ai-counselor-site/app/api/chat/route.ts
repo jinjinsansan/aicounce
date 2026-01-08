@@ -101,6 +101,7 @@ function buildStageGuard(params: {
       guard: [
         "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
         "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
+        "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
         "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
         "- 質問は1つだけ",
       ].join("\n"),
@@ -113,6 +114,8 @@ function buildStageGuard(params: {
       "【進行（強制）】いまはステップ4（ゴール）。",
       "- 解決策/希望/光を示す（断定せず提案）",
       "- 3分でできる一歩を1つだけ",
+      "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
+      "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
       "- 質問は『これ、できそう？』の1つだけ",
     ].join("\n"),
@@ -143,7 +146,7 @@ function buildForcedManagedReply(params: {
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
-      ? `物語の中でも、迷いの中で一歩を選び直していく場面があるんだ。${cleanedRag}`
+      ? `『${cleanedRag}』──ジョバンニみたいに、いまは一歩を選び直すときなんだ。`
       : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
@@ -155,8 +158,8 @@ function buildForcedManagedReply(params: {
 
   const action =
     counselorId === "kenji"
-      ? "3分だけ、(1)ミスの事実(2)次に防ぐ工夫1つ(3)いま連絡すべき相手、をメモしてみよう。"
-      : "3分だけ、(1)起きたこと(2)次に同じミスを減らす工夫1つ、をメモしてみない？";
+      ? "3分だけ、上司に伝える一文をメモしてみよう：『注文忘れ→いまやった対応→再発防止（チェック）』。"
+      : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
 }
@@ -294,12 +297,19 @@ export async function POST(request: NextRequest) {
     let ragSources: { id: string; chunk_text: string; similarity: number }[] = [];
     let ragDurationMs: number | null = null;
 
-    const ragQuery = historyMessages
+    const ragQueryBase = historyMessages
       .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
       .slice(-3)
       .map((m) => m.content)
       .join("\n")
       .trim() || message;
+
+    const ragQuery =
+      counselor.id === "kenji"
+        ? `${ragQueryBase}\n\n銀河鉄道の夜 ジョバンニ カムパネルラ ほんとうのさいわい`
+        : counselor.id === "mitsu"
+          ? `${ragQueryBase}\n\n相田みつを にんげんだもの 書`
+          : ragQueryBase;
 
     if (useRag && counselor.ragEnabled) {
       const ragStart =
@@ -357,7 +367,19 @@ export async function POST(request: NextRequest) {
     let finalContent = content;
     const managed = counselor.id === "mitsu" || counselor.id === "kenji";
     const mustNotClarify = managed && (stage >= 2 || isAdviceRequest(message));
-    if (mustNotClarify && containsClarificationPrompt(finalContent)) {
+    const tooGenericForWork =
+      managed &&
+      stage >= 4 &&
+      /(深呼吸|夜空|星|旅)/.test(finalContent) &&
+      !/(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|お客様|注文)/.test(finalContent);
+
+    const kenjiOtherWork = counselor.id === "kenji" && /雨ニモマケズ/.test(finalContent);
+    const kenjiMissingAnchor =
+      counselor.id === "kenji" &&
+      stage >= 2 &&
+      !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(finalContent);
+
+    if ((mustNotClarify && containsClarificationPrompt(finalContent)) || tooGenericForWork || kenjiOtherWork || kenjiMissingAnchor) {
       finalContent = buildForcedManagedReply({
         counselorId: counselor.id as "mitsu" | "kenji",
         historyMessages,

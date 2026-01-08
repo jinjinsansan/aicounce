@@ -161,6 +161,7 @@ function buildStageGuard(params: {
       guard: [
       "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
       "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
+      "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
       "- 質問は1つだけ",
     ].join("\n"),
@@ -173,6 +174,8 @@ function buildStageGuard(params: {
     "【進行（強制）】いまはステップ4（ゴール）。",
     "- 解決策/希望/光を示す（断定せず提案）",
     "- 3分でできる一歩を1つだけ",
+    "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
+    "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
     "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
     "- 質問は『これ、できそう？』の1つだけ",
   ].join("\n"),
@@ -204,7 +207,7 @@ function buildForcedManagedReply(params: {
 
   const ragLine = cleanedRag
     ? counselorId === "kenji"
-      ? `物語の中でも、迷いの中で一歩を選び直していく場面があるんだ。${cleanedRag}`
+      ? `『${cleanedRag}』──ジョバンニみたいに、いまは一歩を選び直すときなんだ。`
       : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
@@ -216,8 +219,8 @@ function buildForcedManagedReply(params: {
 
   const action =
     counselorId === "kenji"
-      ? "3分だけ、(1)ミスの事実(2)次に防ぐ工夫1つ(3)いま連絡すべき相手、をメモしてみよう。"
-      : "3分だけ、(1)起きたこと(2)次に同じミスを減らす工夫1つ、をメモしてみない？";
+      ? "3分だけ、上司に伝える一文をメモしてみよう：『注文忘れ→いまやった対応→再発防止（チェック）』。"
+      : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   return `${summary}${ragLine}\n${action}\nこれ、できそう？`;
 }
@@ -570,7 +573,6 @@ export async function POST(req: Request) {
     const responsePromises = selected.map(async (p) => {
       const spec = AI_SPECIALIZATIONS[p.id.toLowerCase()];
       const role = AI_ROLES[p.id.toLowerCase() as keyof typeof AI_ROLES];
-      const { context } = p.ragEnabled ? await searchRagContext(p.id, userMessage, 6) : { context: "" };
 
       // 挨拶のみの場合：シンプルな自己紹介
       if (isGreeting) {
@@ -587,6 +589,26 @@ export async function POST(req: Request) {
                 (m.authorId === p.id || normalizeForMatch(m.author) === normalizeForMatch(p.name))),
           )
         : previousMessages;
+
+      const ragQueryBase = [
+        ...scopedHistory
+          .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+          .slice(-2)
+          .map((m) => m.content),
+        userMessage,
+      ]
+        .filter(Boolean)
+        .join("\n")
+        .trim();
+
+      const ragQuery =
+        p.id.toLowerCase() === "kenji"
+          ? `${ragQueryBase}\n\n銀河鉄道の夜 ジョバンニ カムパネルラ ほんとうのさいわい`
+          : p.id.toLowerCase() === "mitsu"
+            ? `${ragQueryBase}\n\n相田みつを にんげんだもの 書`
+            : ragQueryBase;
+
+      const { context } = p.ragEnabled ? await searchRagContext(p.id, ragQuery, 6) : { context: "" };
 
       const recentAssistantTexts = scopedHistory
         .filter((m) => m.role === "assistant")
@@ -667,7 +689,26 @@ export async function POST(req: Request) {
         /[?？]/.test(final) &&
         !normalizeForMatch(final).includes(normalizeForMatch("できそう"));
 
-      if (askedClarification || askedWrongQuestion) {
+      const includesOtherWork = p.id.toLowerCase() === "kenji" && /雨ニモマケズ/.test(final);
+      const missingKenjiAnchor =
+        p.id.toLowerCase() === "kenji" &&
+        stage >= 2 &&
+        !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(final);
+
+      const tooGenericForWorkInitial =
+        stage >= 4 &&
+        isManaged &&
+        /(深呼吸|夜空|星|旅)/.test(final) &&
+        !/(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|お客様|注文)/.test(final);
+
+      const needsRepair =
+        askedClarification ||
+        askedWrongQuestion ||
+        includesOtherWork ||
+        missingKenjiAnchor ||
+        tooGenericForWorkInitial;
+
+      if (needsRepair) {
         for (let attempt = 0; attempt < 2; attempt += 1) {
           const repairSystem = [
             priorityGuards,
@@ -701,7 +742,19 @@ export async function POST(req: Request) {
         }
 
         // Hard fallback if the model keeps leaking clarification questions.
-        if (containsClarificationPrompt(final)) {
+        const tooGenericForWorkFinal =
+          stage >= 4 &&
+          isManaged &&
+          /(深呼吸|夜空|星|旅)/.test(final) &&
+          !/(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|お客様|注文)/.test(final);
+
+        const mustFallback =
+          containsClarificationPrompt(final) ||
+          (p.id.toLowerCase() === "kenji" && /雨ニモマケズ/.test(final)) ||
+          (p.id.toLowerCase() === "kenji" && stage >= 2 && !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(final)) ||
+          (tooGenericForWorkFinal && isAdviceRequest(userMessage));
+
+        if (mustFallback) {
           if (p.id.toLowerCase() === "kenji" || p.id.toLowerCase() === "mitsu") {
             final = buildForcedManagedReply({
               counselorId: p.id.toLowerCase() as "kenji" | "mitsu",
