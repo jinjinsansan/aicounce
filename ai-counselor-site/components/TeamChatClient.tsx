@@ -752,19 +752,22 @@ export function TeamChatClient() {
   );
 
   return (
-    <div className="relative w-full border-t border-slate-200 text-slate-900" style={gradientStyle}>
+    <div
+      className="relative w-full border-t border-slate-200 text-slate-900 lg:h-[calc(100vh-4rem)] lg:overflow-hidden"
+      style={gradientStyle}
+    >
       {isOffline && (
         <div className="pointer-events-auto absolute left-1/2 top-4 z-50 w-[90%] max-w-md -translate-x-1/2 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-2 text-xs font-semibold text-yellow-800 shadow-lg">
           オフラインです。接続を確認してください。
         </div>
       )}
 
-      <div className="mx-auto flex h-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row">
+      <div className="mx-auto flex h-full min-h-0 max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row">
         <aside className="hidden w-80 flex-shrink-0 rounded-[30px] border border-white/30 bg-white/80 p-5 backdrop-blur md:flex">
           {renderSidebarContent(false)}
         </aside>
 
-        <main className="flex flex-1 flex-col rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
+        <main className="flex min-h-0 flex-1 flex-col rounded-[32px] border border-white/40 bg-white/90 shadow-2xl">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
             <div className="flex items-center gap-3">
               <Button
@@ -858,7 +861,7 @@ export function TeamChatClient() {
             </section>
           )}
 
-          <div className="relative flex flex-1 flex-col overflow-hidden">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
             <div
               ref={scrollContainerRef}
               className="flex-1 overflow-y-auto px-4 py-6"
