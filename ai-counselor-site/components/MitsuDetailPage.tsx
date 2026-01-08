@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Feather, HeartHandshake, Clock3, Sparkles } from "lucide-react";
 
@@ -11,8 +10,6 @@ const POINTS = [
 ];
 
 export default function MitsuDetailPage() {
-  const router = useRouter();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -58,10 +55,11 @@ export default function MitsuDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/counselor/chat/mitsu")}
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#c68a2e] via-[#d97706] to-[#8c6b3f] px-10 py-3 text-lg font-bold text-white shadow-2xl transition hover:translate-y-[1px]"
+              disabled
+              aria-disabled="true"
+              className="mt-10 inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-amber-200 px-10 py-3 text-lg font-bold text-amber-900 shadow-2xl"
             >
-              相談を始める
+              Mitsuはチームカウンセリングチャット専用です
             </button>
             <p className="mt-2 text-sm text-amber-700">RAGで見つけた短い言葉を、自分の声で届けます</p>
           </div>

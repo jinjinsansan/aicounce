@@ -20,7 +20,6 @@ import {
   DaleChatClient,
   PinaChatClient,
   MuuChatClient,
-  MitsuChatClient,
   HoshiChatClient,
   YukiChatClient,
 } from "@/components/GeneralCounselorChatClient";
@@ -258,7 +257,7 @@ export default function ChatPage({
     );
   }
 
-  if (counselorId === "mirai" || counselorId === "kenji") {
+  if (counselorId === "mirai" || counselorId === "kenji" || counselorId === "mitsu") {
     return <StandardChatExperience counselorId={counselorId} />;
   }
 
@@ -318,10 +317,6 @@ export default function ChatPage({
 
   if (counselorId === "muu") {
     return <MuuChatClient />;
-  }
-
-  if (counselorId === "mitsu") {
-    return <MitsuChatClient />;
   }
 
   if (counselorId === "hoshi") {

@@ -142,6 +142,7 @@ export const FALLBACK_COUNSELORS: Counselor[] = [
     tags: ["弱さの肯定", "感謝", "今ここ", "素朴"],
     responseTime: "即時",
     sessionCount: 0,
+    teamOnly: true,
   },
   {
     id: "hoshi",
