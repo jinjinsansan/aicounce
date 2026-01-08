@@ -99,7 +99,21 @@ function isWorkTopic(text: string) {
 }
 
 function containsWorkAction(text: string) {
-  return /(報告|謝罪|確認|連絡|再発防止|チェック|メモ|上司|期限|手順)/.test(text);
+  return /(報告|謝罪|確認|連絡|再発防止|チェック|メモ|期限|手順)/.test(text);
+}
+
+function hasWorkDetail(text: string) {
+  return /(注文|忘れ|クレーム|対応|顧客|お客様|電話|コールセンター|遅刻|遅れ|納期|ミス|失念)/.test(
+    text,
+  );
+}
+
+function isMitsuFactQuestion(text: string) {
+  return /(何について|何を|何と言われ|どの場面|ミス|注文|対応|態度|遅れ|クレーム|忘れ)/.test(text);
+}
+
+function isMitsuFeelingQuestion(text: string) {
+  return /(気持|いちばん|一番|不安|怖|つら|苦し|胸)/.test(text);
 }
 
 function seemsToUseRag(output: string, ragContext?: string) {
@@ -180,6 +194,13 @@ function buildStageGuard(params: {
   ).length;
   const currentNonGreetingUserCount = priorNonGreetingUserCount + 1;
 
+  const historyUserText = historyMessages
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join("\n");
+
+  const detailKnown = hasWorkDetail(historyUserText) || hasWorkDetail(userMessage);
+
   let stage = Math.min(4, Math.max(1, currentNonGreetingUserCount));
   if (isAdviceRequest(userMessage)) stage = 4;
 
@@ -188,7 +209,9 @@ function buildStageGuard(params: {
       stage,
       guard: [
         "【進行（強制）】いまはステップ1（インタビュー）。",
-        "- 返答は短く：共感1行 + 質問1つだけ",
+        counselorId === "mitsu"
+          ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何について叱られた？など）"
+          : "- 返答は短く：共感1行 + 質問1つだけ",
         "- ここでは助言/解決策/RAG引用は禁止",
         "- 同じ聞き直しは禁止",
       ].join("\n"),
@@ -202,7 +225,9 @@ function buildStageGuard(params: {
         "【進行（強制）】いまはステップ2（展開＆掘り下げ）。",
         "- 既に聞いた事実を1行で要約してから進める",
         "- 『どんなことがあった』等の事実の聞き直しは禁止",
-        "- 感情/影響/背景をたずねる質問は1つだけ",
+        counselorId === "mitsu"
+          ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばん苦しいのは？』）"
+          : "- 感情/影響/背景をたずねる質問は1つだけ",
       ].join("\n"),
     };
   }
@@ -233,10 +258,16 @@ function buildStageGuard(params: {
       counselorId === "mitsu"
         ? "- 追加の聞き直しは原則しない。ただし助言に必要なら、選択肢式の確認質問を1つだけ（例：『ミス/態度/遅れのどれ？』）"
         : "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
+      counselorId === "mitsu" && isAdviceRequest(userMessage) && !detailKnown
+        ? "- まだ状況が足りない場合は、最初に選択式で1問だけ確認してから提案する（例：『注文/対応/態度/遅れのどれ？』）"
+        : "",
+      counselorId === "mitsu" && isMoreAdviceRequest(userMessage)
+        ? "- 直前と同じ言い回し/同じ提案を繰り返さない（別の観点で）"
+        : "- 同じ内容の繰り返しはしない",
       counselorId === "mitsu" && isMoreAdviceRequest(userMessage)
         ? "- 最後に『どれがいちばんやりやすそう？』など短い確認質問を1つだけ"
         : "- 質問は短い確認質問を1つだけ（例：『これ、できそう？』）",
-    ].join("\n"),
+    ].filter(Boolean).join("\n"),
   };
 }
 
@@ -304,7 +335,7 @@ function buildForcedManagedReply(params: {
       : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
-      : "『つまづいたっていいじゃないか、にんげんだもの』って言葉があるんだよ。";
+      : "きみの今のしんどさも、にんげんらしさの一部なんだよ。";
 
   const summary = recentUserFacts
     ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
@@ -559,11 +590,19 @@ export async function POST(request: NextRequest) {
         finalContent,
       );
 
+      const isMitsu = counselor.id === "mitsu";
+      const mitsQuestionIsNotFact =
+        isMitsu && stage === 1 && hasQuestion && !isMitsuFactQuestion(finalContent);
+      const mitsQuestionIsNotFeeling =
+        isMitsu && stage === 2 && hasQuestion && !isMitsuFeelingQuestion(finalContent);
+
       const needsInterviewRepair =
         hasQuote ||
         !hasQuestion ||
         suggestsAction ||
-        (stage === 2 && /(どんなことがあった|具体的に教えて)/.test(finalContent));
+        (stage === 2 && /(どんなことがあった|具体的に教えて)/.test(finalContent)) ||
+        mitsQuestionIsNotFact ||
+        mitsQuestionIsNotFeeling;
 
       if (needsInterviewRepair) {
         const repairSystem = [
@@ -573,14 +612,18 @@ export async function POST(request: NextRequest) {
             ? [
                 "【再生成（必須）】いまはステップ1（インタビュー）。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
                 "- 共感は1行だけ",
-                "- 質問は1つだけ（例：『叱られたのは何について？』『何と言われた？』『どの場面？』）",
+                counselor.id === "mitsu"
+                  ? "- 質問は事実確認の1つだけ（例：『叱られたのは何について？（注文/対応/態度/遅れのどれ？）』）"
+                  : "- 質問は1つだけ（例：『叱られたのは何について？』『何と言われた？』『どの場面？』）",
                 "- 助言/解決策/行動提案は禁止",
                 "- RAG引用（『』）は禁止",
               ].join("\n")
             : [
                 "【再生成（必須）】いまはステップ2（展開＆掘り下げ）。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
                 "- 既に聞いた事実を1行で要約",
-                "- 感情/影響をたずねる質問は1つだけ",
+                counselor.id === "mitsu"
+                  ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばん苦しいのは、叱られた言い方？ミスへの罪悪感？クビの不安？』）"
+                  : "- 感情/影響をたずねる質問は1つだけ",
                 "- 事実の聞き直し（『どんなことがあった』等）は禁止",
                 "- 助言/解決策/行動提案は禁止",
                 "- RAG引用（『』）は禁止",
@@ -631,6 +674,12 @@ export async function POST(request: NextRequest) {
       stage >= 2 &&
       !/(ジョバンニ|カムパネルラ|ほんとうのさいわい|銀河鉄道)/.test(finalContent);
 
+    const mustHaveRealQuote =
+      counselor.id === "mitsu" &&
+      shouldUseRagThisTurn &&
+      stage >= 3 &&
+      !/『[^』]{6,}』/.test(finalContent);
+
     if (counselor.id === "kenji" && isGreetingMessage && kenjiOtherWork) {
       finalContent =
         "おはよう。銀河鉄道の夜のように、静かに聴くね。いま一番胸が苦しいのは、どんなところ？";
@@ -643,7 +692,8 @@ export async function POST(request: NextRequest) {
       (!isGreetingMessage && kenjiOtherWork) ||
       kenjiMissingAnchor ||
       mitsMissingWorkAction ||
-      mitsForbidden
+      mitsForbidden ||
+      mustHaveRealQuote
     ) {
       finalContent = buildForcedManagedReply({
         counselorId: counselor.id as "mitsu" | "kenji",
