@@ -61,6 +61,26 @@ function sanitizeContent(raw: string, author?: string) {
   return text;
 }
 
+function normalizeForMatch(value?: string) {
+  return String(value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\u3000]+/g, "")
+    .replace(/[、。！？!?:：\-–—…「」『』（）()【】\[\]<>]/g, "");
+}
+
+function detectRepeatedClarificationLoop(texts: string[]) {
+  const phrases = ["どんなことがあった", "具体的に教えて", "教えてくれる", "話してみて"];
+  const counts = new Map<string, number>(phrases.map((p) => [normalizeForMatch(p), 0]));
+  for (const t of texts) {
+    const norm = normalizeForMatch(t);
+    for (const key of counts.keys()) {
+      if (norm.includes(key)) counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+  return (counts.get(normalizeForMatch("どんなことがあった")) ?? 0) >= 2;
+}
+
 // ユーザーメッセージが挨拶のみかどうか判定
 function isGreetingOnly(message: string): boolean {
   const greetings = [
@@ -360,6 +380,8 @@ export async function POST(req: Request) {
           .filter((m) => m.role === "user" || m.role === "assistant")
       : [];
 
+    const hasAssistantAuthors = previousMessages.some((m) => m.role === "assistant" && m.author);
+
     // ユーザーメッセージが挨拶のみかどうか判定
     const isGreeting = isGreetingOnly(userMessage);
 
@@ -376,12 +398,35 @@ export async function POST(req: Request) {
       }
 
       // 相談の場合：各AIが独立して専門性を発揮
+      const scopedHistory = hasAssistantAuthors
+        ? previousMessages.filter(
+            (m) =>
+              m.role === "user" ||
+              (m.role === "assistant" && normalizeForMatch(m.author) === normalizeForMatch(p.name)),
+          )
+        : previousMessages;
+
+      const recentAssistantTexts = scopedHistory
+        .filter((m) => m.role === "assistant")
+        .slice(-4)
+        .map((m) => m.content);
+
+      const loopGuard = detectRepeatedClarificationLoop(recentAssistantTexts)
+        ? [
+            "【ループ防止（強制）】直近で確認質問を繰り返しています。これ以上『どんなことがあったの？』『具体的に教えて』等で追加聴取しない。既に得た情報だけでステップ2/3を続ける。次の返答は(1)事実の要約1行(2)RAG要素1つ(3)問いかけは1つだけ(4)3分でできる一歩1つ。",
+          ].join("\n")
+        : "";
+
+      const negativeInstruction = [spec ? spec.negativeInstruction : "", loopGuard]
+        .filter(Boolean)
+        .join("\n");
+
       const teamInstructions = [
         "\n---\n",
         "## チームカウンセリング指示",
         "",
         `### あなたの役割: ${role?.role || p.specializationName}`,
-        spec ? spec.negativeInstruction : "",
+        negativeInstruction,
         "",
         "### 応答スタイル",
         `- ${p.specializationName}の専門家として独自の視点を提供`,
@@ -400,7 +445,7 @@ export async function POST(req: Request) {
 
       // 完全なシステムプロンプト
       const system = p.systemPrompt + teamInstructions + ragSection;
-      const historyMessages: ChatMessage[] = previousMessages.slice(-6).map((m) => ({
+      const historyMessages: ChatMessage[] = scopedHistory.slice(-6).map((m) => ({
         role: m.role,
         content: m.content,
       }));
