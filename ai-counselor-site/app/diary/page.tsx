@@ -40,7 +40,7 @@ export default async function DiaryPage() {
               />
               <div>
                 <p className="text-sm font-semibold text-slate-900">{entry.author_name}</p>
-                <p className="text-xs text-slate-500">{formatDate(entry.published_at ?? entry.journal_date)}</p>
+                <p className="text-xs text-slate-500">{formatDate(entry.journal_date ?? entry.published_at)}</p>
               </div>
               <div className="ml-auto">
                 <DiaryShareButton
@@ -58,7 +58,7 @@ export default async function DiaryPage() {
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-800">{entry.content}</p>
 
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-              <p>公開日: {new Date(entry.published_at ?? entry.journal_date).toLocaleDateString("ja-JP")}</p>
+              <p>公開日: {new Date(entry.journal_date ?? entry.published_at).toLocaleDateString("ja-JP")}</p>
               <Link href={`/diary/${entry.id}/share`} className="text-blue-600 underline underline-offset-4">
                 シェア用ページを見る
               </Link>
