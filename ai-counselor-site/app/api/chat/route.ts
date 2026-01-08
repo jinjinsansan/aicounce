@@ -79,7 +79,7 @@ function buildRagContextFromSources(sources: { chunk_text: string; similarity?: 
 }
 
 function buildForcedInterviewReply(params: {
-  counselorId: "mitsu" | "kenji";
+  counselorId: "mitsu" | "kenji" | "mirai";
   stage: 1 | 2;
   historyMessages: ChatMessage[];
 }) {
@@ -100,6 +100,14 @@ function buildForcedInterviewReply(params: {
       : recentUserFacts
         ? `いまは「${recentUserFacts}」のことで胸が苦しいんだね。`
         : "いま胸が苦しいんだね。";
+
+  if (counselorId === "mirai") {
+    const summary = "つらかったね。";
+    if (stage === 1) {
+      return `${summary}\n何がきっかけで𠮟られたのか、教えてくれる？`;
+    }
+    return `${summary}\nいちばん苦しいのは、叱られた言い方？ミスの不安？クビの不安？`;
+  }
 
   if (counselorId === "mitsu") {
     if (stage === 1) {
@@ -244,7 +252,7 @@ function buildStageGuard(params: {
   userMessage: string;
 }) {
   const { counselorId, historyMessages, userMessage } = params;
-  const managed = counselorId === "mitsu" || counselorId === "kenji";
+  const managed = counselorId === "mitsu" || counselorId === "kenji" || counselorId === "mirai";
   if (!managed) return { stage: 0 as const, guard: "" };
 
   if (isGreetingOnly(userMessage)) {
@@ -280,7 +288,9 @@ function buildStageGuard(params: {
         "【進行（強制）】いまはステップ1（インタビュー）。",
         counselorId === "mitsu"
           ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ（何について叱られた？など）"
-          : "- 返答は短く：共感1行 + 質問1つだけ",
+          : counselorId === "mirai"
+            ? "- 返答は短く：共感1行 + 事実確認の質問1つだけ"
+            : "- 返答は短く：共感1行 + 質問1つだけ",
         "- ここでは助言/解決策/RAG引用は禁止",
         "- 同じ聞き直しは禁止",
       ].join("\n"),
@@ -296,7 +306,9 @@ function buildStageGuard(params: {
         "- 『どんなことがあった』等の事実の聞き直しは禁止",
         counselorId === "mitsu"
           ? "- 感情/影響をたずねる質問は1つだけ（例：『いちばん苦しいのは？』）"
-          : "- 感情/影響/背景をたずねる質問は1つだけ",
+          : counselorId === "mirai"
+            ? "- 感情/影響をたずねる質問は1つだけ"
+            : "- 感情/影響/背景をたずねる質問は1つだけ",
       ].join("\n"),
     };
   }
@@ -307,7 +319,9 @@ function buildStageGuard(params: {
       guard: [
         "【進行（強制）】いまはステップ3（RAGで解放・気づき）。",
         "- RAG要素を1つ必ず入れて、視点転換を1つ提示",
-        "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
+        counselorId === "mirai"
+          ? "- RAGの要点を短く言い換えて1つ入れる（『』引用は任意。直前と同じ引用/同じフレーズは繰り返さない）"
+          : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
         "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
         "- ここでは行動提案はせず、問いで終える",
         "- 質問は1つだけ",
@@ -324,7 +338,9 @@ function buildStageGuard(params: {
         ? "- 3分でできる一歩を最大2つ（選択肢）"
         : "- 3分でできる一歩を1つだけ",
       "- 仕事の相談なら、報告/謝罪/再発防止など『現実の次の一手』を必ず含める（深呼吸だけで終わらない）",
-      "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
+      counselorId === "mirai"
+        ? "- 必要ならRAGの要点を短く言い換えて入れる（同じ引用の繰り返し禁止。引用は必須ではない）"
+        : "- RAGから短い一節を『』で1つだけ引用する（出典名は言わない）",
       counselorId === "mitsu"
         ? "- 追加の聞き直しは原則しない。ただし助言に必要なら、選択肢式の確認質問を1つだけ（例：『ミス/態度/遅れのどれ？』）"
         : "- 事実の聞き直しは禁止（『どんなことがあった』禁止）",
@@ -349,7 +365,7 @@ function hashString(value: string) {
   return Math.abs(hash);
 }
 
-function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji", seed: string) {
+function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji" | "mirai", seed: string) {
   const options =
     counselorId === "mitsu"
       ? [
@@ -358,12 +374,19 @@ function pickManagedCheckInQuestion(counselorId: "mitsu" | "kenji", seed: string
           "どれがいちばんやりやすそう？",
           "今日これだけなら、試せそう？",
         ]
-      : [
-          "これ、できそう？",
-          "まず一歩だけ、選べそう？",
-          "この一文、書けそう？",
-          "ここから、進めそう？",
-        ];
+      : counselorId === "mirai"
+        ? [
+            "この次の一手、どれが一番やりやすそう？",
+            "まずは一つだけ、やってみる？",
+            "いま一番ほしいのは、落ち着き？具体策？",
+            "ここまでの話、合ってる？",
+          ]
+        : [
+            "これ、できそう？",
+            "まず一歩だけ、選べそう？",
+            "この一文、書けそう？",
+            "ここから、進めそう？",
+          ];
 
   const index = hashString(seed || String(Date.now())) % options.length;
   return options[index];
@@ -395,8 +418,20 @@ function summarizeKenjiFromHistory(historyMessages: ChatMessage[]) {
   return "上司に𠮟られて胸が苦しいんだね。";
 }
 
+function summarizeMiraiFromHistory(historyMessages: ChatMessage[]) {
+  const t = historyMessages
+    .filter((m) => m.role === "user" && !isGreetingOnly(m.content))
+    .slice(-4)
+    .map((m) => m.content)
+    .join("\n");
+
+  if (/言い方/.test(t)) return "叱られた言い方がきつくて、苦しいんだね。";
+  if (/(クビ|解雇)/.test(t)) return "クビになるかもって不安で、胸が苦しいんだね。";
+  return "上司に𠮟られて、胸が苦しいんだね。";
+}
+
 function buildForcedManagedReply(params: {
-  counselorId: "mitsu" | "kenji";
+  counselorId: "mitsu" | "kenji" | "mirai";
   stage: 3 | 4;
   historyMessages: ChatMessage[];
   ragContext?: string;
@@ -431,15 +466,21 @@ function buildForcedManagedReply(params: {
   const ragLine = cleanedRag
     ? counselorId === "kenji"
       ? `『${cleanedRag}』──ジョバンニみたいに、いまは一歩を選び直すときなんだ。`
-      : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
+      : counselorId === "mirai"
+        ? `ヒントとしてね：${cleanedRag}`
+        : `ことばにするとね、こんなのがあるよ。『${cleanedRag}』`
     : counselorId === "kenji"
       ? "ジョバンニも迷いながら『ほんとうのさいわい』を探して、まず一歩を選び直したんだ。"
-      : "きみの今のしんどさも、にんげんらしさの一部なんだよ。";
+      : counselorId === "mirai"
+        ? "いまは視点を少しだけ変えるヒントがほしいところだよね。"
+        : "きみの今のしんどさも、にんげんらしさの一部なんだよ。";
 
   const summary =
     counselorId === "mitsu"
       ? summarizeMitsuFromHistory(historyMessages)
-      : summarizeKenjiFromHistory(historyMessages);
+      : counselorId === "mirai"
+        ? summarizeMiraiFromHistory(historyMessages)
+        : summarizeKenjiFromHistory(historyMessages);
 
   if (stage === 3) {
     if (!cleanedRag) {
@@ -453,6 +494,8 @@ function buildForcedManagedReply(params: {
     const question =
       counselorId === "kenji"
         ? "その言葉のどこが、いまのきみに一番刺さる？"
+        : counselorId === "mirai"
+          ? "いま一番こわいのは、クビ？評価？それとも上司の目？"
         : "この言葉のどこが、いまのきみに一番重なる？";
     return `${summary}\n${ragLine}\n${question}`;
   }
@@ -460,6 +503,8 @@ function buildForcedManagedReply(params: {
   const action =
     counselorId === "kenji"
       ? "3分だけ、上司に伝える一文をメモしてみよう：『叱責のポイント→自分の理解→次の対策→確認したいこと』。"
+      : counselorId === "mirai"
+        ? "3分だけでいいよ。上司に確認する一文を下書きしてみよう：『ご指摘の点は○○と理解しました。今後は△△で防ぎます。優先順位だけ確認させてください』。"
       : "3分だけ、次の一手をメモしてみない？『何が起きた→いま出来る対応→次の防止策1つ』。";
 
   const questionSeed = `${counselorId}|${recentUserFacts}|${cleanedRag ?? ""}`;
@@ -659,7 +704,7 @@ export async function POST(request: NextRequest) {
       counselor.systemPrompt ??
       "You are a supportive counselor who responds in Japanese with empathy and actionable advice.";
 
-    const managed = counselor.id === "mitsu" || counselor.id === "kenji";
+    const managed = counselor.id === "mitsu" || counselor.id === "kenji" || counselor.id === "mirai";
     const isGreetingMessage = isGreetingOnly(message);
 
     const { stage, guard: stageGuard } = buildStageGuard({
@@ -789,7 +834,7 @@ export async function POST(request: NextRequest) {
 
         if (stillHasQuote || !stillHasQuestion || stillSuggestsAction || stillBadMitsuQ || stillBadKenjiQ) {
           finalContent = buildForcedInterviewReply({
-            counselorId: counselor.id as "mitsu" | "kenji",
+            counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
             stage,
             historyMessages,
           });
@@ -803,7 +848,7 @@ export async function POST(request: NextRequest) {
       /(してみない|やってみない|メモして|試してみ|行動|再発防止|報告|謝罪)/.test(finalContent);
     if (stage3SuggestsAction) {
       finalContent = buildForcedManagedReply({
-        counselorId: counselor.id as "mitsu" | "kenji",
+        counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
         stage: 3,
         historyMessages,
         ragContext,
@@ -859,13 +904,13 @@ export async function POST(request: NextRequest) {
     ) {
       if (managed && (stage === 1 || stage === 2)) {
         finalContent = buildForcedInterviewReply({
-          counselorId: counselor.id as "mitsu" | "kenji",
+          counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
           stage,
           historyMessages,
         });
       } else {
         finalContent = buildForcedManagedReply({
-          counselorId: counselor.id as "mitsu" | "kenji",
+          counselorId: counselor.id as "mitsu" | "kenji" | "mirai",
           stage: stage === 3 ? 3 : 4,
           historyMessages,
           ragContext,
@@ -873,7 +918,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const mustUseRag = shouldUseRagThisTurn;
+    if (counselor.id === "mirai" && stage >= 3) {
+      const lastAssistant = [...historyMessages].reverse().find((m) => m.role === "assistant")?.content;
+      const lastQuote = extractQuotedPhrases(String(lastAssistant ?? ""))[0];
+      const nextQuote = extractQuotedPhrases(finalContent)[0];
+      if (lastQuote && nextQuote && normalizeForMatch(lastQuote) === normalizeForMatch(nextQuote)) {
+        const repairSystem = [
+          guardedSystemPrompt,
+          "【再生成（必須）】直前と同じ『』引用を繰り返しています。次の条件で、ユーザーに返す最終回答だけを書き直してください。",
+          "- 直前と同じ『』引用は使わない（引用なしでもOK）",
+          "- いまのステップのルール（質問数など）は維持",
+          "- 仕事の相談なら、現実の次の一手が伝わるようにする",
+        ].join("\n");
+
+        const repairMessages: ChatMessage[] = [
+          ...historyMessages,
+          { role: "assistant", content: finalContent },
+          {
+            role: "user",
+            content: "上の返答を、直前と同じ引用を避けて、自然な日本語で書き直して。",
+          },
+        ];
+
+        const repaired = await callLLMWithHistory(
+          counselor.modelType ?? "openai",
+          counselor.modelName ?? "gpt-4o-mini",
+          repairSystem,
+          repairMessages,
+          shouldUseRagThisTurn ? ragContext : undefined,
+        );
+        finalContent = repaired.content ?? finalContent;
+      }
+    }
+
+    const mustUseRag = shouldUseRagThisTurn && !(counselor.id === "mirai" && stage >= 4);
     if (mustUseRag && !seemsToUseRag(finalContent, ragContext)) {
       const snippet = extractRagSnippet(ragContext, 90);
       if (snippet) {
