@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { AccessState } from "@/lib/access-control";
 import type { PlanSlug } from "@/lib/plans";
 
@@ -55,6 +56,7 @@ type PaypalWindow = Window & {
 };
 
 export default function AccountPage() {
+  const router = useRouter();
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [trialState, setTrialState] = useState<"idle" | "loading" | "success">("idle");
@@ -65,6 +67,10 @@ export default function AccountPage() {
   const [notificationFilter, setNotificationFilter] = useState<"unread" | "all">("unread");
   const [notificationUpdating, setNotificationUpdating] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
+  const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -199,6 +205,34 @@ export default function AccountPage() {
     } finally {
       setNotificationUpdating(false);
       setTimeout(() => setNotificationMessage(null), 4000);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteLoading) return;
+    if (!window.confirm("本当にアカウントを削除しますか？この操作は元に戻せません。")) {
+      return;
+    }
+    setDeleteLoading(true);
+    setDeleteError(null);
+    setDeleteMessage(null);
+    try {
+      const response = await fetch("/api/account/delete", { method: "POST" });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "failed");
+      }
+      setDeleteConfirmChecked(false);
+      setDeleteMessage("アカウントを削除しました。トップページに移動します...");
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setDeleteError("アカウント削除に失敗しました。しばらくしてからもう一度お試しください。");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -480,6 +514,32 @@ export default function AccountPage() {
                   <dd>{new Date(overview.profile.lastLoginAt).toLocaleString("ja-JP")}</dd>
                 </div>
               </dl>
+            </div>
+
+            <div className="rounded-3xl border border-red-200 bg-white/90 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-red-600">アカウント削除</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                アカウントと紐づく会話、日記、通知などのデータがすべて削除されます。この操作は取り消せません。
+              </p>
+              <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4"
+                  checked={deleteConfirmChecked}
+                  onChange={(event) => setDeleteConfirmChecked(event.target.checked)}
+                />
+                <span>全てのデータが削除されることを理解し、同意します。</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={!deleteConfirmChecked || deleteLoading}
+                className="mt-4 w-full rounded-full border border-red-200 bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteLoading ? "削除中..." : "アカウントを削除する"}
+              </button>
+              {deleteError && <p className="mt-3 text-sm text-red-500">{deleteError}</p>}
+              {deleteMessage && <p className="mt-3 text-sm text-emerald-600">{deleteMessage}</p>}
             </div>
           </div>
         </section>
