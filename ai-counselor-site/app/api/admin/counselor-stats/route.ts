@@ -24,12 +24,10 @@ export async function GET() {
     // Count team session participation per counselor
     const teamCounts = new Map<string, number>();
     if (teamSessions) {
-      for (const session of teamSessions as Array<{ id: string; participants: unknown }>) {
+      for (const session of teamSessions as Array<{ id: string; participants: string[] | null }>) {
         if (session.participants && Array.isArray(session.participants)) {
           for (const counselorId of session.participants) {
-            if (typeof counselorId === "string") {
-              teamCounts.set(counselorId, (teamCounts.get(counselorId) || 0) + 1);
-            }
+            teamCounts.set(counselorId, (teamCounts.get(counselorId) || 0) + 1);
           }
         }
       }

@@ -83,7 +83,7 @@ export default function AdminCounselorsPage() {
           </p>
           <h2 className="text-2xl font-bold text-slate-900">カウンセラー別統計</h2>
           <p className="text-sm text-slate-500">
-            チャット作成回数の多い順に表示しています。TOPページのカウンセラー一覧と同期しています。
+            合計セッション数（個別+チーム）の多い順に表示しています。TOPページのカウンセラー一覧と同期しています。
           </p>
         </div>
         <div className="flex gap-2 rounded-full bg-white/80 p-1 text-sm font-semibold text-slate-600 shadow-inner">
