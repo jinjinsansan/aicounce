@@ -6,13 +6,34 @@ export async function GET() {
   if (authError) return authError;
 
   try {
-    // Get all counselors with their session counts
+    // Get individual counselor session counts
     const { data: stats, error: statsError } = await supabase
       .from("counselor_stats")
       .select("counselor_id, session_count")
       .order("session_count", { ascending: false });
 
     if (statsError) throw statsError;
+
+    // Get team counseling session counts
+    const { data: teamSessions, error: teamError } = await supabase
+      .from("team_sessions")
+      .select("id, participants");
+
+    if (teamError) throw teamError;
+
+    // Count team session participation per counselor
+    const teamCounts = new Map<string, number>();
+    if (teamSessions) {
+      for (const session of teamSessions as Array<{ id: string; participants: unknown }>) {
+        if (session.participants && Array.isArray(session.participants)) {
+          for (const counselorId of session.participants) {
+            if (typeof counselorId === "string") {
+              teamCounts.set(counselorId, (teamCounts.get(counselorId) || 0) + 1);
+            }
+          }
+        }
+      }
+    }
 
     // Load counselor data from constants (as counselors are defined in code, not DB)
     let counselors;
@@ -26,35 +47,26 @@ export async function GET() {
 
     // Merge stats with counselor info
     const counselorMap = new Map(counselors.map((c) => [c.id, c]));
+    const statsMap = new Map(stats.map((s) => [s.counselor_id, s.session_count]));
     
-    const result = stats.map((stat) => {
-      const counselor = counselorMap.get(stat.counselor_id);
+    const result = counselors.map((counselor) => {
+      const individualCount = statsMap.get(counselor.id) || 0;
+      const teamCount = teamCounts.get(counselor.id) || 0;
+      
       return {
-        id: stat.counselor_id,
-        name: counselor?.name ?? "Unknown",
-        specialty: counselor?.specialty ?? "",
-        iconUrl: counselor?.iconUrl ?? "",
-        ragEnabled: counselor?.ragEnabled ?? false,
-        sessionCount: stat.session_count,
+        id: counselor.id,
+        name: counselor.name,
+        specialty: counselor.specialty,
+        iconUrl: counselor.iconUrl ?? "",
+        ragEnabled: counselor.ragEnabled ?? false,
+        sessionCount: individualCount,
+        teamSessionCount: teamCount,
+        totalSessionCount: individualCount + teamCount,
       };
     });
 
-    // Include counselors with 0 sessions
-    for (const counselor of counselors) {
-      if (!stats.find((s) => s.counselor_id === counselor.id)) {
-        result.push({
-          id: counselor.id,
-          name: counselor.name,
-          specialty: counselor.specialty,
-          iconUrl: counselor.iconUrl ?? "",
-          ragEnabled: counselor.ragEnabled ?? false,
-          sessionCount: 0,
-        });
-      }
-    }
-
-    // Sort by session count descending
-    result.sort((a, b) => b.sessionCount - a.sessionCount);
+    // Sort by total session count descending
+    result.sort((a, b) => b.totalSessionCount - a.totalSessionCount);
 
     return NextResponse.json({ stats: result });
   } catch (error) {

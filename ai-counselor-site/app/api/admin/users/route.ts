@@ -23,19 +23,16 @@ export async function GET() {
     if (usersError) throw usersError;
 
     // Get conversation counts per user
-    const { data: conversationCounts, error: conversationError } = await supabase
+    const { data: conversations, error: conversationError } = await supabase
       .from("conversations")
-      .select("user_id")
-      .then((result) => {
-        if (result.error) throw result.error;
-        const counts = new Map<string, number>();
-        for (const conv of result.data) {
-          counts.set(conv.user_id, (counts.get(conv.user_id) || 0) + 1);
-        }
-        return { data: counts, error: null };
-      });
+      .select("user_id");
 
     if (conversationError) throw conversationError;
+
+    const conversationCounts = new Map<string, number>();
+    for (const conv of conversations || []) {
+      conversationCounts.set(conv.user_id, (conversationCounts.get(conv.user_id) || 0) + 1);
+    }
 
     // Get subscription status per user
     const { data: subscriptions, error: subError } = await supabase

@@ -11,6 +11,8 @@ type CounselorStat = {
   iconUrl: string;
   ragEnabled: boolean;
   sessionCount: number;
+  teamSessionCount: number;
+  totalSessionCount: number;
 };
 
 type Filter = "all" | "rag" | "nonRag";
@@ -187,20 +189,32 @@ function StatCard({
           {stat.specialty}
         </p>
       </div>
-      <div className="mt-4 flex items-end justify-between">
-        <div>
-          <p className="text-xs text-slate-500">チャット作成数</p>
-          <p className="text-3xl font-bold text-slate-900">{stat.sessionCount.toLocaleString()}</p>
+      <div className="mt-4 space-y-3">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-xs text-slate-500">合計セッション数</p>
+            <p className="text-3xl font-bold text-slate-900">{stat.totalSessionCount.toLocaleString()}</p>
+          </div>
+          <span
+            className={`rounded-full px-2 py-1 text-xs font-semibold ${
+              stat.ragEnabled
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-slate-200 text-slate-600"
+            }`}
+          >
+            {stat.ragEnabled ? "RAG" : "非RAG"}
+          </span>
         </div>
-        <span
-          className={`rounded-full px-2 py-1 text-xs font-semibold ${
-            stat.ragEnabled
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-slate-200 text-slate-600"
-          }`}
-        >
-          {stat.ragEnabled ? "RAG" : "非RAG"}
-        </span>
+        <div className="flex gap-4 text-xs text-slate-600">
+          <div>
+            <span className="text-slate-400">個別: </span>
+            <span className="font-semibold">{stat.sessionCount.toLocaleString()}</span>
+          </div>
+          <div>
+            <span className="text-slate-400">チーム: </span>
+            <span className="font-semibold">{stat.teamSessionCount.toLocaleString()}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
