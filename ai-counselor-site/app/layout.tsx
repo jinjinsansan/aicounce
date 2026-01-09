@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   title: "メンタルAIチーム | もう、誰にも気を使わなくていい",
   description:
     "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
+  manifest: "/manifest.json",
+  themeColor: "#0f172a",
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",

@@ -1,0 +1,28 @@
+{
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "display": "standalone",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "host": "namisapo.app",
+  "launcherName": "メンタルAIチーム",
+  "name": "メンタルAIチーム",
+  "navigationColor": "#0f172a",
+  "navigationColorDark": "#0f172a",
+  "navigationDividerColor": "#0f172a",
+  "navigationDividerColorDark": "#0f172a",
+  "backgroundColor": "#ffffff",
+  "themeColor": "#0f172a",
+  "startUrl": "/",
+  "webManifestUrl": "https://namisapo.app/manifest.json",
+  "enableNotifications": true,
+  "orientation": "portrait",
+  "signingKey": {
+    "alias": "android",
+    "path": "android.keystore"
+  }
+}

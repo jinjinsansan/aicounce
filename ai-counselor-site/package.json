@@ -23,7 +23,10 @@
     "muu:upload": "ts-node scripts/muu/upload-to-rag.ts",
     "mitsu:upload": "ts-node scripts/mitsu/upload-to-rag.ts",
     "kenji:upload": "ts-node scripts/kenji/upload-to-rag.ts",
-    "hoshi:upload": "ts-node scripts/hoshi/upload-to-rag.ts"
+    "hoshi:upload": "ts-node scripts/hoshi/upload-to-rag.ts",
+    "twa:init": "bubblewrap init --manifest https://namisapo.app/manifest.json",
+    "twa:build": "bubblewrap build",
+    "twa:update": "bubblewrap update"
   },
   "dependencies": {
     "@line/bot-sdk": "^10.5.0",
@@ -35,6 +38,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
+    "next-pwa": "^5.6.0",
     "openai": "^6.15.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -42,6 +46,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@bubblewrap/cli": "^1.24.1",
     "@next/bundle-analyzer": "^15.5.9",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

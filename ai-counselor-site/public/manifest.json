@@ -1,0 +1,21 @@
+{
+  "name": "メンタルAIチーム",
+  "short_name": "メンタルAI",
+  "start_url": "/",
+  "display": "standalone",
+  "description": "AIだけのカウンセリング事務所。24時間365日あなたの心に寄り添います。",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
