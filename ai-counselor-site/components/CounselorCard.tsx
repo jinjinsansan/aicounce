@@ -8,9 +8,10 @@ import { formatNumber } from "@/lib/utils";
 interface CounselorCardProps {
   counselor: Counselor;
   onSelect?: (id: string) => void;
+  priority?: boolean;
 }
 
-export default function CounselorCard({ counselor, onSelect }: CounselorCardProps) {
+export default function CounselorCard({ counselor, onSelect, priority = false }: CounselorCardProps) {
   const [isPending, startTransition] = useTransition();
   const isComingSoon = Boolean(counselor.comingSoon);
 
@@ -30,6 +31,7 @@ export default function CounselorCard({ counselor, onSelect }: CounselorCardProp
               fill
               className="object-cover"
               sizes="64px"
+              priority={priority}
             />
           ) : (
             <span className="text-2xl font-bold text-slate-400">{counselor.name.slice(0, 1)}</span>

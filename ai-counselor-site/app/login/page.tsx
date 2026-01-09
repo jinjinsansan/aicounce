@@ -83,7 +83,9 @@ function LoginContent() {
         setMessage("確認メールを送信しました。メールのリンクから登録を完了してください。");
       }
     } catch (error) {
-      console.error("signup request failed", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("signup request failed", error);
+      }
       setMessage("サインアップに失敗しました");
     } finally {
       setIsSubmitting(false);
@@ -110,7 +112,9 @@ function LoginContent() {
         setMessage("パスワード再設定メールを送信しました");
       }
     } catch (error) {
-      console.error("password reset request failed", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("password reset request failed", error);
+      }
       setMessage("パスワード再設定に失敗しました");
     } finally {
       setIsResetting(false);
