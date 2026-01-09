@@ -62,6 +62,9 @@ export default function AccountPage() {
   const [campaignInput, setCampaignInput] = useState("");
   const [campaignStatus, setCampaignStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState<"unread" | "all">("unread");
+  const [notificationUpdating, setNotificationUpdating] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -166,6 +169,49 @@ export default function AccountPage() {
       setCampaignLoading(false);
     }
   };
+
+  const handleNotificationsUpdated = (next: OverviewResponse["notifications"]) => {
+    setOverview((prev) => (prev ? { ...prev, notifications: next } : prev));
+  };
+
+  const markNotificationsAsRead = async ({ ids, markAll = false }: { ids?: string[]; markAll?: boolean }) => {
+    if (notificationUpdating) return;
+    if (!markAll && (!ids || ids.length === 0)) return;
+
+    setNotificationUpdating(true);
+    setNotificationMessage(null);
+
+    try {
+      const response = await fetch("/api/account/notifications/read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(markAll ? { all: true } : { ids }),
+      });
+      if (!response.ok) {
+        throw new Error("failed");
+      }
+      const data = (await response.json()) as { notifications?: OverviewResponse["notifications"] };
+      handleNotificationsUpdated(data.notifications ?? []);
+      setNotificationMessage("既読にしました");
+    } catch (err) {
+      console.error(err);
+      setNotificationMessage("既読処理に失敗しました");
+    } finally {
+      setNotificationUpdating(false);
+      setTimeout(() => setNotificationMessage(null), 4000);
+    }
+  };
+
+  const notifications = overview?.notifications ?? [];
+  const unreadNotifications = notifications.filter((notification) => !notification.read_at);
+  const visibleNotifications = notificationFilter === "unread" ? unreadNotifications : notifications;
+
+  useEffect(() => {
+    if (!overview) return;
+    if (notificationFilter === "unread" && unreadNotifications.length === 0) {
+      setNotificationFilter("all");
+    }
+  }, [overview, notificationFilter, unreadNotifications.length]);
 
   if (loading) {
     return (
@@ -336,20 +382,89 @@ export default function AccountPage() {
             </div>
 
             <div className="rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900">通知ボックス</h2>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">通知ボックス</h2>
+                  <p className="text-sm text-slate-500">
+                    未読 {unreadNotifications.length} 件 / 合計 {overview.notifications.length} 件
+                  </p>
+                </div>
+                <div className="flex gap-2 rounded-full bg-slate-100 p-1 text-xs font-semibold text-slate-500">
+                  {[
+                    { value: "unread", label: "未読" },
+                    { value: "all", label: "すべて" },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setNotificationFilter(value as "unread" | "all")}
+                      className={`rounded-full px-4 py-1 transition ${
+                        notificationFilter === value ? "bg-slate-900 text-white" : "text-slate-500"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {notificationMessage && (
+                <p className="mt-3 text-sm text-slate-500">{notificationMessage}</p>
+              )}
+
+              {unreadNotifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => markNotificationsAsRead({ markAll: true })}
+                  disabled={notificationUpdating}
+                  className="mt-4 text-xs font-semibold text-blue-700 underline disabled:opacity-50"
+                >
+                  未読をすべて既読にする
+                </button>
+              )}
+
               <div className="mt-4 space-y-3">
-                {overview.notifications.length === 0 && (
-                  <p className="text-sm text-slate-500">お知らせはありません。</p>
+                {visibleNotifications.length === 0 && (
+                  <p className="text-sm text-slate-500">
+                    {notificationFilter === "unread" ? "未読のお知らせはありません。" : "お知らせはありません。"}
+                  </p>
                 )}
-                {overview.notifications.map((notification) => (
-                  <article key={notification.id} className="rounded-2xl bg-slate-50 px-4 py-3">
-                    <p className="text-sm font-semibold text-slate-900">{notification.title}</p>
-                    <p className="text-sm text-slate-600">{notification.body}</p>
-                    <p className="text-xs text-slate-400">
-                      {new Date(notification.sent_at).toLocaleString("ja-JP")}
-                    </p>
-                  </article>
-                ))}
+                {visibleNotifications.map((notification) => {
+                  const isUnread = !notification.read_at;
+                  return (
+                    <article
+                      key={notification.id}
+                      className={`rounded-2xl border px-4 py-3 ${
+                        isUnread ? "border-blue-200 bg-white shadow-sm" : "border-slate-100 bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-900">
+                            {notification.title}
+                            {isUnread && (
+                              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                未読
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-sm text-slate-600 whitespace-pre-line">{notification.body}</p>
+                          <p className="text-xs text-slate-400">{formatDateTime(notification.sent_at)}</p>
+                        </div>
+                        {isUnread && (
+                          <button
+                            type="button"
+                            onClick={() => markNotificationsAsRead({ ids: [notification.id] })}
+                            disabled={notificationUpdating}
+                            className="text-xs font-semibold text-blue-700 underline-offset-2 hover:underline disabled:opacity-50"
+                          >
+                            既読にする
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
 
