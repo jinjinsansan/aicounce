@@ -9,22 +9,29 @@ export const metadata: Metadata = {
   description:
     "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
   icons: {
-    icon: "/images/logo/logo_square.png",
-    apple: "/images/logo/logo_square.png",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
   openGraph: {
     title: "メンタルAIチーム",
     description:
       "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
-    images: ["/images/logo/logo_square.png"],
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "メンタルAIチーム",
+      },
+    ],
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "メンタルAIチーム",
     description:
       "人間が一切介在しない、AIだけのカウンセリング事務所。10人のプロフェッショナルAIカウンセラーが、あなたの心の声を優しく聴きます。",
-    images: ["/images/logo/logo_square.png"],
+    images: ["/logo.png"],
   },
 };
 
