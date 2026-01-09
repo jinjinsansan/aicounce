@@ -10,11 +10,7 @@ export default function ProblemSolutionSection() {
             なぜ今、「AI」に相談するのか
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            人に話すのがつらいときこそ、誰にも気を使わない相手が必要です。
-            <span className="hidden sm:inline">
-              <br />
-            </span>
-            <span className="sm:inline">{" "}私たちは「絶対的な安心感」をAIで届けます。</span>
+            人に話すのがつらいときこそ、誰にも気を使わない相手が必要です。私たちは「絶対的な安心感」をAIで届けます。
           </p>
         </div>
 

@@ -21,7 +21,9 @@ export default function HeroSection() {
             メンタルAIチーム
           </h1>
           <p className="text-2xl font-semibold leading-tight text-slate-800 sm:text-3xl">
-            人間が一切介在しない、AIだけのカウンセリングチーム。もう、誰にも気を使わなくていい。
+            人間が一切介在しない、AIだけのカウンセリングチーム。
+            <br className="hidden sm:block" />
+            もう、誰にも気を使わなくていい。
           </p>
           <p className="text-lg leading-relaxed text-slate-600 sm:text-xl">
             様々なプロフェッショナルAIカウンセラーがあなたの心の声を優しく聴きます。

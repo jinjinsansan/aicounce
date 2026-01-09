@@ -48,11 +48,7 @@ export default function MultiCounselingSection() {
                   <Image src="/images/counselors/michelle.png" alt="カウンセラー" fill className="object-contain" />
                 </div>
                 <div className="rounded-xl bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
-                  1人のカウンセラーと
-                  <span className="hidden sm:inline">
-                    <br />
-                  </span>
-                  落ち着いて対話
+                  1人のカウンセラーと落ち着いて対話
                 </div>
               </div>
             </div>
