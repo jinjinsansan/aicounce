@@ -42,6 +42,26 @@ type DiaryEntryInsert = {
   metadata?: Record<string, unknown> | null;
 };
 
+type DiaryEntrySummary = {
+  author_id: string;
+  content: string;
+};
+
+type DiarySourceMetadata = {
+  chunk_id: string;
+  document_id: string | null;
+  parent_chunk_id: string | null;
+  similarity: number | null;
+};
+
+type DiaryBodyResult = {
+  content: string;
+  sources: DiarySourceMetadata[];
+};
+
+const MAX_UNIQUE_GENERATION_ATTEMPTS = 3;
+const DIARY_SIMILARITY_THRESHOLD = 0.82;
+
 const toJstContext = (now = new Date()) => {
   const formatter = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
@@ -86,7 +106,73 @@ const normalizeDiaryContent = (raw: string): string => {
   return trimmed.join("\n");
 };
 
-async function generateDiaryBody(config: DiaryConfig) {
+const buildCharacterBigrams = (text: string): Set<string> => {
+  const normalized = text
+    .toLowerCase()
+    .replace(/[\s\u3000]+/gu, "")
+    .replace(/[^\p{L}\p{N}ぁ-んァ-ヶ一-龯ー。、。,.!?]/gu, "");
+
+  const grams = new Set<string>();
+  if (!normalized) return grams;
+  if (normalized.length === 1) {
+    grams.add(normalized);
+    return grams;
+  }
+  for (let i = 0; i < normalized.length - 1; i += 1) {
+    grams.add(normalized.slice(i, i + 2));
+  }
+  return grams;
+};
+
+const calculateTextSimilarity = (a: string, b: string): number => {
+  if (!a.trim() || !b.trim()) return 0;
+  const gramsA = buildCharacterBigrams(a);
+  const gramsB = buildCharacterBigrams(b);
+  if (!gramsA.size || !gramsB.size) return 0;
+
+  let intersection = 0;
+  for (const gram of gramsA) {
+    if (gramsB.has(gram)) {
+      intersection += 1;
+    }
+  }
+  const union = gramsA.size + gramsB.size - intersection;
+  if (union === 0) return 0;
+  return intersection / union;
+};
+
+async function fetchDiaryEntriesForDate(dateString: string): Promise<DiaryEntrySummary[]> {
+  const supabase = getServiceSupabase();
+  const { data, error } = await supabase
+    .from("diary_entries")
+    .select("author_id, content")
+    .eq("journal_date", dateString)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("Failed to fetch diary entries for similarity check", error);
+    return [];
+  }
+
+  return (data ?? [])
+    .map((row) => ({ author_id: row.author_id, content: row.content ?? "" }))
+    .filter((row) => row.content.trim().length > 0);
+}
+
+const findMostSimilarEntry = (content: string, entries: DiaryEntrySummary[]) => {
+  let bestScore = 0;
+  let bestEntry: DiaryEntrySummary | null = null;
+  for (const entry of entries) {
+    const score = calculateTextSimilarity(content, entry.content);
+    if (score > bestScore) {
+      bestScore = score;
+      bestEntry = entry;
+    }
+  }
+  return { entry: bestEntry, score: bestScore };
+};
+
+async function generateDiaryBody(config: DiaryConfig): Promise<DiaryBodyResult> {
   const { context, sources } = await searchRagContext(
     config.id,
     "今日の利用者向けに短いヒントを作るための重要ポイント",
@@ -116,7 +202,7 @@ async function generateDiaryBody(config: DiaryConfig) {
   );
 
   const normalized = normalizeDiaryContent(result.content || "");
-  const metadataSources = (sources ?? []).slice(0, 3).map((src) => ({
+  const metadataSources: DiarySourceMetadata[] = (sources ?? []).slice(0, 3).map((src) => ({
     chunk_id: src.id,
     document_id: (src as any).document_id ?? null,
     parent_chunk_id: (src as any).parent_chunk_id ?? null,
@@ -124,6 +210,52 @@ async function generateDiaryBody(config: DiaryConfig) {
   }));
 
   return { content: normalized, sources: metadataSources };
+}
+
+type UniqueDiaryGenerationSuccess = {
+  success: true;
+  content: string;
+  sources: DiarySourceMetadata[];
+  attempts: number;
+  similarityScore: number;
+};
+
+type UniqueDiaryGenerationFailure = {
+  success: false;
+  reason: "empty_content" | "duplicate_content";
+};
+
+type UniqueDiaryGenerationResult = UniqueDiaryGenerationSuccess | UniqueDiaryGenerationFailure;
+
+async function generateUniqueDiaryContent(
+  config: DiaryConfig,
+  existingEntries: DiaryEntrySummary[],
+): Promise<UniqueDiaryGenerationResult> {
+  let sawEmptyContent = false;
+
+  for (let attempt = 0; attempt < MAX_UNIQUE_GENERATION_ATTEMPTS; attempt += 1) {
+    const { content, sources } = await generateDiaryBody(config);
+    if (!content.trim()) {
+      sawEmptyContent = true;
+      continue;
+    }
+
+    const { score } = findMostSimilarEntry(content, existingEntries);
+    if (!score || score < DIARY_SIMILARITY_THRESHOLD) {
+      return {
+        success: true,
+        content,
+        sources,
+        attempts: attempt + 1,
+        similarityScore: score ?? 0,
+      };
+    }
+  }
+
+  return {
+    success: false,
+    reason: sawEmptyContent ? "empty_content" : "duplicate_content",
+  };
 }
 
 async function upsertDiaryEntry(payload: DiaryEntryInsert) {
@@ -176,6 +308,7 @@ export async function runDailyDiaries(options: { force?: boolean; now?: Date } =
   const now = options.now ?? new Date();
   const jst = toJstContext(now);
   const results: DailyDiaryRunResult[] = [];
+  const todaysEntries = await fetchDiaryEntriesForDate(jst.dateString);
 
   for (const config of COUNSELOR_DIARY_CONFIGS) {
     if (!options.force && jst.hour < DAILY_POST_HOUR_JST) {
@@ -183,18 +316,20 @@ export async function runDailyDiaries(options: { force?: boolean; now?: Date } =
       continue;
     }
 
-    const already = await hasDiaryForDate(config.id, jst.dateString);
-    if (already) {
+    const alreadyLocal = todaysEntries.some((entry) => entry.author_id === config.id);
+    const alreadyRemote = alreadyLocal ? true : await hasDiaryForDate(config.id, jst.dateString);
+    if (alreadyRemote) {
       results.push({ authorId: config.id, posted: false, reason: "already_posted" });
       continue;
     }
 
     try {
-      const { content, sources } = await generateDiaryBody(config);
-      if (!content.trim()) {
-        results.push({ authorId: config.id, posted: false, reason: "empty_content" });
+      const uniqueGeneration = await generateUniqueDiaryContent(config, todaysEntries);
+      if (!uniqueGeneration.success) {
+        results.push({ authorId: config.id, posted: false, reason: uniqueGeneration.reason });
         continue;
       }
+      const { content, sources, attempts, similarityScore } = uniqueGeneration;
 
       const entryId = await upsertDiaryEntry({
         author_id: config.id,
@@ -204,9 +339,15 @@ export async function runDailyDiaries(options: { force?: boolean; now?: Date } =
         content,
         published_at: jst.isoNow,
         journal_date: jst.dateString,
-        metadata: { sources },
+        metadata: {
+          sources,
+          generation_attempts: attempts,
+          similarity_threshold: DIARY_SIMILARITY_THRESHOLD,
+          last_similarity_score: similarityScore,
+        },
       });
 
+      todaysEntries.push({ author_id: config.id, content });
       results.push({ authorId: config.id, posted: true, entryId });
     } catch (error) {
       console.error(`Failed to post diary for ${config.id}`, error);
