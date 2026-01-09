@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { MessageCircle, Users } from "lucide-react";
 
 export default function MultiCounselingSection() {
@@ -127,6 +128,14 @@ export default function MultiCounselingSection() {
 
         <div className="mt-10 text-center text-sm text-slate-600">
           チームカウンセリングチャットは <span className="font-semibold text-slate-900">プレミアムプラン</span> でご利用いただけます
+        </div>
+        <div className="mt-6 flex justify-center">
+          <Link
+            href="/team"
+            className="inline-flex items-center rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-black"
+          >
+            チームカウンセリングチャットを開く
+          </Link>
         </div>
       </div>
     </section>

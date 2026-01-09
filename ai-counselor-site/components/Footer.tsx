@@ -15,7 +15,7 @@ export default function Footer() {
             <NewsletterForm />
           </div>
 
-          <div className="grid grid-cols-2 gap-6 text-sm text-slate-700 md:justify-items-end">
+          <div className="grid grid-cols-2 gap-6 text-sm text-slate-700 md:grid-cols-3 md:justify-items-end">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">リンク</p>
               <Link href="/" className="block hover:text-slate-900">ホーム</Link>
@@ -29,6 +29,15 @@ export default function Footer() {
               <Link href="/legal/terms" className="block hover:text-slate-900">利用規約</Link>
               <Link href="/legal/privacy" className="block hover:text-slate-900">プライバシーポリシー</Link>
               <Link href="/legal/tokusho" className="block hover:text-slate-900">特定商取引法に基づく表記</Link>
+            </div>
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">関連リンク</p>
+              <Link href="https://namisapo.app/" target="_blank" rel="noreferrer" className="block hover:text-slate-900">
+                かんじょうにっき
+              </Link>
+              <Link href="https://web.namisapo.com/" target="_blank" rel="noreferrer" className="block hover:text-slate-900">
+                一般社団NAMIDAサポート協会
+              </Link>
             </div>
           </div>
         </div>
