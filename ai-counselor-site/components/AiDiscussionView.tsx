@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, Loader2, Plus, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Menu, Mic, Plus, RotateCcw, Share2, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Counselor } from "@/types";
@@ -48,12 +48,19 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
   const [moderatorStyle, setModeratorStyle] = useState("moderator_calm");
   const [rounds, setRounds] = useState<(typeof DISCUSSION_ROUND_OPTIONS)[number]>(3);
 
+  type SessionSummary = { id: string; title: string; topic: string; updated_at: string };
+  
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<DiscussionMessage[]>([]);
   const [state, setState] = useState<RunningState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [typingState, setTypingState] = useState<{ speakerName: string } | null>(null);
   const [thinkingIndex, setThinkingIndex] = useState(0);
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -94,8 +101,122 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
     }
   }, [messages, typingState]);
 
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const loadSessions = useCallback(async () => {
+    setIsLoadingSessions(true);
+    try {
+      const res = await fetch("/api/discussion/sessions");
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data);
+      }
+    } catch (error) {
+      console.error("Failed to load sessions", error);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, []);
+
+  const loadSession = useCallback(async (sessionId: string) => {
+    setIsLoadingSession(true);
+    try {
+      const res = await fetch(`/api/discussion/sessions/${sessionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setActiveSessionId(sessionId);
+        setTopic(data.session.topic);
+        setDebaterA(data.session.debater_a_id);
+        setDebaterB(data.session.debater_b_id);
+        setModerator(data.session.moderator_id ?? "");
+        setDebaterAStyle(data.session.debater_a_style);
+        setDebaterBStyle(data.session.debater_b_style);
+        setModeratorStyle(data.session.moderator_style ?? "moderator_calm");
+        setRounds(data.session.rounds);
+        setMessages(data.messages || []);
+        setIsSettingsExpanded(false);
+        setIsSidebarOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to load session", error);
+    } finally {
+      setIsLoadingSession(false);
+    }
+  }, []);
+
+  const deleteSession = useCallback(async (sessionId: string) => {
+    if (!confirm("この議論を削除しますか？")) return;
+    try {
+      const res = await fetch(`/api/discussion/sessions/${sessionId}`, { method: "DELETE" });
+      if (res.ok) {
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+        if (activeSessionId === sessionId) {
+          setActiveSessionId(null);
+          handleReset();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete session", error);
+    }
+  }, [activeSessionId]);
+
+  const createSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/discussion/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          debaterAId: debaterA,
+          debaterBId: debaterB,
+          moderatorId: moderator || null,
+          debaterAStyle,
+          debaterBStyle,
+          moderatorStyle,
+          rounds,
+        }),
+      });
+      if (res.ok) {
+        const newSession = await res.json();
+        setActiveSessionId(newSession.id);
+        setSessions((prev) => [newSession, ...prev]);
+        return newSession.id;
+      }
+    } catch (error) {
+      console.error("Failed to create session", error);
+    }
+    return null;
+  }, [topic, debaterA, debaterB, moderator, debaterAStyle, debaterBStyle, moderatorStyle, rounds]);
+
+  const saveMessage = useCallback(async (sessionId: string, message: DiscussionMessage) => {
+    try {
+      await fetch(`/api/discussion/sessions/${sessionId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: message.role,
+          authorId: message.authorId,
+          authorName: message.authorName,
+          authorIconUrl: message.authorIconUrl,
+          content: message.content,
+          createdAt: message.createdAt,
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to save message", error);
+    }
+  }, []);
+
+  const handleNewChat = () => {
+    setActiveSessionId(null);
+    handleReset();
+    setIsSidebarOpen(false);
+  };
+
   const processStream = useCallback(
-    async (response: Response) => {
+    async (response: Response, sessionId: string | null) => {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
@@ -122,6 +243,9 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
             } else if (event.type === "message") {
               setTypingState(null);
               setMessages((prev) => [...prev, event.message]);
+              if (sessionId) {
+                saveMessage(sessionId, event.message);
+              }
             } else if (event.type === "done") {
               setTypingState(null);
             } else if (event.type === "error") {
@@ -133,7 +257,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
         }
       }
     },
-    [],
+    [saveMessage],
   );
 
   const handleStart = async () => {
@@ -150,7 +274,18 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
     setTypingState(null);
     setState("starting");
     setIsSettingsExpanded(false);
+    
+    let currentSessionId = activeSessionId;
+    
     try {
+      // Create session if new discussion
+      if (!currentSessionId) {
+        currentSessionId = await createSession();
+        if (!currentSessionId) {
+          throw new Error("セッションの作成に失敗しました");
+        }
+      }
+
       const response = await fetch("/api/discussion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,7 +304,8 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
         throw new Error(errorData?.error ?? "議論の開始に失敗しました");
       }
 
-      await processStream(response);
+      await processStream(response, currentSessionId);
+      await loadSessions(); // Refresh session list
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "議論の開始に失敗しました");
@@ -205,7 +341,8 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
         const errorData = await response.json();
         throw new Error(errorData?.error ?? "追加ラウンドの生成に失敗しました");
       }
-      await processStream(response);
+      await processStream(response, activeSessionId);
+      await loadSessions();
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "追加ラウンドの生成に失敗しました");
@@ -244,7 +381,8 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
         const errorData = await response.json();
         throw new Error(errorData?.error ?? "まとめの生成に失敗しました");
       }
-      await processStream(response);
+      await processStream(response, activeSessionId);
+      await loadSessions();
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "まとめの生成に失敗しました");
@@ -300,10 +438,138 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
 
   return (
     <div className="relative w-full border-t border-slate-200" style={gradientStyle}>
-      <div className="mx-auto flex h-full max-w-6xl flex-col gap-4 overflow-hidden p-4 sm:p-6">
+      <div className="mx-auto flex h-full max-w-7xl gap-4 p-4 sm:p-6">
+        {/* 左サイドバー（デスクトップ） */}
+        <aside className="hidden w-80 flex-shrink-0 space-y-3 md:flex md:flex-col">
+          <Button
+            onClick={handleNewChat}
+            className="w-full rounded-full border-transparent shadow-lg"
+            style={{ backgroundColor: DISCUSSION_THEME.accent, color: "#ffffff" }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            新しい議論
+          </Button>
+
+          <div className="flex-1 overflow-y-auto rounded-[30px] border border-white/30 bg-white/70 p-5 backdrop-blur">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">過去の議論</h3>
+            {isLoadingSessions ? (
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 animate-pulse rounded-3xl bg-slate-200/50" />
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
+              <p className="py-4 text-center text-sm text-slate-400">まだ議論がありません</p>
+            ) : (
+              <div className="space-y-2">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={cn(
+                      "group relative cursor-pointer rounded-3xl border p-3 transition",
+                      activeSessionId === session.id
+                        ? "border-transparent bg-purple-600 text-white shadow-lg"
+                        : "border-purple-100 bg-white hover:border-purple-200",
+                    )}
+                    onClick={() => loadSession(session.id)}
+                  >
+                    <div className="pr-8">
+                      <p className={cn("truncate text-sm font-medium", activeSessionId === session.id ? "text-white" : "text-slate-900")}>
+                        {session.title || session.topic}
+                      </p>
+                      <p className={cn("mt-1 truncate text-xs", activeSessionId === session.id ? "text-purple-100" : "text-slate-500")}>
+                        {new Date(session.updated_at).toLocaleDateString("ja-JP")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(session.id);
+                      }}
+                      className={cn(
+                        "absolute right-2 top-3 rounded-full p-1 transition",
+                        activeSessionId === session.id
+                          ? "text-purple-200 hover:bg-purple-500 hover:text-white"
+                          : "text-slate-400 hover:bg-slate-100 hover:text-red-600",
+                      )}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* モバイルサイドバー */}
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div className="absolute inset-0 bg-black/20" onClick={() => setIsSidebarOpen(false)} />
+            <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-[30px] border-t border-white/30 bg-white/95 p-6 backdrop-blur">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900">議論履歴</h3>
+                <button onClick={() => setIsSidebarOpen(false)} className="rounded-full p-2 hover:bg-slate-100">
+                  <X className="h-5 w-5 text-slate-600" />
+                </button>
+              </div>
+              <Button
+                onClick={handleNewChat}
+                className="mb-4 w-full rounded-full border-transparent shadow-lg"
+                style={{ backgroundColor: DISCUSSION_THEME.accent, color: "#ffffff" }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                新しい議論
+              </Button>
+              <div className="space-y-2">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={cn(
+                      "group relative cursor-pointer rounded-3xl border p-3 transition",
+                      activeSessionId === session.id
+                        ? "border-transparent bg-purple-600 text-white"
+                        : "border-purple-100 bg-white",
+                    )}
+                    onClick={() => loadSession(session.id)}
+                  >
+                    <div className="pr-8">
+                      <p className={cn("truncate text-sm font-medium", activeSessionId === session.id ? "text-white" : "text-slate-900")}>
+                        {session.title || session.topic}
+                      </p>
+                      <p className={cn("mt-1 truncate text-xs", activeSessionId === session.id ? "text-purple-100" : "text-slate-500")}>
+                        {new Date(session.updated_at).toLocaleDateString("ja-JP")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(session.id);
+                      }}
+                      className={cn(
+                        "absolute right-2 top-3 rounded-full p-1",
+                        activeSessionId === session.id ? "text-purple-200" : "text-slate-400",
+                      )}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
         {/* ヘッダー */}
-        <header className="rounded-[32px] border border-white/40 bg-white/90 p-6 shadow-2xl backdrop-blur-sm">
-          <div className="flex items-start justify-between gap-4">
+        <header className="flex-shrink-0 rounded-[32px] border border-white/40 bg-white/90 p-6 shadow-2xl backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="flex-shrink-0 rounded-2xl border border-purple-200 bg-purple-50 p-3 transition hover:bg-purple-100 md:hidden"
+            >
+              <Menu className="h-5 w-5 text-purple-600" />
+            </button>
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-purple-600">AI Live Debate</p>
               <h1 className="mt-1 text-2xl font-bold text-slate-900">AI議論ライブ</h1>
@@ -311,7 +577,9 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
                 専門知識を持つAI同士がリアルタイムで議論します。
               </p>
             </div>
-            <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-gradient-to-br from-purple-400 to-pink-400 shadow-lg"></div>
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-gradient-to-br from-red-400 to-pink-400 shadow-lg">
+              <Mic className="h-7 w-7 text-white" />
+            </div>
           </div>
 
           {/* 設定セクション */}
@@ -454,21 +722,6 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
           className="flex-1 overflow-y-auto rounded-[32px] border border-white/40 bg-white/90 p-6 shadow-2xl backdrop-blur-sm"
         >
           <div className="mx-auto max-w-3xl space-y-4">
-            {messages.length === 0 && !typingState && (
-              <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 text-center">
-                <div className={cn("rounded-3xl border px-6 py-4 shadow-sm", DISCUSSION_THEME.promptBorder)}>
-                  <p className={cn("text-sm font-medium", DISCUSSION_THEME.promptText)}>
-                    議題とAIを設定して「議論を開始」を押してください
-                  </p>
-                </div>
-                <div className={cn("rounded-3xl border px-6 py-4 shadow-sm", DISCUSSION_THEME.promptBorder)}>
-                  <p className={cn("text-sm font-medium", DISCUSSION_THEME.promptText)}>
-                    専門知識を持つAI同士の白熱した議論を体験できます
-                  </p>
-                </div>
-              </div>
-            )}
-
             {messages.map(renderMessage)}
 
             {typingState && (
@@ -586,3 +839,8 @@ function ParticipantSelector({
     </div>
   );
 }
+        </div>
+      </div>
+    </div>
+
+// Note: This file has been updated to include session management
