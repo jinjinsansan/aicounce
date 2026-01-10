@@ -608,7 +608,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="例：生成AIはクリエイティブ職を奪うのか？"
-                    className="w-full rounded-2xl border-2 border-purple-200 bg-white px-4 py-3 text-sm leading-relaxed transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
+                    className="w-full rounded-2xl border-2 border-purple-200 bg-white px-4 py-3 text-base leading-relaxed transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
                     rows={3}
                     disabled={disableControls}
                   />
@@ -814,7 +814,7 @@ function ParticipantSelector({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border-2 border-purple-200 bg-white px-3 py-2 text-sm transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
+        className="w-full rounded-2xl border-2 border-purple-200 bg-white px-3 py-2 text-base transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
         disabled={disabled}
       >
         {optional && <option value="">なし</option>}
@@ -828,7 +828,7 @@ function ParticipantSelector({
       <select
         value={styleValue}
         onChange={(e) => onStyleChange(e.target.value)}
-        className="w-full rounded-2xl border-2 border-purple-200 bg-white px-3 py-2 text-sm transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
+        className="w-full rounded-2xl border-2 border-purple-200 bg-white px-3 py-2 text-base transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
         disabled={disabled}
       >
         {styles.map((style) => (
