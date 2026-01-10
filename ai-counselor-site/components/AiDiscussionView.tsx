@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Plus, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Counselor } from "@/types";
 import type { DiscussionMessage, DiscussionStyleOption } from "@/types/discussion";
@@ -20,6 +21,17 @@ const THINKING_MESSAGES = [
   "が論点を探しています...",
   "が言葉を選んでいます...",
 ];
+
+const DISCUSSION_THEME = {
+  gradientFrom: "#fdf4ff",
+  gradientVia: "#fae8ff",
+  gradientTo: "#f3e8ff",
+  accent: "#9333ea",
+  cardBorder: "border-purple-100",
+  promptBorder: "border-purple-100",
+  promptText: "text-purple-700",
+  promptHoverBorder: "border-purple-300",
+};
 
 export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) {
   const selectableCounselors = useMemo(
@@ -41,6 +53,10 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
   const [error, setError] = useState<string | null>(null);
   const [typingState, setTypingState] = useState<{ speakerName: string } | null>(null);
   const [thinkingIndex, setThinkingIndex] = useState(0);
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(true);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const debaterStyles = useMemo(() => DISCUSSION_STYLES.filter((style) => style.role !== "moderator"), []);
   const moderatorStyles = useMemo(() => DISCUSSION_STYLES.filter((style) => style.role !== "debater"), []);
@@ -52,6 +68,16 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
 
   const disableControls = state !== "idle";
 
+  const gradientStyle = useMemo(
+    () => ({
+      background: `linear-gradient(135deg, ${DISCUSSION_THEME.gradientFrom} 0%, ${DISCUSSION_THEME.gradientVia} 50%, ${DISCUSSION_THEME.gradientTo} 100%)`,
+      minHeight: "calc(100vh - 4rem)",
+      height: "calc(100vh - 4rem)",
+      maxHeight: "calc(100vh - 4rem)",
+    }),
+    [],
+  );
+
   useEffect(() => {
     if (!typingState) return;
     const interval = setInterval(() => {
@@ -59,6 +85,14 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
     }, 1400);
     return () => clearInterval(interval);
   }, [typingState]);
+
+  useEffect(() => {
+    if (messages.length > 0 || typingState) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [messages, typingState]);
 
   const processStream = useCallback(
     async (response: Response) => {
@@ -115,6 +149,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
     setMessages([]);
     setTypingState(null);
     setState("starting");
+    setIsSettingsExpanded(false);
     try {
       const response = await fetch("/api/discussion", {
         method: "POST",
@@ -219,177 +254,276 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
     }
   };
 
+  const handleReset = () => {
+    setMessages([]);
+    setTypingState(null);
+    setError(null);
+    setTopic("");
+    setIsSettingsExpanded(true);
+  };
+
   const renderMessage = (message: DiscussionMessage) => {
-    const fallback = counselorById(message.authorId);
+    const counselor = counselorById(message.authorId);
+    const isModeratorMessage = message.role === "moderator";
+
     return (
-      <div key={message.id} className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-        <div className="h-10 w-10 overflow-hidden rounded-full border border-slate-200">
+      <div key={message.id} className="flex gap-3">
+        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <Image
-            src={message.authorIconUrl ?? fallback?.iconUrl ?? "/images/counselors/michelle.png"}
+            src={message.authorIconUrl ?? counselor?.iconUrl ?? "/images/counselors/michelle.png"}
             alt={message.authorName}
             width={40}
             height={40}
             className="h-full w-full object-cover"
           />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-900">{message.authorName}</span>
+        <div
+          className={cn(
+            "max-w-[85%] rounded-3xl border px-5 py-3 shadow-sm",
+            isModeratorMessage ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white",
+          )}
+        >
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-900">{message.authorName}</span>
             <span className="text-xs text-slate-400">
-              {new Date(message.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+              {new Date(message.createdAt).toLocaleTimeString("ja-JP", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
           </div>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{message.content}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{message.content}</p>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="space-y-10">
-      <section className="rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">議題</label>
-              <textarea
-                value={topic}
-                onChange={(event) => setTopic(event.target.value)}
-                placeholder="例：生成AIはクリエイティブ職を奪うのか？"
-                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none"
-                rows={3}
-                disabled={disableControls}
-              />
+    <div className="relative w-full border-t border-slate-200" style={gradientStyle}>
+      <div className="mx-auto flex h-full max-w-6xl flex-col gap-4 overflow-hidden p-4 sm:p-6">
+        {/* ヘッダー */}
+        <header className="rounded-[32px] border border-white/40 bg-white/90 p-6 shadow-2xl backdrop-blur-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-purple-600">AI Live Debate</p>
+              <h1 className="mt-1 text-2xl font-bold text-slate-900">AI議論ライブ</h1>
+              <p className="mt-2 text-sm text-slate-600">
+                専門知識を持つAI同士がリアルタイムで議論します。
+              </p>
             </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">ラウンド</p>
-              <div className="flex flex-wrap gap-2">
-                {DISCUSSION_ROUND_OPTIONS.map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setRounds(value)}
-                    disabled={disableControls}
-                    className={cn(
-                      "rounded-full px-4 py-2 text-sm font-semibold",
-                      rounds === value
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200",
-                      disableControls && "opacity-60",
-                    )}
-                  >
-                    {value}ラウンド
-                  </button>
-                ))}
-              </div>
-            </div>
+            <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-gradient-to-br from-purple-400 to-pink-400 shadow-lg"></div>
           </div>
 
-          <div className="space-y-5">
-            <ParticipantSelector
-              label="AI 1"
-              counselors={selectableCounselors}
-              value={debaterA}
-              onChange={setDebaterA}
-              styleValue={debaterAStyle}
-              onStyleChange={setDebaterAStyle}
-              styles={debaterStyles}
-              disabled={disableControls}
-            />
-            <ParticipantSelector
-              label="AI 2"
-              counselors={selectableCounselors}
-              value={debaterB}
-              onChange={setDebaterB}
-              styleValue={debaterBStyle}
-              onStyleChange={setDebaterBStyle}
-              styles={debaterStyles}
-              disabled={disableControls}
-            />
-            <ParticipantSelector
-              label="まとめ役"
-              counselors={selectableCounselors}
-              value={moderator}
-              onChange={setModerator}
-              styleValue={moderatorStyle}
-              onStyleChange={setModeratorStyle}
-              styles={moderatorStyles}
-              disabled={disableControls}
-              optional
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={handleStart}
-            disabled={disableControls}
-            className="flex-1 rounded-full bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
-            {state === "starting" ? "議論生成中..." : "議論を開始"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTopic("")}
-            disabled={disableControls}
-            className="rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-          >
-            リセット
-          </button>
-        </div>
-
-        {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-bold text-slate-900">議論ログ</h2>
-          <div className="flex flex-wrap gap-2">
-            {DISCUSSION_ROUND_OPTIONS.map((value) => (
-              <button
-                key={`extend-${value}`}
-                type="button"
-                onClick={() => handleExtend(value)}
-                disabled={state !== "idle" || !messages.length}
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                +{value}ラウンド
-              </button>
-            ))}
+          {/* 設定セクション */}
+          <div className="mt-4">
             <button
               type="button"
-              onClick={handleSummary}
-              disabled={state !== "idle" || !messages.length || !moderator}
-              className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+              onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
+              className="flex w-full items-center justify-between rounded-2xl border border-purple-100 bg-purple-50/50 px-4 py-3 text-left transition hover:bg-purple-50"
             >
-              {state === "summarizing" ? "まとめ中..." : "まとめ役に依頼"}
+              <span className="text-sm font-semibold text-purple-900">議論設定</span>
+              {isSettingsExpanded ? (
+                <ChevronUp className="h-4 w-4 text-purple-600" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-purple-600" />
+              )}
             </button>
+
+            {isSettingsExpanded && (
+              <div className="mt-4 space-y-4">
+                {/* 議題 */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    議題
+                  </label>
+                  <textarea
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="例：生成AIはクリエイティブ職を奪うのか？"
+                    className="w-full rounded-2xl border-2 border-purple-200 bg-white px-4 py-3 text-sm leading-relaxed transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
+                    rows={3}
+                    disabled={disableControls}
+                  />
+                </div>
+
+                {/* ラウンド選択 */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    ラウンド数
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DISCUSSION_ROUND_OPTIONS.map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRounds(value)}
+                        disabled={disableControls}
+                        className={cn(
+                          "rounded-full px-4 py-2 text-sm font-semibold transition",
+                          rounds === value
+                            ? "border-transparent bg-purple-600 text-white shadow-lg"
+                            : "border border-purple-200 bg-white text-purple-700 hover:border-purple-300 hover:bg-purple-50",
+                          disableControls && "opacity-60",
+                        )}
+                      >
+                        {value}ラウンド
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI選択 */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <ParticipantSelector
+                    label="AI 1"
+                    counselors={selectableCounselors}
+                    value={debaterA}
+                    onChange={setDebaterA}
+                    styleValue={debaterAStyle}
+                    onStyleChange={setDebaterAStyle}
+                    styles={debaterStyles}
+                    disabled={disableControls}
+                  />
+                  <ParticipantSelector
+                    label="AI 2"
+                    counselors={selectableCounselors}
+                    value={debaterB}
+                    onChange={setDebaterB}
+                    styleValue={debaterBStyle}
+                    onStyleChange={setDebaterBStyle}
+                    styles={debaterStyles}
+                    disabled={disableControls}
+                  />
+                  <ParticipantSelector
+                    label="まとめ役"
+                    counselors={selectableCounselors}
+                    value={moderator}
+                    onChange={setModerator}
+                    styleValue={moderatorStyle}
+                    onStyleChange={setModeratorStyle}
+                    styles={moderatorStyles}
+                    disabled={disableControls}
+                    optional
+                  />
+                </div>
+
+                {/* アクションボタン */}
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={handleStart}
+                    disabled={disableControls}
+                    className="flex-1 rounded-full border-transparent shadow-lg"
+                    style={{ backgroundColor: DISCUSSION_THEME.accent, color: "#ffffff" }}
+                  >
+                    {state === "starting" ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        議論生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        議論を開始
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleReset}
+                    disabled={disableControls}
+                    variant="outline"
+                    className="rounded-full"
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    リセット
+                  </Button>
+                </div>
+
+                {error && (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                    {error}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* メッセージエリア */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto rounded-[32px] border border-white/40 bg-white/90 p-6 shadow-2xl backdrop-blur-sm"
+        >
+          <div className="mx-auto max-w-3xl space-y-4">
+            {messages.length === 0 && !typingState && (
+              <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 text-center">
+                <div className={cn("rounded-3xl border px-6 py-4 shadow-sm", DISCUSSION_THEME.promptBorder)}>
+                  <p className={cn("text-sm font-medium", DISCUSSION_THEME.promptText)}>
+                    議題とAIを設定して「議論を開始」を押してください
+                  </p>
+                </div>
+                <div className={cn("rounded-3xl border px-6 py-4 shadow-sm", DISCUSSION_THEME.promptBorder)}>
+                  <p className={cn("text-sm font-medium", DISCUSSION_THEME.promptText)}>
+                    専門知識を持つAI同士の白熱した議論を体験できます
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {messages.map(renderMessage)}
+
+            {typingState && (
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
+                </div>
+                <div className="flex max-w-[85%] items-center rounded-3xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
+                  <p className="text-sm text-slate-600">
+                    {typingState.speakerName}
+                    {THINKING_MESSAGES[thinkingIndex]}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
-        <div className="space-y-3">
-          {messages.length === 0 && !typingState && (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
-              まだ議論は始まっていません。お題とAIを設定して「議論を開始」を押してください。
+        {/* 追加コントロール */}
+        {messages.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/40 bg-white/90 px-6 py-4 shadow-lg backdrop-blur-sm">
+            <div className="flex flex-wrap gap-2">
+              {DISCUSSION_ROUND_OPTIONS.map((value) => (
+                <Button
+                  key={`extend-${value}`}
+                  onClick={() => handleExtend(value)}
+                  disabled={state !== "idle"}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                >
+                  <Plus className="mr-1 h-3 w-3" />+{value}ラウンド
+                </Button>
+              ))}
             </div>
-          )}
-          {messages.map(renderMessage)}
-          {typingState && (
-            <div className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-200">
-                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-              </div>
-              <div className="flex flex-1 items-center">
-                <p className="text-sm text-slate-500">
-                  {typingState.speakerName}
-                  {THINKING_MESSAGES[thinkingIndex]}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+            <Button
+              onClick={handleSummary}
+              disabled={state !== "idle" || !moderator}
+              size="sm"
+              className="rounded-full bg-emerald-600 hover:bg-emerald-500"
+            >
+              {state === "summarizing" ? (
+                <>
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  まとめ中...
+                </>
+              ) : (
+                "まとめ役に依頼"
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -419,18 +553,18 @@ function ParticipantSelector({
 }: ParticipantSelectorProps) {
   return (
     <div className="space-y-2">
-      <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
         {label}
-        {optional && <span className="ml-1 text-[10px] font-normal text-slate-400">任意</span>}
+        {optional && <span className="ml-1 text-[10px] font-normal text-slate-400">(任意)</span>}
       </label>
       <select
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none"
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-2xl border-2 border-purple-200 bg-white px-3 py-2 text-sm transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
         disabled={disabled}
       >
-        {!optional && !value && <option value="">選択してください</option>}
         {optional && <option value="">なし</option>}
+        {!optional && !value && <option value="">選択してください</option>}
         {counselors.map((counselor) => (
           <option key={counselor.id} value={counselor.id}>
             {counselor.name}（{counselor.specialty}）
@@ -439,8 +573,8 @@ function ParticipantSelector({
       </select>
       <select
         value={styleValue}
-        onChange={(event) => onStyleChange(event.target.value)}
-        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none"
+        onChange={(e) => onStyleChange(e.target.value)}
+        className="w-full rounded-2xl border-2 border-purple-200 bg-white px-3 py-2 text-sm transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:ring-offset-0"
         disabled={disabled}
       >
         {styles.map((style) => (
