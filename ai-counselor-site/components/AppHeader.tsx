@@ -15,6 +15,7 @@ const BASE_PRIMARY_LINKS = [
   { href: "/#counselors", label: "カウンセラー" },
   { href: "/team", label: "チームケア" },
   { href: "/diary", label: "日記" },
+  { href: "/ai-discussion", label: "AI議論" },
 ];
 
 const BASE_SERVICE_LINKS = [
