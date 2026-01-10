@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { fetchCounselorById } from "@/lib/counselors";
 import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
 import { callLLMWithHistory } from "@/lib/llm";
@@ -39,70 +38,115 @@ export async function POST(request: Request) {
     payload = (await request.json()) as DiscussionRequest;
   } catch (error) {
     console.error("Invalid discussion payload", error);
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "Invalid payload" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const action = payload.action ?? "start";
   if (!payload.debaterA?.id || !payload.debaterB?.id) {
-    return NextResponse.json({ error: "AIを2体選択してください" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "AIを2体選択してください" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (payload.debaterA.id === payload.debaterB.id) {
-    return NextResponse.json({ error: "別々のAIを選択してください" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "別々のAIを選択してください" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const topic = (payload.topic ?? "").trim();
   if (action !== "summary" && !topic) {
-    return NextResponse.json({ error: "議題を入力してください" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "議題を入力してください" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const rounds = payload.rounds ?? 3;
   if (
     action !== "summary" &&
-    !DISCUSSION_ROUND_OPTIONS.includes(
-      rounds as (typeof DISCUSSION_ROUND_OPTIONS)[number],
-    )
+    !DISCUSSION_ROUND_OPTIONS.includes(rounds as (typeof DISCUSSION_ROUND_OPTIONS)[number])
   ) {
-    return NextResponse.json({ error: "無効なラウンド数です" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "無効なラウンド数です" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  try {
-    const debaterA = await buildParticipantProfile(payload.debaterA, "debater");
-    const debaterB = await buildParticipantProfile(payload.debaterB, "debater");
-    const moderator = payload.moderator?.id
-      ? await buildParticipantProfile(payload.moderator, "moderator")
-      : null;
+  const encoder = new TextEncoder();
 
-    const history = sanitizeHistory(payload.history ?? [], [
-      debaterA,
-      debaterB,
-      moderator,
-    ].filter(Boolean) as ParticipantProfile[]);
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const debaterA = await buildParticipantProfile(payload.debaterA!, "debater");
+        const debaterB = await buildParticipantProfile(payload.debaterB!, "debater");
+        const moderator = payload.moderator?.id
+          ? await buildParticipantProfile(payload.moderator, "moderator")
+          : null;
 
-    if (action === "summary") {
-      if (!moderator) {
-        return NextResponse.json({ error: "まとめ役を選択してください" }, { status: 400 });
+        const history = sanitizeHistory(
+          payload.history ?? [],
+          [debaterA, debaterB, moderator].filter(Boolean) as ParticipantProfile[],
+        );
+
+        if (action === "summary") {
+          if (!moderator) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ error: "まとめ役を選択してください" })}\n\n`),
+            );
+            controller.close();
+            return;
+          }
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "typing", speakerName: moderator.name })}\n\n`,
+            ),
+          );
+          const summary = await generateModeratorSummary({ topic, history, moderator });
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "message", message: summary })}\n\n`),
+          );
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          controller.close();
+          return;
+        }
+
+        await runDebateRoundsStreaming({
+          topic,
+          rounds,
+          debaterA,
+          debaterB,
+          history,
+          controller,
+          encoder,
+        });
+
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+        controller.close();
+      } catch (error) {
+        console.error("discussion route error", error);
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ type: "error", error: "議論の生成に失敗しました" })}\n\n`,
+          ),
+        );
+        controller.close();
       }
-      const summary = await generateModeratorSummary({ topic, history, moderator });
-      return NextResponse.json({ messages: [summary] });
-    }
+    },
+  });
 
-    const newMessages = await runDebateRounds({
-      topic,
-      rounds,
-      debaterA,
-      debaterB,
-      history,
-    });
-
-    return NextResponse.json({
-      sessionId: crypto.randomUUID(),
-      messages: newMessages,
-    });
-  } catch (error) {
-    console.error("discussion route error", error);
-    return NextResponse.json({ error: "議論の生成に失敗しました" }, { status: 500 });
-  }
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }
 
 async function buildParticipantProfile(
@@ -149,18 +193,22 @@ function sanitizeHistory(
     .slice(-40);
 }
 
-async function runDebateRounds(params: {
+async function runDebateRoundsStreaming(params: {
   topic: string;
   rounds: number;
   debaterA: ParticipantProfile;
   debaterB: ParticipantProfile;
   history: DiscussionMessage[];
-}): Promise<DiscussionMessage[]> {
-  const { topic, rounds, debaterA, debaterB } = params;
+  controller: ReadableStreamDefaultController;
+  encoder: TextEncoder;
+}): Promise<void> {
+  const { topic, rounds, debaterA, debaterB, controller, encoder } = params;
   const history = [...params.history];
-  const produced: DiscussionMessage[] = [];
 
   for (let round = 0; round < rounds; round += 1) {
+    controller.enqueue(
+      encoder.encode(`data: ${JSON.stringify({ type: "typing", speakerName: debaterA.name })}\n\n`),
+    );
     const aMessage = await generateDebaterMessage({
       topic,
       speaker: debaterA,
@@ -169,8 +217,13 @@ async function runDebateRounds(params: {
       role: "debaterA",
     });
     history.push(aMessage);
-    produced.push(aMessage);
+    controller.enqueue(
+      encoder.encode(`data: ${JSON.stringify({ type: "message", message: aMessage })}\n\n`),
+    );
 
+    controller.enqueue(
+      encoder.encode(`data: ${JSON.stringify({ type: "typing", speakerName: debaterB.name })}\n\n`),
+    );
     const bMessage = await generateDebaterMessage({
       topic,
       speaker: debaterB,
@@ -179,10 +232,10 @@ async function runDebateRounds(params: {
       role: "debaterB",
     });
     history.push(bMessage);
-    produced.push(bMessage);
+    controller.enqueue(
+      encoder.encode(`data: ${JSON.stringify({ type: "message", message: bMessage })}\n\n`),
+    );
   }
-
-  return produced;
 }
 
 async function generateDebaterMessage(params: {

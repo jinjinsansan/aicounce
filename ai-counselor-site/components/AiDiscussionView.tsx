@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Counselor } from "@/types";
 import type { DiscussionMessage, DiscussionStyleOption } from "@/types/discussion";
@@ -12,6 +13,13 @@ interface AiDiscussionViewProps {
 }
 
 type RunningState = "idle" | "starting" | "continuing" | "summarizing";
+
+const THINKING_MESSAGES = [
+  "が考えています...",
+  "が視点を整理しています...",
+  "が論点を探しています...",
+  "が言葉を選んでいます...",
+];
 
 export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) {
   const selectableCounselors = useMemo(
@@ -31,6 +39,8 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
   const [messages, setMessages] = useState<DiscussionMessage[]>([]);
   const [state, setState] = useState<RunningState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [typingState, setTypingState] = useState<{ speakerName: string } | null>(null);
+  const [thinkingIndex, setThinkingIndex] = useState(0);
 
   const debaterStyles = useMemo(() => DISCUSSION_STYLES.filter((style) => style.role !== "moderator"), []);
   const moderatorStyles = useMemo(() => DISCUSSION_STYLES.filter((style) => style.role !== "debater"), []);
@@ -42,6 +52,56 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
 
   const disableControls = state !== "idle";
 
+  useEffect(() => {
+    if (!typingState) return;
+    const interval = setInterval(() => {
+      setThinkingIndex((prev) => (prev + 1) % THINKING_MESSAGES.length);
+    }, 1400);
+    return () => clearInterval(interval);
+  }, [typingState]);
+
+  const processStream = useCallback(
+    async (response: Response) => {
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error("ストリームの読み取りに失敗しました");
+      }
+
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          try {
+            const event = JSON.parse(data);
+            if (event.type === "typing") {
+              setTypingState({ speakerName: event.speakerName });
+            } else if (event.type === "message") {
+              setTypingState(null);
+              setMessages((prev) => [...prev, event.message]);
+            } else if (event.type === "done") {
+              setTypingState(null);
+            } else if (event.type === "error") {
+              throw new Error(event.error ?? "エラーが発生しました");
+            }
+          } catch (parseError) {
+            console.error("Failed to parse SSE event", parseError);
+          }
+        }
+      }
+    },
+    [],
+  );
+
   const handleStart = async () => {
     if (!topic.trim()) {
       setError("議題を入力してください");
@@ -52,6 +112,8 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
       return;
     }
     setError(null);
+    setMessages([]);
+    setTypingState(null);
     setState("starting");
     try {
       const response = await fetch("/api/discussion", {
@@ -67,14 +129,16 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
         }),
       });
 
-      const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload?.error ?? "議論の開始に失敗しました");
+        const errorData = await response.json();
+        throw new Error(errorData?.error ?? "議論の開始に失敗しました");
       }
-      setMessages(payload.messages ?? []);
+
+      await processStream(response);
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "議論の開始に失敗しました");
+      setTypingState(null);
     } finally {
       setState("idle");
     }
@@ -86,6 +150,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
       return;
     }
     setError(null);
+    setTypingState(null);
     setState("continuing");
     try {
       const response = await fetch("/api/discussion", {
@@ -101,14 +166,15 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
           history: messages,
         }),
       });
-      const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload?.error ?? "追加ラウンドの生成に失敗しました");
+        const errorData = await response.json();
+        throw new Error(errorData?.error ?? "追加ラウンドの生成に失敗しました");
       }
-      setMessages((prev) => [...prev, ...(payload.messages ?? [])]);
+      await processStream(response);
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "追加ラウンドの生成に失敗しました");
+      setTypingState(null);
     } finally {
       setState("idle");
     }
@@ -124,6 +190,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
       return;
     }
     setError(null);
+    setTypingState(null);
     setState("summarizing");
     try {
       const response = await fetch("/api/discussion", {
@@ -138,14 +205,15 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
           history: messages,
         }),
       });
-      const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload?.error ?? "まとめの生成に失敗しました");
+        const errorData = await response.json();
+        throw new Error(errorData?.error ?? "まとめの生成に失敗しました");
       }
-      setMessages((prev) => [...prev, ...(payload.messages ?? [])]);
+      await processStream(response);
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "まとめの生成に失敗しました");
+      setTypingState(null);
     } finally {
       setState("idle");
     }
@@ -301,12 +369,25 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
         </div>
 
         <div className="space-y-3">
-          {messages.length === 0 && (
+          {messages.length === 0 && !typingState && (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-6 text-center text-sm text-slate-500">
               まだ議論は始まっていません。お題とAIを設定して「議論を開始」を押してください。
             </div>
           )}
           {messages.map(renderMessage)}
+          {typingState && (
+            <div className="flex gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-200">
+                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+              </div>
+              <div className="flex flex-1 items-center">
+                <p className="text-sm text-slate-500">
+                  {typingState.speakerName}
+                  {THINKING_MESSAGES[thinkingIndex]}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>
