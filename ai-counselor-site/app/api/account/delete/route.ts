@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import type { GenericSchema, PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
@@ -43,7 +43,7 @@ export async function POST() {
 }
 
 async function deleteUserRelatedData(client: SupabaseClient<Database>, userId: string) {
-  const clientAny = client as unknown as SupabaseClient<GenericSchema>;
+  const clientAny = client as unknown as SupabaseClient<any>;
 
   const conversationIds = await selectIds(client, "conversations", "id", "user_id", userId);
   if (conversationIds.length > 0) {
@@ -103,7 +103,7 @@ async function deleteUserRelatedData(client: SupabaseClient<Database>, userId: s
 }
 
 async function selectIds(
-  client: SupabaseClient<GenericSchema>,
+  client: SupabaseClient<any>,
   table: string,
   column: string,
   filterColumn: string,
