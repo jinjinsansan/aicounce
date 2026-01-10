@@ -1,3 +1,6 @@
+import { cookies } from "next/headers";
+import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 import { fetchCounselorById } from "@/lib/counselors";
 import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
 import { callLLMWithHistory } from "@/lib/llm";
@@ -35,6 +38,30 @@ type ParticipantProfile = {
 };
 
 export async function POST(request: Request) {
+  // Authentication & Access Control
+  const cookieStore = await cookies();
+  const supabase = createSupabaseRouteClient(cookieStore);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
+  } catch (accessError) {
+    const { status, message } = parseAccessError(accessError);
+    return new Response(JSON.stringify({ error: message }), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   let payload: DiscussionRequest;
   try {
     payload = (await request.json()) as DiscussionRequest;

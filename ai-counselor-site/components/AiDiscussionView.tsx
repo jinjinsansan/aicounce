@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronDown, ChevronUp, Loader2, Menu, Mic, Plus, RotateCcw, Share2, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,16 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
 
   type SessionSummary = { id: string; title: string; topic: string; updated_at: string };
   
+  type AccessState = {
+    canUseTeam: boolean;
+    lineLinked: boolean;
+    onTrial: boolean;
+    trialExpiresAt?: string;
+    campaignAccess?: { code: string; expiresAt: string } | null;
+  };
+  
+  const [accessState, setAccessState] = useState<AccessState | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<DiscussionMessage[]>([]);
@@ -102,8 +113,24 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
   }, [messages, typingState]);
 
   useEffect(() => {
+    loadAccessState();
     loadSessions();
   }, []);
+
+  const loadAccessState = async () => {
+    setAccessLoading(true);
+    try {
+      const res = await fetch("/api/account/overview");
+      if (res.ok) {
+        const data = await res.json();
+        setAccessState(data.access);
+      }
+    } catch (error) {
+      console.error("Failed to load access state", error);
+    } finally {
+      setAccessLoading(false);
+    }
+  };
 
   const loadSessions = useCallback(async () => {
     setIsLoadingSessions(true);
@@ -435,6 +462,86 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
       </div>
     );
   };
+
+  // Paywall UI
+  if (accessLoading) {
+    return (
+      <div className="relative min-h-screen w-full overflow-x-hidden border-t border-slate-200" style={gradientStyle}>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!accessState?.canUseTeam) {
+    return (
+      <div className="relative min-h-screen w-full overflow-x-hidden border-t border-slate-200" style={gradientStyle}>
+        <div className="mx-auto max-w-2xl px-4 py-20">
+          <div className="rounded-3xl border border-purple-100 bg-white/90 p-8 text-center shadow-2xl backdrop-blur-sm sm:p-12">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-400 to-pink-400">
+              <Mic className="h-10 w-10 text-white" />
+            </div>
+            <h2 className="mb-3 text-2xl font-bold text-slate-900">AI議論ライブ</h2>
+            <p className="mb-6 text-slate-600">
+              この機能は<strong className="text-purple-600">プレミアムプラン</strong>限定です。
+            </p>
+            
+            <div className="mb-8 space-y-3 text-left">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-purple-500" />
+                <p className="text-sm text-slate-700">2体のAIカウンセラーが専門知識で白熱討論</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-purple-500" />
+                <p className="text-sm text-slate-700">まとめ役AIが結論を提示</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-purple-500" />
+                <p className="text-sm text-slate-700">議論履歴の保存・再生</p>
+              </div>
+            </div>
+
+            {accessState?.lineLinked && accessState.onTrial ? (
+              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4">
+                <p className="text-sm font-semibold text-green-800">
+                  ✨ トライアル中は無料でご利用いただけます
+                </p>
+                {accessState.trialExpiresAt && (
+                  <p className="mt-1 text-xs text-green-700">
+                    期限: {new Date(accessState.trialExpiresAt).toLocaleDateString("ja-JP")}
+                  </p>
+                )}
+              </div>
+            ) : accessState?.campaignAccess ? (
+              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4">
+                <p className="text-sm font-semibold text-green-800">
+                  ✨ キャンペーンコード適用中
+                </p>
+                <p className="mt-1 text-xs text-green-700">
+                  期限: {new Date(accessState.campaignAccess.expiresAt).toLocaleDateString("ja-JP")}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Link href="/account">
+                  <Button 
+                    className="w-full rounded-full py-6 text-base font-bold shadow-lg"
+                    style={{ backgroundColor: DISCUSSION_THEME.accent, color: "#ffffff" }}
+                  >
+                    プレミアムプランに登録
+                  </Button>
+                </Link>
+                <p className="text-xs text-slate-500">
+                  または、<Link href="/account" className="text-purple-600 underline">LINE公式アカウント追加</Link>で無料トライアル
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden border-t border-slate-200" style={gradientStyle}>

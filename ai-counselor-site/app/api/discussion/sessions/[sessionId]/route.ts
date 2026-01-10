@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
+import { assertAccess, parseAccessError } from "@/lib/access-control";
 
 type RouteParams = {
   params: Promise<{ sessionId: string }>;
@@ -17,6 +18,16 @@ export async function GET(_request: Request, { params }: RouteParams) {
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
+  } catch (accessError) {
+    const { status, message } = parseAccessError(accessError);
+    return new Response(JSON.stringify({ error: message }), {
+      status,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -82,6 +93,16 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    await assertAccess(session.user.id, "team", session.user.email ?? null);
+  } catch (accessError) {
+    const { status, message } = parseAccessError(accessError);
+    return new Response(JSON.stringify({ error: message }), {
+      status,
       headers: { "Content-Type": "application/json" },
     });
   }
