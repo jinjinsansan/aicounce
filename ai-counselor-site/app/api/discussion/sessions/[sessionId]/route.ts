@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   try {
     // Fetch session details
-    const { data: sessionData, error: sessionError } = await supabase
+    const { data: sessionData, error: sessionError } = await (supabase as any)
       .from("discussion_sessions")
       .select("*")
       .eq("id", sessionId)
@@ -38,7 +38,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     // Fetch messages
-    const { data: messages, error: messagesError } = await supabase
+    const { data: messages, error: messagesError } = await (supabase as any)
       .from("discussion_messages")
       .select("*")
       .eq("session_id", sessionId)
@@ -87,7 +87,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   }
 
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("discussion_sessions")
       .delete()
       .eq("id", sessionId)

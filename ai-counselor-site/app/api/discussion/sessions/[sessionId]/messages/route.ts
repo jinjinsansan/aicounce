@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   try {
     // Verify session ownership
-    const { data: sessionData, error: sessionError } = await supabase
+    const { data: sessionData, error: sessionError } = await (supabase as any)
       .from("discussion_sessions")
       .select("id")
       .eq("id", sessionId)
@@ -48,7 +48,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const payload = (await request.json()) as SaveMessagePayload;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("discussion_messages")
       .insert({
         session_id: sessionId,
@@ -71,7 +71,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     // Update session updated_at
-    await supabase
+    await (supabase as any)
       .from("discussion_sessions")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", sessionId);

@@ -17,7 +17,7 @@ export async function GET() {
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("discussion_sessions")
       .select("id, title, topic, updated_at")
       .eq("user_id", session.user.id)
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     const payload = (await request.json()) as CreateSessionPayload;
     const title = payload.topic.slice(0, 50) + (payload.topic.length > 50 ? "..." : "");
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("discussion_sessions")
       .insert({
         user_id: session.user.id,

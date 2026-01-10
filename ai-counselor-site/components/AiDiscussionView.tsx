@@ -777,6 +777,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
           </div>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -839,8 +840,3 @@ function ParticipantSelector({
     </div>
   );
 }
-        </div>
-      </div>
-    </div>
-
-// Note: This file has been updated to include session management
