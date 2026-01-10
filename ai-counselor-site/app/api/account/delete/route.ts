@@ -6,7 +6,7 @@ import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase, hasServiceRole } from "@/lib/supabase-server";
 import type { Database } from "@/types/supabase";
 
-type PostgrestQuery = Promise<{ error: PostgrestError | null }>;
+type PostgrestExecutable = PromiseLike<{ error: PostgrestError | null }>;
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -116,7 +116,7 @@ async function selectIds(
   return (data ?? []).map((row: Record<string, string>) => row[column]).filter(Boolean);
 }
 
-async function ensureSuccess(label: string, query: PostgrestQuery) {
+async function ensureSuccess(label: string, query: PostgrestExecutable) {
   const { error } = await query;
   if (error) {
     throw new Error(`[${label}] ${error.message}`);
