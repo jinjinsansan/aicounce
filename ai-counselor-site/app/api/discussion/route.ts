@@ -1,6 +1,7 @@
 import { fetchCounselorById } from "@/lib/counselors";
 import { getDefaultCounselorPrompt } from "@/lib/prompts/counselorPrompts";
 import { callLLMWithHistory } from "@/lib/llm";
+import { searchRagContext } from "@/lib/rag";
 import { DISCUSSION_ROUND_OPTIONS, getStyleInstruction } from "@/lib/discussion/config";
 import type { DiscussionMessage } from "@/types/discussion";
 
@@ -30,6 +31,7 @@ type ParticipantProfile = {
   systemPrompt: string;
   specialty?: string;
   description?: string;
+  ragEnabled: boolean;
 };
 
 export async function POST(request: Request) {
@@ -175,6 +177,7 @@ async function buildParticipantProfile(
     systemPrompt: `${basePrompt}\n\n${styleInstruction}`.trim(),
     specialty: counselor.specialty,
     description: counselor.description,
+    ragEnabled: Boolean(counselor.ragEnabled),
   };
 }
 
@@ -248,6 +251,24 @@ async function generateDebaterMessage(params: {
   const { topic, speaker, opponent, history, role } = params;
   const transcript = buildTranscript(history);
 
+  let ragContext = "";
+  if (speaker.ragEnabled) {
+    const recentMessages = history
+      .slice(-4)
+      .map((m) => m.content)
+      .join(" ");
+    const ragQuery = [topic, recentMessages].filter(Boolean).join("\n");
+
+    try {
+      const ragResult = await searchRagContext(speaker.id, ragQuery, 6);
+      if (ragResult?.context) {
+        ragContext = ragResult.context;
+      }
+    } catch (error) {
+      console.error(`RAG search failed for ${speaker.id}`, error);
+    }
+  }
+
   const instructions = [
     `議題: ${topic}`,
     `あなたは ${speaker.name}。相手は ${opponent.name}${opponent.specialty ? `（専門: ${opponent.specialty}）` : ""}。`,
@@ -255,9 +276,16 @@ async function generateDebaterMessage(params: {
     "必ず新しい視点や問いを一つ提示し、文章の最後は次に繋がる問いや挑戦で締めます。",
   ];
 
+  if (ragContext) {
+    instructions.push(
+      "\n【あなたの専門知識】\n以下はあなたが学んだ知識です。この専門知識を活かして議論してください。",
+    );
+  }
+
   const userMessage = [
     transcript ? `これまでのやりとり:\n${transcript}\n` : "",
     instructions.join("\n"),
+    ragContext ? `\n${ragContext}` : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -287,11 +315,38 @@ async function generateModeratorSummary(params: {
 }): Promise<DiscussionMessage> {
   const { topic, history, moderator } = params;
   const transcript = buildTranscript(history);
-  const prompt = [
+
+  let ragContext = "";
+  if (moderator.ragEnabled) {
+    const recentMessages = history
+      .slice(-6)
+      .map((m) => m.content)
+      .join(" ");
+    const ragQuery = [topic, recentMessages].filter(Boolean).join("\n");
+
+    try {
+      const ragResult = await searchRagContext(moderator.id, ragQuery, 6);
+      if (ragResult?.context) {
+        ragContext = ragResult.context;
+      }
+    } catch (error) {
+      console.error(`RAG search failed for moderator ${moderator.id}`, error);
+    }
+  }
+
+  const instructions = [
     transcript ? `議論ログ:\n${transcript}` : "",
     `議題: ${topic || "(テーマなし)"}`,
     "上記の議論を3〜5行で整理してください。双方の主張と、次の行動や提案を含めてまとめます。",
-  ]
+  ];
+
+  if (ragContext) {
+    instructions.push(
+      "\n【あなたの専門知識】\n以下の知識を活かして、より専門的な視点でまとめてください。",
+    );
+  }
+
+  const prompt = [instructions.join("\n\n"), ragContext ? `\n${ragContext}` : ""]
     .filter(Boolean)
     .join("\n\n");
 
