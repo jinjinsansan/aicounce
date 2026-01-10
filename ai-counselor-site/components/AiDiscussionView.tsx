@@ -437,8 +437,8 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
   };
 
   return (
-    <div className="relative w-full border-t border-slate-200" style={gradientStyle}>
-      <div className="mx-auto flex h-full max-w-7xl gap-4 p-4 sm:p-6">
+    <div className="relative min-h-screen w-full overflow-x-hidden border-t border-slate-200" style={gradientStyle}>
+      <div className="mx-auto flex h-full w-full max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:gap-4 sm:px-6">
         {/* 左サイドバー（デスクトップ） */}
         <aside className="hidden w-80 flex-shrink-0 space-y-3 md:flex md:flex-col">
           <Button

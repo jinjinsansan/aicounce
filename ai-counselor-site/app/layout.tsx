@@ -1,15 +1,8 @@
 import "@/sentry.client.config";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
 import SupabaseProvider from "@/components/providers/SupabaseProvider";
 import AppHeader from "@/components/AppHeader";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
 
 export const metadata: Metadata = {
   title: "メンタルAIチーム | もう、誰にも気を使わなくていい",
