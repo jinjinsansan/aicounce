@@ -108,12 +108,17 @@ async function selectIds(
   column: string,
   filterColumn: string,
   userId: string,
-) {
-  const { data, error } = await client.from(table).select(column).eq(filterColumn, userId);
+): Promise<string[]> {
+  const { data, error } = await client
+    .from(table)
+    .select<string, { [key: string]: string }>(column)
+    .eq(filterColumn, userId);
   if (error) {
     throw new Error(`failed to load ${table}: ${error.message}`);
   }
-  return (data ?? []).map((row: Record<string, string>) => row[column]).filter(Boolean);
+  return (data ?? [])
+    .map((row) => row[column])
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
 }
 
 async function ensureSuccess(label: string, query: PostgrestExecutable) {
