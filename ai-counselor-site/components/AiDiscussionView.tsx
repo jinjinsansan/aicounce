@@ -54,6 +54,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
   type AccessState = {
     canUseTeam: boolean;
     lineLinked: boolean;
+    betaLineAccess: boolean;
     onTrial: boolean;
     trialExpiresAt?: string;
     campaignAccess?: { code: string; expiresAt: string } | null;
@@ -484,7 +485,7 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
             </div>
             <h2 className="mb-3 text-2xl font-bold text-slate-900">AI議論ライブ</h2>
             <p className="mb-6 text-slate-600">
-              この機能は<strong className="text-purple-600">プレミアムプラン</strong>限定です。
+              <strong className="text-purple-600">ベータ版期間中</strong>、LINE公式アカウント追加で<strong className="text-green-600">完全無料</strong>でご利用いただけます。
             </p>
             
             <div className="mb-8 space-y-3 text-left">
@@ -502,41 +503,19 @@ export default function AiDiscussionView({ counselors }: AiDiscussionViewProps) 
               </div>
             </div>
 
-            {accessState?.lineLinked && accessState.onTrial ? (
-              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4">
-                <p className="text-sm font-semibold text-green-800">
-                  ✨ トライアル中は無料でご利用いただけます
-                </p>
-                {accessState.trialExpiresAt && (
-                  <p className="mt-1 text-xs text-green-700">
-                    期限: {new Date(accessState.trialExpiresAt).toLocaleDateString("ja-JP")}
-                  </p>
-                )}
-              </div>
-            ) : accessState?.campaignAccess ? (
-              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4">
-                <p className="text-sm font-semibold text-green-800">
-                  ✨ キャンペーンコード適用中
-                </p>
-                <p className="mt-1 text-xs text-green-700">
-                  期限: {new Date(accessState.campaignAccess.expiresAt).toLocaleDateString("ja-JP")}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Link href="/account">
-                  <Button 
-                    className="w-full rounded-full py-6 text-base font-bold shadow-lg"
-                    style={{ backgroundColor: DISCUSSION_THEME.accent, color: "#ffffff" }}
-                  >
-                    プレミアムプランに登録
-                  </Button>
-                </Link>
-                <p className="text-xs text-slate-500">
-                  または、<Link href="/account" className="text-purple-600 underline">LINE公式アカウント追加</Link>で無料トライアル
-                </p>
-              </div>
-            )}
+            <div className="space-y-3">
+              <Link href="/account">
+                <Button 
+                  className="w-full rounded-full py-6 text-base font-bold shadow-lg"
+                  style={{ backgroundColor: DISCUSSION_THEME.accent, color: "#ffffff" }}
+                >
+                  LINE公式アカウント追加で無料アクセス
+                </Button>
+              </Link>
+              <p className="text-xs text-slate-500">
+                ベータ版期間中は、LINE追加後<strong className="text-green-600">期限なし</strong>で全機能をご利用いただけます
+              </p>
+            </div>
           </div>
         </div>
       </div>

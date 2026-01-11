@@ -117,10 +117,17 @@ export default function AccountPage() {
               ...prev,
               trial: {
                 line_linked: true,
-                trial_expires_at: data.trialExpiresAt,
+                trial_expires_at: data.trialExpiresAt ?? null,
                 trial_started_at: new Date().toISOString(),
               },
-              access: { ...prev.access, onTrial: true, canUseIndividual: true, canUseTeam: true },
+              access: {
+                ...prev.access,
+                lineLinked: true,
+                betaLineAccess: true,
+                onTrial: true,
+                canUseIndividual: true,
+                canUseTeam: true,
+              },
             }
           : prev,
       );
@@ -274,7 +281,8 @@ export default function AccountPage() {
   if (!overview) return null;
 
   const currentPlan = overview.subscription?.plan_id ?? "none";
-  const trialEnds = overview.trial?.trial_expires_at
+  const betaLineAccess = overview.access.betaLineAccess;
+  const trialEnds = !betaLineAccess && overview.trial?.trial_expires_at
     ? new Date(overview.trial.trial_expires_at).toLocaleString("ja-JP")
     : null;
 
@@ -313,7 +321,13 @@ export default function AccountPage() {
 
             <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
               <p>
-                現在の状態: {overview.access.onTrial ? "無料トライアル中" : currentPlan === "none" ? "未契約" : `契約中 (${currentPlan})`}
+                現在の状態: {overview.access.betaLineAccess
+                  ? "LINE連携ベータアクセス（無期限無料）"
+                  : overview.access.onTrial
+                    ? "無料トライアル中"
+                    : currentPlan === "none"
+                      ? "未契約"
+                      : `契約中 (${currentPlan})`}
               </p>
               {trialEnds && <p>トライアル終了日: {trialEnds}</p>}
               {overview.subscription?.current_period_end && (
@@ -351,7 +365,7 @@ export default function AccountPage() {
             <div className="rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm">
               <h2 className="text-xl font-bold text-slate-900">公式LINE連携</h2>
               <p className="mt-1 text-sm text-slate-500">
-                公式LINEを追加すると7日間の無料トライアルが開始されます。
+                ベータ期間中は公式LINEを追加するだけで個別・チームを含む全AIカウンセリングが無期限で解放されます。
               </p>
               <div className="mt-4 flex flex-col gap-3">
                 <a
@@ -371,7 +385,7 @@ export default function AccountPage() {
                   {overview.trial?.line_linked ? "連携済み" : trialState === "loading" ? "確認中..." : "連携を確認する"}
                 </button>
                 {trialState === "success" && (
-                  <p className="text-xs text-emerald-600">トライアルを開始しました！</p>
+                  <p className="text-xs text-emerald-600">ベータアクセスが有効になりました！</p>
                 )}
               </div>
             </div>

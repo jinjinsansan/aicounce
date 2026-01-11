@@ -50,7 +50,7 @@ async function sendTrialMessage(replyToken?: string) {
     await lineClient.replyMessage(replyToken, [
       {
         type: "text",
-        text: "LINE連携が完了しました。本日より7日間、個別・チームを含むすべてのAIカウンセリングがご利用いただけます。メンタルAIチームのサイトで『連携を確認する』ボタンを押すとトライアルが即時反映されます。",
+        text: "LINE連携ありがとうございます。ベータ期間中は個別・チームを含むすべてのAIカウンセリングをずっと無料でご利用いただけます。メンタルAIチームのサイトで『連携を確認する』ボタンを押すと即時に反映されます。",
       },
     ]);
   } catch (error) {

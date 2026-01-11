@@ -195,7 +195,7 @@ function StandardChatExperience({ counselorId }: { counselorId: string }) {
           </p>
           <h1 className="text-3xl font-black text-slate-900">個別カウンセリングはベーシックプラン専用です</h1>
           <p className="text-slate-600">
-            公式LINEの7日間無料トライアル、もしくはベーシックプランの決済で利用できます。
+            ベータ期間中は公式LINEを追加するだけで個別カウンセリングを無期限でご利用いただけます。正式リリース後はベーシックプランへ移行すれば継続利用できます。
           </p>
         </div>
         <LinkButton href="/account" label="マイページでプランを確認" />

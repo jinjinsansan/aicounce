@@ -626,7 +626,7 @@ export default function TeamCounselingPage() {
           </p>
           <h1 className="text-3xl font-black text-[#6b4423]">チームカウンセリングはプレミアム限定です</h1>
           <p className="text-[#6b4423]/80">
-            公式LINEの7日無料トライアル、またはプレミアムプランの決済でご利用いただけます。マイページから切り替えてください。
+            ベータ期間中は公式LINEを追加するだけでチームカウンセリングも無期限で開放中です。正式運用後はプレミアムプランへ切り替えてご利用ください。
           </p>
         </div>
         <a

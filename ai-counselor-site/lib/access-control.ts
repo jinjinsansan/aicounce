@@ -8,6 +8,7 @@ export type AccessState = {
   onTrial: boolean;
   trialExpiresAt?: string;
   lineLinked: boolean;
+  betaLineAccess: boolean;
   campaignAccess?: {
     code: string;
     expiresAt: string;
@@ -66,11 +67,14 @@ export async function resolveAccessState(userId: string, sessionEmail?: string |
   const effectiveEmail = dbEmail ?? normalizedSessionEmail;
   const isAdmin = Boolean(effectiveEmail && ADMIN_EMAILS.has(effectiveEmail));
 
-  const trialExpiresAt = trial?.trial_expires_at ?? undefined;
-  const onTrial = Boolean(
-    trialExpiresAt && new Date(trialExpiresAt).getTime() > Date.now(),
-  );
+  const rawTrialExpiresAt = trial?.trial_expires_at ?? undefined;
   const lineLinked = Boolean(trial?.line_linked ?? user?.line_linked_at);
+  const betaLineAccess = Boolean(lineLinked);
+
+  const trialExpiresAt = betaLineAccess ? undefined : rawTrialExpiresAt;
+  const onTrial = Boolean(
+    betaLineAccess || (rawTrialExpiresAt && new Date(rawTrialExpiresAt).getTime() > Date.now()),
+  );
   const campaignData = campaign as
     | {
         expires_at: string | null;
@@ -100,6 +104,7 @@ export async function resolveAccessState(userId: string, sessionEmail?: string |
     onTrial,
     trialExpiresAt,
     lineLinked,
+    betaLineAccess,
     campaignAccess:
       hasCampaignAccess && campaignExpiresAt
         ? {
@@ -121,10 +126,9 @@ export async function assertAccess(
   const allowed =
     requirement === "individual" ? state.canUseIndividual : state.canUseTeam;
   if (!allowed) {
-    const planNeeded = requirement === "individual" ? "basic" : "premium";
     throw Object.assign(new Error("payment_required"), {
       status: 402,
-      detail: `Please subscribe to the ${planNeeded} plan or use an active trial / campaign code`,
+      detail: `Please add LINE official account for free access during beta period`,
     });
   }
 }

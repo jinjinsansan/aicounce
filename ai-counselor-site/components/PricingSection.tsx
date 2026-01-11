@@ -1,20 +1,36 @@
 import Link from "next/link";
 
 export default function PricingSection() {
+  const betaPerk = {
+    badge: "BETA SPECIAL",
+    title: "公式LINE連携でベータ期間ずっと無料",
+    description:
+      "今だけ、LINE公式アカウントを追加するだけで個別・チームを含むすべてのAIカウンセリングが無期限で解放されます。クレジットカード登録は不要、解除もワンタップです。",
+    highlights: [
+      "即日アクティベーションで待ち時間ゼロ",
+      "ベーシック/プレミアム相当の機能がすべて開放",
+      "ベータ終了前には必ず事前告知",
+    ],
+    cta: {
+      label: "LINEで無料アクセスを取得",
+      href: "https://line.me/R/ti/p/@701wsyqr",
+    },
+  };
+
   const plans = [
     {
       name: "フリー",
       price: "¥0",
-      period: "7日間",
-      description: "まずは無料で体験",
+      period: "β期間中ずっと",
+      description: "公式LINE連携だけで全機能を解放",
       features: [
         "公式LINE追加で即開始",
-        "7日間すべての機能利用可",
-        "全AIカウンセラーお試し可",
-        "クレカ登録不要",
+        "個別・チーム含む全AIが無制限",
+        "24時間いつでも相談・再開",
+        "クレカ登録なし / いつでも解除",
       ],
-      cta: "公式LINEで無料体験",
-      ctaLink: "https://line.me/",
+      cta: "LINEで今すぐ無料参加",
+      ctaLink: "https://line.me/R/ti/p/@701wsyqr",
       highlight: false,
     },
     {
@@ -66,6 +82,33 @@ export default function PricingSection() {
           <p className="mb-12 text-lg text-slate-600">
             心のケアを当たり前のインフラに。必要なときに、無理なく続けられるプランです。
           </p>
+
+          <div className="mb-12 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-6 text-left shadow-[0_15px_45px_rgba(16,185,129,0.15)] sm:p-8">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+              {betaPerk.badge}
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 sm:text-3xl">{betaPerk.title}</h3>
+            <p className="mt-3 text-base leading-relaxed text-slate-600">{betaPerk.description}</p>
+            <ul className="mt-5 grid gap-3 sm:grid-cols-3">
+              {betaPerk.highlights.map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-2 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm"
+                >
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={betaPerk.cta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-3 text-base font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-600"
+            >
+              {betaPerk.cta.label}
+            </Link>
+          </div>
 
           {/* Pricing Cards Grid */}
           <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -129,7 +172,7 @@ export default function PricingSection() {
                   {/* Free Plan Note */}
                   {plan.name === "フリー" && (
                     <p className="mt-4 text-center text-xs text-slate-500">
-                      無料期間終了後も自動課金なし
+                      ベータ終了前に必ずご案内し、それまでは課金されません
                     </p>
                   )}
                 </div>

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createSupabaseRouteClient } from "@/lib/supabase-clients";
 import { getServiceSupabase } from "@/lib/supabase-server";
-import { daysFromNow } from "@/lib/plans";
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -29,11 +28,10 @@ export async function POST() {
 
     if (existingTrial?.line_linked) {
       return NextResponse.json(
-        { error: "LINE連携済みのため無料トライアルは再開できません" },
+        { error: "すでに公式LINEと連携済みです" },
         { status: 409 },
       );
     }
-    const trialExpiresAt = daysFromNow(7);
 
     await adminSupabase
       .from("user_trials")
@@ -43,7 +41,7 @@ export async function POST() {
           source: "line",
           line_linked: true,
           trial_started_at: new Date().toISOString(),
-          trial_expires_at: trialExpiresAt,
+          trial_expires_at: null,
         },
         { onConflict: "user_id" },
       );
@@ -53,7 +51,7 @@ export async function POST() {
       .update({ line_linked_at: new Date().toISOString() })
       .eq("id", session.user.id);
 
-    return NextResponse.json({ success: true, trialExpiresAt });
+    return NextResponse.json({ success: true, trialExpiresAt: null });
   } catch (error) {
     console.error("line trial error", error);
     return NextResponse.json({ error: "Failed to start trial" }, { status: 500 });
