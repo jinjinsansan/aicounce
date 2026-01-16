@@ -180,6 +180,16 @@ export default function AppHeader() {
                           <span className="ml-auto text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all">→</span>
                         </Link>
                       ))}
+                      <Link
+                        href="https://namisapo.app/"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        onClick={closeMenu}
+                        className="group flex items-center rounded-xl px-3 py-3 text-base font-medium text-slate-700 hover:bg-slate-100"
+                      >
+                        <span className="group-hover:text-slate-900 transition-colors">かんじょうにっき</span>
+                        <span className="ml-auto text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all">↗</span>
+                      </Link>
                       {isAdmin && (
                         <Link
                           href="/admin"
