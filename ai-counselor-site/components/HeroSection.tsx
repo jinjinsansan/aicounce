@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative flex min-h-screen items-center overflow-hidden bg-white px-4 py-16 sm:px-6 sm:py-20 md:py-24">
+    <section className="relative flex min-h-screen items-center overflow-hidden bg-gradient-to-br from-rose-50 via-white to-sky-50 px-4 py-16 sm:px-6 sm:py-20 md:py-24">
       <video
-        className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+        className="absolute inset-0 h-full w-full object-cover opacity-60 motion-reduce:hidden"
         autoPlay
         loop
         muted

@@ -55,7 +55,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-200">
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-2 py-6 sm:gap-20 sm:px-4 sm:py-8 lg:px-8">
         <EmotionDiaryBanner />
         
